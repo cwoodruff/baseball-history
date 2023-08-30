@@ -668,6 +668,11 @@ fabric.properties
 # Windows Installer files from build outputs
 
 # JetBrains Rider
+.idea/
+
+.DS_Store
+.idea/.idea.NextGenASPNET7WebAPI/.idea/aws.xml
+.idea/.idea.NextGenASPNET7WebAPI/.idea/dataSources.xml
 
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
