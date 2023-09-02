@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.iOS;
 using Avalonia.Media;
 using Avalonia.ReactiveUI;
+using BaseballHistory;
 
 namespace BaseballHistory.iOS;
 
