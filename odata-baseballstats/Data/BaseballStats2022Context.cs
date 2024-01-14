@@ -1,91 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using odata_baseballstats.Entities;
 
 namespace odata_baseballstats.Data;
 
-public partial class BaseballStats2022Context : DbContext
+public partial class BaseballStats2022Context(DbContextOptions<BaseballStats2022Context> options) : DbContext(options)
 {
-    public BaseballStats2022Context()
-    {
-    }
-
-    public BaseballStats2022Context(DbContextOptions<BaseballStats2022Context> options)
-        : base(options)
-    {
-    }
-
     public virtual DbSet<AllstarFull> AllstarFulls { get; set; }
-
     public virtual DbSet<Appearance> Appearances { get; set; }
-
     public virtual DbSet<AwardsManager> AwardsManagers { get; set; }
-
     public virtual DbSet<AwardsPlayer> AwardsPlayers { get; set; }
-
     public virtual DbSet<AwardsShareManager> AwardsShareManagers { get; set; }
-
     public virtual DbSet<AwardsSharePlayer> AwardsSharePlayers { get; set; }
-
     public virtual DbSet<Batting> Battings { get; set; }
-
     public virtual DbSet<BattingPost> BattingPosts { get; set; }
-
     public virtual DbSet<CollegePlaying> CollegePlayings { get; set; }
-
     public virtual DbSet<Fielding> Fieldings { get; set; }
-
     public virtual DbSet<FieldingOf> FieldingOfs { get; set; }
-
     public virtual DbSet<FieldingOfsplit> FieldingOfsplits { get; set; }
-
     public virtual DbSet<FieldingPost> FieldingPosts { get; set; }
-
     public virtual DbSet<HallOfFame> HallOfFames { get; set; }
-
     public virtual DbSet<HomeGame> HomeGames { get; set; }
-
     public virtual DbSet<Manager> Managers { get; set; }
-
     public virtual DbSet<ManagersHalf> ManagersHalves { get; set; }
-
     public virtual DbSet<Park> Parks { get; set; }
-
     public virtual DbSet<Person> People { get; set; }
-
     public virtual DbSet<Pitching> Pitchings { get; set; }
-
     public virtual DbSet<PitchingPost> PitchingPosts { get; set; }
-
     public virtual DbSet<PlayerBattingTotal> PlayerBattingTotals { get; set; }
-
     public virtual DbSet<PlayerFieldingTotal> PlayerFieldingTotals { get; set; }
-
     public virtual DbSet<PlayerPitchingTotal> PlayerPitchingTotals { get; set; }
-
     public virtual DbSet<Salary> Salaries { get; set; }
-
     public virtual DbSet<School> Schools { get; set; }
-
     public virtual DbSet<SeriesPost> SeriesPosts { get; set; }
-
     public virtual DbSet<Team> Teams { get; set; }
-
     public virtual DbSet<TeamBattingTotal> TeamBattingTotals { get; set; }
-
     public virtual DbSet<TeamFieldingTotal> TeamFieldingTotals { get; set; }
-
     public virtual DbSet<TeamPitchingTotal> TeamPitchingTotals { get; set; }
-
     public virtual DbSet<TeamsFranchise> TeamsFranchises { get; set; }
-
     public virtual DbSet<TeamsHalf> TeamsHalves { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=WOODY-DESKTOP;Database=BaseballStats2022;MultipleActiveResultSets=true;TrustServerCertificate=true;Integrated Security=true;Trusted_Connection=true;;Application Name=BaseballStatsOData");
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AllstarFull>(entity =>

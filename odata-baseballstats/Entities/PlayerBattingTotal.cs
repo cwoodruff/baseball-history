@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace odata_baseballstats.Entities;
+﻿namespace odata_baseballstats.Entities;
 
 public partial class PlayerBattingTotal
 {
