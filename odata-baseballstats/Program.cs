@@ -13,10 +13,10 @@ var configuration = builder.Configuration;
 var connection = String.Empty;
 
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-    connection = configuration.GetConnectionString("ChinookDbWindows");
+    connection = configuration.GetConnectionString("BaseballStatsDbWindows");
 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
          RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-    connection = configuration.GetConnectionString("ChinookDbDocker");
+    connection = configuration.GetConnectionString("BaseballStatsDbDocker");
 
 builder.Services.AddRestier((builder) =>
 {
@@ -31,7 +31,6 @@ builder.Services.AddRestier((builder) =>
                 MaxAnyAllExpressionDepth = 5,
                 MaxExpansionDepth = 5,
             });
-
     });
 });
 
@@ -45,7 +44,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-
 }
 
 app.UseRestierBatching();
@@ -56,10 +54,7 @@ app.UseHttpsRedirection();
 app.UseEndpoints(endpoints =>
 {
     endpoints.Select().Expand().Filter().OrderBy().MaxTop(100).Count().SetTimeZoneInfo(TimeZoneInfo.Utc);
-    endpoints.MapRestier(builder =>
-    {
-        builder.MapApiRoute<BaseballStatsApi>("odata", "", true);
-    });
+    endpoints.MapRestier(builder => { builder.MapApiRoute<BaseballStatsApi>("odata", "", true); });
 });
 
 app.UseRestierSwagger(true);

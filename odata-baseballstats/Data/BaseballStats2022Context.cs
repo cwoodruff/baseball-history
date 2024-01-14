@@ -26,19 +26,13 @@ public partial class BaseballStats2022Context(DbContextOptions<BaseballStats2022
     public virtual DbSet<Person> People { get; set; }
     public virtual DbSet<Pitching> Pitchings { get; set; }
     public virtual DbSet<PitchingPost> PitchingPosts { get; set; }
-    public virtual DbSet<PlayerBattingTotal> PlayerBattingTotals { get; set; }
-    public virtual DbSet<PlayerFieldingTotal> PlayerFieldingTotals { get; set; }
-    public virtual DbSet<PlayerPitchingTotal> PlayerPitchingTotals { get; set; }
     public virtual DbSet<Salary> Salaries { get; set; }
     public virtual DbSet<School> Schools { get; set; }
     public virtual DbSet<SeriesPost> SeriesPosts { get; set; }
     public virtual DbSet<Team> Teams { get; set; }
-    public virtual DbSet<TeamBattingTotal> TeamBattingTotals { get; set; }
-    public virtual DbSet<TeamFieldingTotal> TeamFieldingTotals { get; set; }
-    public virtual DbSet<TeamPitchingTotal> TeamPitchingTotals { get; set; }
     public virtual DbSet<TeamsFranchise> TeamsFranchises { get; set; }
     public virtual DbSet<TeamsHalf> TeamsHalves { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AllstarFull>(entity =>
@@ -761,83 +755,6 @@ public partial class BaseballStats2022Context(DbContextOptions<BaseballStats2022
                 .HasConstraintName("FK_PitchingPost_Teams");
         });
 
-        modelBuilder.Entity<PlayerBattingTotal>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("PlayerBattingTotals");
-
-            entity.Property(e => e.Ab).HasColumnName("AB");
-            entity.Property(e => e.Bb).HasColumnName("BB");
-            entity.Property(e => e.Cs).HasColumnName("CS");
-            entity.Property(e => e.Gidp).HasColumnName("GIDP");
-            entity.Property(e => e.Hpb).HasColumnName("HPB");
-            entity.Property(e => e.Hr).HasColumnName("HR");
-            entity.Property(e => e.Ibb).HasColumnName("IBB");
-            entity.Property(e => e.PlayerId)
-                .HasMaxLength(9)
-                .HasColumnName("playerID");
-            entity.Property(e => e.Rbi).HasColumnName("RBI");
-            entity.Property(e => e.Sb).HasColumnName("SB");
-            entity.Property(e => e.Sf).HasColumnName("SF");
-            entity.Property(e => e.Sh).HasColumnName("SH");
-            entity.Property(e => e.So).HasColumnName("SO");
-            entity.Property(e => e._2b).HasColumnName("2B");
-            entity.Property(e => e._3b).HasColumnName("3B");
-        });
-
-        modelBuilder.Entity<PlayerFieldingTotal>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("PlayerFieldingTotals");
-
-            entity.Property(e => e.Cs).HasColumnName("CS");
-            entity.Property(e => e.Dp).HasColumnName("DP");
-            entity.Property(e => e.Gs).HasColumnName("GS");
-            entity.Property(e => e.Pb).HasColumnName("PB");
-            entity.Property(e => e.PlayerId)
-                .HasMaxLength(9)
-                .HasColumnName("playerID");
-            entity.Property(e => e.Po).HasColumnName("PO");
-            entity.Property(e => e.Pos)
-                .HasMaxLength(2)
-                .HasColumnName("POS");
-            entity.Property(e => e.Sb).HasColumnName("SB");
-            entity.Property(e => e.Wp).HasColumnName("WP");
-            entity.Property(e => e.Zr).HasColumnName("ZR");
-        });
-
-        modelBuilder.Entity<PlayerPitchingTotal>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("PlayerPitchingTotals");
-
-            entity.Property(e => e.Baopp).HasColumnName("BAOpp");
-            entity.Property(e => e.Bb).HasColumnName("BB");
-            entity.Property(e => e.Bfp).HasColumnName("BFP");
-            entity.Property(e => e.Bk).HasColumnName("BK");
-            entity.Property(e => e.Cg).HasColumnName("CG");
-            entity.Property(e => e.Er).HasColumnName("ER");
-            entity.Property(e => e.Gf).HasColumnName("GF");
-            entity.Property(e => e.Gidp).HasColumnName("GIDP");
-            entity.Property(e => e.Gs).HasColumnName("GS");
-            entity.Property(e => e.Hbp).HasColumnName("HBP");
-            entity.Property(e => e.Hr).HasColumnName("HR");
-            entity.Property(e => e.Ibb).HasColumnName("IBB");
-            entity.Property(e => e.Ipouts).HasColumnName("IPouts");
-            entity.Property(e => e.PlayerId)
-                .HasMaxLength(9)
-                .HasColumnName("playerID");
-            entity.Property(e => e.Sf).HasColumnName("SF");
-            entity.Property(e => e.Sh).HasColumnName("SH");
-            entity.Property(e => e.Sho).HasColumnName("SHO");
-            entity.Property(e => e.So).HasColumnName("SO");
-            entity.Property(e => e.Sv).HasColumnName("SV");
-            entity.Property(e => e.Wp).HasColumnName("WP");
-        });
-
         modelBuilder.Entity<Salary>(entity =>
         {
             entity.HasKey(e => new { e.PlayerId, e.TeamId, e.LgId, e.YearId });
@@ -890,7 +807,8 @@ public partial class BaseballStats2022Context(DbContextOptions<BaseballStats2022
 
             entity.ToTable("SeriesPost");
 
-            entity.HasIndex(e => new { e.TeamIdloser, e.LgIdloser, e.YearId, e.Round }, "IX_SeriesPostLoser").IsUnique();
+            entity.HasIndex(e => new { e.TeamIdloser, e.LgIdloser, e.YearId, e.Round }, "IX_SeriesPostLoser")
+                .IsUnique();
 
             entity.Property(e => e.TeamIdwinner)
                 .HasMaxLength(3)
@@ -990,92 +908,6 @@ public partial class BaseballStats2022Context(DbContextOptions<BaseballStats2022
             entity.HasOne(d => d.ParkNavigation).WithMany(p => p.Teams)
                 .HasForeignKey(d => d.ParkId)
                 .HasConstraintName("FK_Teams_Parks");
-        });
-
-        modelBuilder.Entity<TeamBattingTotal>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("TeamBattingTotals");
-
-            entity.Property(e => e.Ab).HasColumnName("AB");
-            entity.Property(e => e.Bb).HasColumnName("BB");
-            entity.Property(e => e.Cs).HasColumnName("CS");
-            entity.Property(e => e.Gidp).HasColumnName("GIDP");
-            entity.Property(e => e.Hpb).HasColumnName("HPB");
-            entity.Property(e => e.Hr).HasColumnName("HR");
-            entity.Property(e => e.Ibb).HasColumnName("IBB");
-            entity.Property(e => e.LgId)
-                .HasMaxLength(2)
-                .HasColumnName("lgID");
-            entity.Property(e => e.Rbi).HasColumnName("RBI");
-            entity.Property(e => e.Sb).HasColumnName("SB");
-            entity.Property(e => e.Sf).HasColumnName("SF");
-            entity.Property(e => e.Sh).HasColumnName("SH");
-            entity.Property(e => e.So).HasColumnName("SO");
-            entity.Property(e => e.TeamId)
-                .HasMaxLength(3)
-                .HasColumnName("teamID");
-            entity.Property(e => e.YearId).HasColumnName("yearID");
-            entity.Property(e => e._2b).HasColumnName("2B");
-            entity.Property(e => e._3b).HasColumnName("3B");
-        });
-
-        modelBuilder.Entity<TeamFieldingTotal>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("TeamFieldingTotals");
-
-            entity.Property(e => e.Cs).HasColumnName("CS");
-            entity.Property(e => e.Dp).HasColumnName("DP");
-            entity.Property(e => e.Gs).HasColumnName("GS");
-            entity.Property(e => e.LgId)
-                .HasMaxLength(2)
-                .HasColumnName("lgID");
-            entity.Property(e => e.Pb).HasColumnName("PB");
-            entity.Property(e => e.Po).HasColumnName("PO");
-            entity.Property(e => e.Sb).HasColumnName("SB");
-            entity.Property(e => e.TeamId)
-                .HasMaxLength(3)
-                .HasColumnName("teamID");
-            entity.Property(e => e.Wp).HasColumnName("WP");
-            entity.Property(e => e.YearId).HasColumnName("yearID");
-            entity.Property(e => e.Zr).HasColumnName("ZR");
-        });
-
-        modelBuilder.Entity<TeamPitchingTotal>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("TeamPitchingTotals");
-
-            entity.Property(e => e.Baopp).HasColumnName("BAOpp");
-            entity.Property(e => e.Bb).HasColumnName("BB");
-            entity.Property(e => e.Bfp).HasColumnName("BFP");
-            entity.Property(e => e.Bk).HasColumnName("BK");
-            entity.Property(e => e.Cg).HasColumnName("CG");
-            entity.Property(e => e.Er).HasColumnName("ER");
-            entity.Property(e => e.Gf).HasColumnName("GF");
-            entity.Property(e => e.Gidp).HasColumnName("GIDP");
-            entity.Property(e => e.Gs).HasColumnName("GS");
-            entity.Property(e => e.Hbp).HasColumnName("HBP");
-            entity.Property(e => e.Hr).HasColumnName("HR");
-            entity.Property(e => e.Ibb).HasColumnName("IBB");
-            entity.Property(e => e.Ipouts).HasColumnName("IPouts");
-            entity.Property(e => e.LgId)
-                .HasMaxLength(2)
-                .HasColumnName("lgID");
-            entity.Property(e => e.Sf).HasColumnName("SF");
-            entity.Property(e => e.Sh).HasColumnName("SH");
-            entity.Property(e => e.Sho).HasColumnName("SHO");
-            entity.Property(e => e.So).HasColumnName("SO");
-            entity.Property(e => e.Sv).HasColumnName("SV");
-            entity.Property(e => e.TeamId)
-                .HasMaxLength(3)
-                .HasColumnName("teamID");
-            entity.Property(e => e.Wp).HasColumnName("WP");
-            entity.Property(e => e.YearId).HasColumnName("yearID");
         });
 
         modelBuilder.Entity<TeamsFranchise>(entity =>
