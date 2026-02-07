@@ -69,8 +69,23 @@ public partial class BaseballDbContext : DbContext
 
     public virtual DbSet<TeamsHalf> TeamsHalf { get; set; }
 
+    // Helper method for DateOnly? conversion that handles empty strings
+    private static DateOnly? ConvertToDateOnly(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        if (DateOnly.TryParse(value, out var date))
+            return date;
+        return null;
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Value converter for DateOnly? that handles empty strings from the database
+        var dateOnlyConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateOnly?, string?>(
+            v => v.HasValue ? v.Value.ToString("yyyy-MM-dd") : null,
+            v => ConvertToDateOnly(v));
+
         modelBuilder.Entity<AllstarFull>(entity =>
         {
             entity.HasKey(e => new { e.PlayerId, e.YearId, e.LgId, e.TeamId, e.GameId });
@@ -698,11 +713,13 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Spanfirst)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
-                .HasColumnName("spanfirst");
+                .HasColumnName("spanfirst")
+                .HasConversion(dateOnlyConverter);
             entity.Property(e => e.Spanlast)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
-                .HasColumnName("spanlast");
+                .HasColumnName("spanlast")
+                .HasConversion(dateOnlyConverter);
         });
 
         modelBuilder.Entity<Managers>(entity =>
@@ -865,11 +882,13 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Debut)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
-                .HasColumnName("debut");
+                .HasColumnName("debut")
+                .HasConversion(dateOnlyConverter);
             entity.Property(e => e.FinalGame)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
-                .HasColumnName("finalGame");
+                .HasColumnName("finalGame")
+                .HasConversion(dateOnlyConverter);
             entity.Property(e => e.Height)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")

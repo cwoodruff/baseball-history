@@ -96,40 +96,70 @@
 <script src="~/js/site.js" asp-append-version="true"></script>
 
 <script>
+    // Clean up any existing modals before loading new ones
+    function cleanupModals() {
+        // Remove any leftover backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+            backdrop.remove();
+        });
+        // Remove modal-open class from body
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+        document.body.style.removeProperty('overflow');
+    }
+
     // HTMX configuration
+    document.body.addEventListener('htmx:beforeSwap', function (evt) {
+        // Clean up before loading new modal content
+        if (evt.detail.target.id === 'modal-container') {
+            var existingModal = evt.detail.target.querySelector('.modal');
+            if (existingModal) {
+                var existingInstance = bootstrap.Modal.getInstance(existingModal);
+                if (existingInstance) {
+                    existingInstance.dispose();
+                }
+            }
+            cleanupModals();
+        }
+    });
+
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         // Initialize any Bootstrap modals loaded via HTMX
         if (evt.detail.target.id === 'modal-container') {
             var modal = evt.detail.target.querySelector('.modal');
             if (modal) {
-                var bsModal = new bootstrap.Modal(modal, {
-                    backdrop: true,
-                    keyboard: true
-                });
-                bsModal.show();
+                // Ensure clean state
+                cleanupModals();
 
-                // Clean up modal and backdrop when hidden
-                modal.addEventListener('hidden.bs.modal', function () {
-                    // Dispose the modal instance
-                    bsModal.dispose();
-                    // Clear the container
-                    evt.detail.target.innerHTML = '';
-                    // Remove any leftover backdrops
-                    document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
-                        backdrop.remove();
+                // Small delay to ensure DOM is ready
+                setTimeout(function() {
+                    var bsModal = new bootstrap.Modal(modal, {
+                        backdrop: true,
+                        keyboard: true
                     });
-                    // Remove modal-open class from body
-                    document.body.classList.remove('modal-open');
-                    document.body.style.removeProperty('padding-right');
-                    document.body.style.removeProperty('overflow');
-                });
+                    bsModal.show();
+
+                    // Clean up modal and backdrop when hidden
+                    modal.addEventListener('hidden.bs.modal', function () {
+                        // Dispose the modal instance
+                        try {
+                            bsModal.dispose();
+                        } catch (e) {}
+                        // Clear the container
+                        document.getElementById('modal-container').innerHTML = '';
+                        // Clean up
+                        cleanupModals();
+                    }, { once: true });
+                }, 10);
             }
         }
 
         // Reinitialize Bootstrap dropdowns after any HTMX swap
         var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
         dropdowns.forEach(function (dropdown) {
-            new bootstrap.Dropdown(dropdown);
+            if (!bootstrap.Dropdown.getInstance(dropdown)) {
+                new bootstrap.Dropdown(dropdown);
+            }
         });
     });
 
@@ -152,6 +182,11 @@
         if (searchContainer && !searchContainer.contains(e.target)) {
             searchResults.innerHTML = '';
         }
+    });
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        cleanupModals();
     });
 </script>
 

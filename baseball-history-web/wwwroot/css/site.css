@@ -41,8 +41,10 @@
    -------------------------------------------------------------------------- */
 html {
     font-size: 14px;
-    position: relative;
     min-height: 100%;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto !important;
 }
 
 @media (min-width: 768px) {
@@ -52,9 +54,22 @@ html {
 }
 
 body {
-    margin-bottom: 60px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background-color: var(--bg-primary);
     color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+/* Ensure main content grows to push footer down */
+body > .container {
+    flex: 1 0 auto;
+}
+
+/* Ensure body can scroll when not in modal state */
+body:not(.modal-open) {
+    overflow-y: auto !important;
 }
 
 a {
@@ -333,22 +348,27 @@ a:hover {
 }
 
 /* Ensure modal container and backdrop have proper z-index */
-#modal-container {
-    position: relative;
-    z-index: 1050;
-}
-
 #modal-container .modal {
     z-index: 1055;
-}
-
-#modal-container .modal-backdrop {
-    z-index: 1050;
 }
 
 /* Fix for modal content background */
 .modal-content {
     background-color: var(--bg-secondary);
+}
+
+/* Ensure backdrops layer correctly */
+.modal-backdrop {
+    z-index: 1050 !important;
+}
+
+/* Ensure modal is visible and responsive */
+.modal.show {
+    display: block !important;
+}
+
+.modal-dialog {
+    pointer-events: auto;
 }
 
 /* --------------------------------------------------------------------------
@@ -582,9 +602,11 @@ a:hover {
    Footer
    -------------------------------------------------------------------------- */
 .footer-mlb {
+    flex-shrink: 0;
     background-color: var(--mlb-navy);
     color: var(--mlb-white);
     padding: 1.5rem 0;
+    margin-top: auto;
 }
 
 .footer-mlb a {

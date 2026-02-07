@@ -26,7 +26,7 @@ public class SearchModel : PageModel
         }
 
         ViewModel.Query = q;
-        var searchTerm = q.Trim();
+        var searchTerm = q.Trim().ToLower();
 
         // Get Hall of Fame player IDs
         var hofPlayerIds = await _context.HallOfFame
@@ -35,13 +35,15 @@ public class SearchModel : PageModel
             .Distinct()
             .ToHashSetAsync();
 
-        // Search players (by first name, last name, or full name)
+        // Search players (by first name, last name, or full name) - case insensitive
         var players = await _context.People
             .Where(p =>
-                (p.NameFirst != null && p.NameFirst.Contains(searchTerm)) ||
-                (p.NameLast != null && p.NameLast.Contains(searchTerm)) ||
+                (p.NameFirst != null && p.NameFirst.ToLower().Contains(searchTerm)) ||
+                (p.NameLast != null && p.NameLast.ToLower().Contains(searchTerm)) ||
                 (p.NameFirst != null && p.NameLast != null &&
-                 (p.NameFirst + " " + p.NameLast).Contains(searchTerm)))
+                 (p.NameFirst.ToLower() + " " + p.NameLast.ToLower()).Contains(searchTerm)))
+            .OrderByDescending(p => p.Battings.Sum(b => (int?)b.Hr) ?? 0 + p.Pitchings.Sum(pi => (int?)pi.W) ?? 0)
+            .ThenBy(p => p.NameLast)
             .Take(10)
             .Select(p => new { p.PlayerId, p.NameFirst, p.NameLast, p.Debut, p.FinalGame })
             .ToListAsync();
@@ -58,9 +60,11 @@ public class SearchModel : PageModel
             IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId)
         }).ToList();
 
-        // Search franchises
+        // Search franchises - case insensitive
         var franchises = await _context.TeamsFranchises
-            .Where(f => f.FranchName != null && f.FranchName.Contains(searchTerm))
+            .Where(f => f.FranchName != null && f.FranchName.ToLower().Contains(searchTerm))
+            .OrderByDescending(f => f.Active == "Y")
+            .ThenBy(f => f.FranchName)
             .Take(5)
             .ToListAsync();
 

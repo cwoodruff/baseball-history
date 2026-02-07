@@ -91,7 +91,7 @@ public class IndexModel : PageModel
         // Return partial view for HTMX requests
         if (Request.IsHtmxNonBoostedRequest())
         {
-            return Partial("_PlayerList", ViewModel);
+            return Partial("_PlayersContent", ViewModel);
         }
 
         return Page();

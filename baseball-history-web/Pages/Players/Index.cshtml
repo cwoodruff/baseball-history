@@ -4,19 +4,6 @@
     ViewData["Title"] = "Players";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="text-mlb-navy mb-0">Players</h1>
-    <span class="text-muted">@Model.ViewModel.TotalPlayers.ToString("N0") players</span>
-</div>
-
-@await Html.PartialAsync("Components/_AlphabetNav", new baseball_history_web.ViewModels.AlphabetNavModel
-{
-    CurrentLetter = Model.ViewModel.CurrentLetter?.FirstOrDefault(),
-    AvailableLetters = Model.ViewModel.AvailableLetters,
-    BaseUrl = "/Players",
-    Target = "#player-list"
-})
-
-<div id="player-list">
-    @await Html.PartialAsync("_PlayerList", Model.ViewModel)
+<div id="players-content">
+    @await Html.PartialAsync("_PlayersContent", Model.ViewModel)
 </div>
