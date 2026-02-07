@@ -8,4 +8,13 @@
         <UserSecretsId>9ff2a186-1699-4607-983b-90c179bba7f9</UserSecretsId>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.0" />
+      <PackageReference Include="CommunityToolkit.Aspire.Hosting.Sqlite" Version="13.1.2-beta.515" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\baseball-history-web\baseball-history-web.csproj" />
+    </ItemGroup>
+
 </Project>
