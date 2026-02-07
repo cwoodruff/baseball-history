@@ -19,4 +19,12 @@
         </PackageReference>
     </ItemGroup>
 
+    <!-- Include SQLite database in publish output -->
+    <ItemGroup>
+        <None Update="lahman.db">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>
