@@ -4,6 +4,8 @@ A web application for exploring Major League Baseball history using the Lahman
 Baseball Database. Baseball data and statistics from 1871 to 2025. Built with ASP.NET Core Razor Pages, Entity Framework Core,
 htmx, and Bootstrap.
 
+![Home Screenshot](./docs/home-screenshot.png)
+
 ## Table of Contents
 
 - [Overview](#overview)
