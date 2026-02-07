@@ -6,6 +6,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-web", "bas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-tests", "baseball-history-tests\baseball-history-tests.csproj", "{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "database", "database", "{F6A96521-9D5F-4100-9436-5A3C10C08667}"
+	ProjectSection(SolutionItems) = preProject
+		database\lahman.db = database\lahman.db
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
