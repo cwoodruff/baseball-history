@@ -11,6 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "database", "database", "{F6
 		database\lahman.db = database\lahman.db
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03C0A8B8-3B21-46A1-9DA2-3FF365E59B32}"
+	ProjectSection(SolutionItems) = preProject
+		docs\foreign-key-plan.md = docs\foreign-key-plan.md
+		docs\migrate-foreign-keys.sql = docs\migrate-foreign-keys.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
