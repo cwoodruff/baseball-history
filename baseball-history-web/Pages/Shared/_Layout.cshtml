@@ -1,51 +1,154 @@
-﻿<!DOCTYPE html>
+@using baseball_history_web.Extensions
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - baseball_history_web</title>
+    <title>@ViewData["Title"] - Baseball History</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/css/team-colors.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/baseball_history_web.styles.css" asp-append-version="true"/>
 </head>
-<body>
+<body hx-boost="true">
 <header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-mlb">
         <div class="container">
-            <a class="navbar-brand" asp-area="" asp-page="/Index">baseball_history_web</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" asp-area="" asp-page="/Index">
+                <span class="me-2">&#9918;</span>Baseball History
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                        <a class="nav-link" asp-area="" asp-page="/Index">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+                        <a class="nav-link" asp-area="" asp-page="/Players/Index">Players</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/Teams/Index">Teams</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="statsDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false" hx-boost="false">
+                            Stats
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="statsDropdown">
+                            <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Batting">Batting Leaders</a></li>
+                            <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Pitching">Pitching Leaders</a></li>
+                            <li><hr class="dropdown-divider"/></li>
+                            <li><a class="dropdown-item" asp-area="" asp-page="/HallOfFame/Index">Hall of Fame</a></li>
+                        </ul>
                     </li>
                 </ul>
+                <div class="search-container">
+                    <input type="search" class="form-control" placeholder="Search players, teams..."
+                           name="q"
+                           hx-get="/Search"
+                           hx-trigger="input changed delay:300ms, search"
+                           hx-target="#search-results"
+                           hx-swap="innerHTML"
+                           autocomplete="off"/>
+                    <div id="search-results" class="search-results-dropdown"></div>
+                </div>
             </div>
         </div>
     </nav>
 </header>
-<div class="container">
+
+<div class="container mt-4">
     <main role="main" class="pb-3">
         @RenderBody()
     </main>
 </div>
 
-<footer class="border-top footer text-muted">
+<div id="modal-container"></div>
+
+<footer class="footer-mlb mt-auto">
     <div class="container">
-        &copy; 2026 - baseball_history_web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+        <div class="row">
+            <div class="col-md-6">
+                <span>&copy; @DateTime.Now.Year Baseball History</span>
+                <span class="mx-2">|</span>
+                <span>Data from the <a href="https://www.seanlahman.com/baseball-archive/statistics/" target="_blank">Lahman Baseball Database</a></span>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a asp-area="" asp-page="/Privacy">Privacy</a>
+                <span class="mx-2">|</span>
+                <a asp-area="" asp-page="/Health">Health Check</a>
+            </div>
+        </div>
     </div>
 </footer>
 
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+
+<script>
+    // HTMX configuration
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        // Initialize any Bootstrap modals loaded via HTMX
+        if (evt.detail.target.id === 'modal-container') {
+            var modal = evt.detail.target.querySelector('.modal');
+            if (modal) {
+                var bsModal = new bootstrap.Modal(modal, {
+                    backdrop: true,
+                    keyboard: true
+                });
+                bsModal.show();
+
+                // Clean up modal and backdrop when hidden
+                modal.addEventListener('hidden.bs.modal', function() {
+                    // Dispose the modal instance
+                    bsModal.dispose();
+                    // Clear the container
+                    evt.detail.target.innerHTML = '';
+                    // Remove any leftover backdrops
+                    document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                        backdrop.remove();
+                    });
+                    // Remove modal-open class from body
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                    document.body.style.removeProperty('overflow');
+                });
+            }
+        }
+
+        // Reinitialize Bootstrap dropdowns after any HTMX swap
+        var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+        dropdowns.forEach(function(dropdown) {
+            new bootstrap.Dropdown(dropdown);
+        });
+    });
+
+    // Also reinitialize on page load via htmx:afterSettle for boosted navigation
+    document.body.addEventListener('htmx:afterSettle', function(evt) {
+        // Reinitialize Bootstrap dropdowns
+        var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+        dropdowns.forEach(function(dropdown) {
+            // Check if already initialized
+            if (!bootstrap.Dropdown.getInstance(dropdown)) {
+                new bootstrap.Dropdown(dropdown);
+            }
+        });
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', function(e) {
+        var searchContainer = document.querySelector('.search-container');
+        var searchResults = document.getElementById('search-results');
+        if (searchContainer && !searchContainer.contains(e.target)) {
+            searchResults.innerHTML = '';
+        }
+    });
+</script>
 
 @await RenderSectionAsync("Scripts", required: false)
 </body>

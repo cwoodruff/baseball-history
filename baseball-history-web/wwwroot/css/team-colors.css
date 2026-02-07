@@ -1,0 +1,460 @@
+/* ==========================================================================
+   Baseball History - Team Colors
+   All 30 MLB Team Color Schemes
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   American League East
+   -------------------------------------------------------------------------- */
+
+/* Baltimore Orioles */
+[data-team="BAL"],
+[data-franchise="BAL"] {
+    --team-primary: #DF4601;
+    --team-secondary: #000000;
+    --team-accent: #FFFFFF;
+}
+
+/* Boston Red Sox */
+[data-team="BOS"],
+[data-franchise="BOS"] {
+    --team-primary: #BD3039;
+    --team-secondary: #0C2340;
+    --team-accent: #FFFFFF;
+}
+
+/* New York Yankees */
+[data-team="NYA"],
+[data-team="NYY"],
+[data-franchise="NYY"] {
+    --team-primary: #003087;
+    --team-secondary: #E4002B;
+    --team-accent: #FFFFFF;
+}
+
+/* Tampa Bay Rays */
+[data-team="TBA"],
+[data-team="TBD"],
+[data-team="TBR"],
+[data-franchise="TBD"],
+[data-franchise="TBR"] {
+    --team-primary: #092C5C;
+    --team-secondary: #8FBCE6;
+    --team-accent: #FFFFFF;
+}
+
+/* Toronto Blue Jays */
+[data-team="TOR"],
+[data-franchise="TOR"] {
+    --team-primary: #134A8E;
+    --team-secondary: #1D2D5C;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   American League Central
+   -------------------------------------------------------------------------- */
+
+/* Chicago White Sox */
+[data-team="CHA"],
+[data-team="CHW"],
+[data-franchise="CHW"] {
+    --team-primary: #27251F;
+    --team-secondary: #C4CED4;
+    --team-accent: #FFFFFF;
+}
+
+/* Cleveland Guardians (formerly Indians) */
+[data-team="CLE"],
+[data-franchise="CLE"] {
+    --team-primary: #00385D;
+    --team-secondary: #E50022;
+    --team-accent: #FFFFFF;
+}
+
+/* Detroit Tigers */
+[data-team="DET"],
+[data-franchise="DET"] {
+    --team-primary: #0C2340;
+    --team-secondary: #FA4616;
+    --team-accent: #FFFFFF;
+}
+
+/* Kansas City Royals */
+[data-team="KCA"],
+[data-team="KCR"],
+[data-franchise="KCR"] {
+    --team-primary: #004687;
+    --team-secondary: #BD9B60;
+    --team-accent: #FFFFFF;
+}
+
+/* Minnesota Twins */
+[data-team="MIN"],
+[data-franchise="MIN"] {
+    --team-primary: #002B5C;
+    --team-secondary: #D31145;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   American League West
+   -------------------------------------------------------------------------- */
+
+/* Houston Astros */
+[data-team="HOU"],
+[data-franchise="HOU"] {
+    --team-primary: #002D62;
+    --team-secondary: #EB6E1F;
+    --team-accent: #FFFFFF;
+}
+
+/* Los Angeles Angels */
+[data-team="ANA"],
+[data-team="CAL"],
+[data-team="LAA"],
+[data-franchise="ANA"] {
+    --team-primary: #BA0021;
+    --team-secondary: #003263;
+    --team-accent: #FFFFFF;
+}
+
+/* Oakland Athletics */
+[data-team="OAK"],
+[data-franchise="OAK"] {
+    --team-primary: #003831;
+    --team-secondary: #EFB21E;
+    --team-accent: #FFFFFF;
+}
+
+/* Seattle Mariners */
+[data-team="SEA"],
+[data-franchise="SEA"] {
+    --team-primary: #0C2C56;
+    --team-secondary: #005C5C;
+    --team-accent: #FFFFFF;
+}
+
+/* Texas Rangers */
+[data-team="TEX"],
+[data-franchise="TEX"] {
+    --team-primary: #003278;
+    --team-secondary: #C0111F;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   National League East
+   -------------------------------------------------------------------------- */
+
+/* Atlanta Braves */
+[data-team="ATL"],
+[data-franchise="ATL"] {
+    --team-primary: #CE1141;
+    --team-secondary: #13274F;
+    --team-accent: #FFFFFF;
+}
+
+/* Miami Marlins */
+[data-team="FLO"],
+[data-team="MIA"],
+[data-franchise="FLA"],
+[data-franchise="MIA"] {
+    --team-primary: #00A3E0;
+    --team-secondary: #EF3340;
+    --team-accent: #000000;
+}
+
+/* New York Mets */
+[data-team="NYN"],
+[data-team="NYM"],
+[data-franchise="NYM"] {
+    --team-primary: #002D72;
+    --team-secondary: #FF5910;
+    --team-accent: #FFFFFF;
+}
+
+/* Philadelphia Phillies */
+[data-team="PHI"],
+[data-franchise="PHI"] {
+    --team-primary: #E81828;
+    --team-secondary: #002D72;
+    --team-accent: #FFFFFF;
+}
+
+/* Washington Nationals */
+[data-team="MON"],
+[data-team="WAS"],
+[data-team="WSN"],
+[data-franchise="WSN"] {
+    --team-primary: #AB0003;
+    --team-secondary: #14225A;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   National League Central
+   -------------------------------------------------------------------------- */
+
+/* Chicago Cubs */
+[data-team="CHN"],
+[data-team="CHC"],
+[data-franchise="CHC"] {
+    --team-primary: #0E3386;
+    --team-secondary: #CC3433;
+    --team-accent: #FFFFFF;
+}
+
+/* Cincinnati Reds */
+[data-team="CIN"],
+[data-franchise="CIN"] {
+    --team-primary: #C6011F;
+    --team-secondary: #000000;
+    --team-accent: #FFFFFF;
+}
+
+/* Milwaukee Brewers */
+[data-team="MIL"],
+[data-franchise="MIL"] {
+    --team-primary: #12284B;
+    --team-secondary: #B6922E;
+    --team-accent: #FFFFFF;
+}
+
+/* Pittsburgh Pirates */
+[data-team="PIT"],
+[data-franchise="PIT"] {
+    --team-primary: #27251F;
+    --team-secondary: #FDB827;
+    --team-accent: #FFFFFF;
+}
+
+/* St. Louis Cardinals */
+[data-team="SLN"],
+[data-team="STL"],
+[data-franchise="STL"] {
+    --team-primary: #C41E3A;
+    --team-secondary: #0C2340;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   National League West
+   -------------------------------------------------------------------------- */
+
+/* Arizona Diamondbacks */
+[data-team="ARI"],
+[data-franchise="ARI"] {
+    --team-primary: #A71930;
+    --team-secondary: #E3D4AD;
+    --team-accent: #000000;
+}
+
+/* Colorado Rockies */
+[data-team="COL"],
+[data-franchise="COL"] {
+    --team-primary: #33006F;
+    --team-secondary: #C4CED4;
+    --team-accent: #FFFFFF;
+}
+
+/* Los Angeles Dodgers */
+[data-team="LAN"],
+[data-team="LAD"],
+[data-franchise="LAD"] {
+    --team-primary: #005A9C;
+    --team-secondary: #EF3E42;
+    --team-accent: #FFFFFF;
+}
+
+/* San Diego Padres */
+[data-team="SDN"],
+[data-team="SDP"],
+[data-franchise="SDP"] {
+    --team-primary: #2F241D;
+    --team-secondary: #FFC425;
+    --team-accent: #FFFFFF;
+}
+
+/* San Francisco Giants */
+[data-team="SFN"],
+[data-team="SFG"],
+[data-franchise="SFG"] {
+    --team-primary: #FD5A1E;
+    --team-secondary: #27251F;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   Historical Teams (Selected)
+   -------------------------------------------------------------------------- */
+
+/* Brooklyn Dodgers */
+[data-team="BRO"] {
+    --team-primary: #005A9C;
+    --team-secondary: #FFFFFF;
+    --team-accent: #FFFFFF;
+}
+
+/* New York Giants */
+[data-team="NY1"],
+[data-team="NYG"] {
+    --team-primary: #FD5A1E;
+    --team-secondary: #000000;
+    --team-accent: #FFFFFF;
+}
+
+/* Boston Braves */
+[data-team="BSN"] {
+    --team-primary: #CE1141;
+    --team-secondary: #13274F;
+    --team-accent: #FFFFFF;
+}
+
+/* St. Louis Browns */
+[data-team="SLA"] {
+    --team-primary: #BA5624;
+    --team-secondary: #27251F;
+    --team-accent: #FFFFFF;
+}
+
+/* Philadelphia Athletics */
+[data-team="PHA"] {
+    --team-primary: #003831;
+    --team-secondary: #EFB21E;
+    --team-accent: #FFFFFF;
+}
+
+/* Washington Senators */
+[data-team="WS1"],
+[data-team="WS2"],
+[data-team="WSA"] {
+    --team-primary: #AB0003;
+    --team-secondary: #14225A;
+    --team-accent: #FFFFFF;
+}
+
+/* Montreal Expos */
+[data-team="MON"] {
+    --team-primary: #003087;
+    --team-secondary: #E4002B;
+    --team-accent: #FFFFFF;
+}
+
+/* Seattle Pilots */
+[data-team="SE1"] {
+    --team-primary: #005C5C;
+    --team-secondary: #FDB827;
+    --team-accent: #FFFFFF;
+}
+
+/* --------------------------------------------------------------------------
+   Team Color Utility Classes
+   -------------------------------------------------------------------------- */
+
+.bg-team-primary {
+    background-color: var(--team-primary);
+}
+
+.bg-team-secondary {
+    background-color: var(--team-secondary);
+}
+
+.text-team-primary {
+    color: var(--team-primary);
+}
+
+.text-team-secondary {
+    color: var(--team-secondary);
+}
+
+.text-team-accent {
+    color: var(--team-accent);
+}
+
+.border-team-primary {
+    border-color: var(--team-primary) !important;
+}
+
+.border-team-secondary {
+    border-color: var(--team-secondary) !important;
+}
+
+/* Team gradient backgrounds */
+.bg-team-gradient {
+    background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+    color: var(--team-accent);
+}
+
+.bg-team-gradient-reverse {
+    background: linear-gradient(135deg, var(--team-secondary) 0%, var(--team-primary) 100%);
+    color: var(--team-accent);
+}
+
+/* Team-colored buttons */
+.btn-team {
+    background-color: var(--team-primary);
+    border-color: var(--team-primary);
+    color: var(--team-accent);
+}
+
+.btn-team:hover {
+    background-color: var(--team-secondary);
+    border-color: var(--team-secondary);
+    color: var(--team-accent);
+}
+
+.btn-outline-team {
+    color: var(--team-primary);
+    border-color: var(--team-primary);
+    background-color: transparent;
+}
+
+.btn-outline-team:hover {
+    background-color: var(--team-primary);
+    color: var(--team-accent);
+}
+
+/* Team accent stripe (used for headers) */
+.team-stripe-bottom {
+    border-bottom: 3px solid var(--team-secondary);
+}
+
+.team-stripe-top {
+    border-top: 3px solid var(--team-secondary);
+}
+
+/* Team card styling */
+.team-card-header {
+    background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+    color: var(--team-accent);
+    padding: 1rem;
+}
+
+.team-card-header h5,
+.team-card-header h6 {
+    color: var(--team-accent);
+    margin: 0;
+}
+
+/* Team modal styling */
+.modal-team .modal-content {
+    border: none;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.modal-team .modal-header {
+    background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+    color: var(--team-accent);
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-team .modal-header .modal-title {
+    font-weight: 700;
+}
+
+.modal-team .modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}

@@ -1,0 +1,35 @@
+@model baseball_history_web.ViewModels.PlayerListViewModel
+
+@if (Model.Players.Count == 0)
+{
+    @await Html.PartialAsync("Components/_EmptyState", baseball_history_web.ViewModels.EmptyStateModel.NoPlayers(Model.CurrentLetter))
+}
+else
+{
+    <div class="row">
+        @foreach (var player in Model.Players)
+        {
+            @await Html.PartialAsync("Components/_PlayerCard", player)
+        }
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        var queryParams = new Dictionary<string, string>();
+        if (!string.IsNullOrEmpty(Model.CurrentLetter))
+        {
+            queryParams["letter"] = Model.CurrentLetter;
+        }
+
+        @await Html.PartialAsync("Components/_Pagination", new baseball_history_web.ViewModels.PaginationModel
+        {
+            CurrentPage = Model.CurrentPage,
+            TotalPages = Model.TotalPages,
+            TotalItems = Model.TotalPlayers,
+            PageSize = Model.PageSize,
+            BaseUrl = "/Players",
+            Target = "#player-list",
+            QueryParams = queryParams
+        })
+    }
+}

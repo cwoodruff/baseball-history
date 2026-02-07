@@ -1,0 +1,74 @@
+@* Player Card Component
+   Usage: @await Html.PartialAsync("Components/_PlayerCard", playerSummary)
+*@
+
+@model baseball_history_web.ViewModels.PlayerSummary
+
+<div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+    <div class="card player-card h-100"
+         hx-get="/Players/Modal/@Model.PlayerId"
+         hx-target="#modal-container"
+         hx-swap="innerHTML"
+         hx-boost="false"
+         @(Model.LastTeamId != null ? $"data-team=\"{Model.LastTeamId}\"" : "")>
+        <div class="card-img-placeholder">
+            @{
+                var initials = "";
+                if (!string.IsNullOrEmpty(Model.FirstName) && !string.IsNullOrEmpty(Model.LastName))
+                {
+                    initials = $"{Model.FirstName[0]}{Model.LastName[0]}";
+                }
+                else if (!string.IsNullOrEmpty(Model.LastName))
+                {
+                    initials = Model.LastName.Length >= 2 ? Model.LastName.Substring(0, 2) : Model.LastName;
+                }
+            }
+            @initials.ToUpper()
+        </div>
+        <div class="card-body">
+            <h6 class="card-title mb-1">
+                @Model.FullName
+                @if (Model.IsInHallOfFame)
+                {
+                    <span class="hof-badge ms-1" title="Hall of Fame">HOF</span>
+                }
+            </h6>
+            <p class="card-text small text-muted mb-2">
+                @if (Model.DebutYear != null && Model.FinalYear != null)
+                {
+                    <span>@Model.DebutYear - @Model.FinalYear</span>
+                }
+                else if (Model.DebutYear != null)
+                {
+                    <span>@Model.DebutYear - Present</span>
+                }
+            </p>
+            @if (Model.TotalHits.HasValue || Model.TotalHomeRuns.HasValue)
+            {
+                <div class="d-flex justify-content-between small">
+                    @if (Model.TotalHits.HasValue)
+                    {
+                        <span>
+                            <strong class="text-mlb-navy">@Model.TotalHits.Value.ToString("N0")</strong>
+                            <span class="text-muted">H</span>
+                        </span>
+                    }
+                    @if (Model.TotalHomeRuns.HasValue)
+                    {
+                        <span>
+                            <strong class="text-mlb-navy">@Model.TotalHomeRuns.Value.ToString("N0")</strong>
+                            <span class="text-muted">HR</span>
+                        </span>
+                    }
+                    @if (Model.TotalGames.HasValue)
+                    {
+                        <span>
+                            <strong class="text-mlb-navy">@Model.TotalGames.Value.ToString("N0")</strong>
+                            <span class="text-muted">G</span>
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

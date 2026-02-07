@@ -1,31 +1,636 @@
+/* ==========================================================================
+   Baseball History - Main Stylesheet
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   MLB Brand Colors
+   -------------------------------------------------------------------------- */
+:root {
+    /* MLB Official Colors */
+    --mlb-navy: #002D72;
+    --mlb-red: #D50032;
+    --mlb-white: #FFFFFF;
+
+    /* Derived colors for UI */
+    --mlb-navy-light: #1a4a8f;
+    --mlb-navy-dark: #001a4d;
+    --mlb-red-light: #e6334d;
+    --mlb-red-dark: #a30027;
+
+    /* Background and text */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #adb5bd;
+
+    /* Team color placeholders (overridden by team-colors.css) */
+    --team-primary: var(--mlb-navy);
+    --team-secondary: var(--mlb-red);
+    --team-accent: var(--mlb-white);
+
+    /* Component colors */
+    --card-border: #dee2e6;
+    --card-shadow: rgba(0, 45, 114, 0.1);
+    --link-color: var(--mlb-navy);
+    --link-hover: var(--mlb-navy-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Base Styles
+   -------------------------------------------------------------------------- */
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+a {
+    color: var(--link-color);
+    text-decoration: none;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+a:hover {
+    color: var(--link-hover);
+}
+
+/* --------------------------------------------------------------------------
+   Focus States
+   -------------------------------------------------------------------------- */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--mlb-navy);
+}
+
+/* --------------------------------------------------------------------------
+   Form Styles
+   -------------------------------------------------------------------------- */
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+/* --------------------------------------------------------------------------
+   Navigation
+   -------------------------------------------------------------------------- */
+.navbar-mlb {
+    background: linear-gradient(135deg, var(--mlb-navy) 0%, var(--mlb-navy-dark) 100%);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-mlb .navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--mlb-white);
+}
+
+.navbar-mlb .navbar-brand:hover {
+    color: var(--mlb-red);
+}
+
+.navbar-mlb .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-mlb .nav-link:hover,
+.navbar-mlb .nav-link.active {
+    color: var(--mlb-white);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-mlb .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   Cards
+   -------------------------------------------------------------------------- */
+.card {
+    border: 1px solid var(--card-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px var(--card-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px var(--card-shadow);
+}
+
+.card-header-mlb {
+    background: linear-gradient(135deg, var(--mlb-navy) 0%, var(--mlb-navy-light) 100%);
+    color: var(--mlb-white);
+    font-weight: 600;
+    border-bottom: 3px solid var(--mlb-red);
+}
+
+/* Team-colored card header */
+.card-header-team {
+    background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+    color: var(--team-accent);
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Player & Team Cards
+   -------------------------------------------------------------------------- */
+.player-card,
+.team-card {
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.player-card .card-img-placeholder,
+.team-card .card-img-placeholder {
+    background: linear-gradient(135deg, var(--mlb-navy) 0%, var(--mlb-navy-light) 100%);
+    color: var(--mlb-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    height: 80px;
+}
+
+.team-card .card-img-placeholder {
+    background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+    color: var(--team-accent);
+}
+
+.player-card .stat-highlight,
+.team-card .stat-highlight {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--mlb-navy);
+}
+
+/* --------------------------------------------------------------------------
+   Alphabet Navigation
+   -------------------------------------------------------------------------- */
+.alphabet-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 1rem 0;
+    border-bottom: 2px solid var(--mlb-red);
+    margin-bottom: 1.5rem;
+}
+
+.alphabet-nav .letter-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    color: var(--mlb-navy);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--card-border);
+    transition: all 0.2s ease;
+}
+
+.alphabet-nav .letter-link:hover,
+.alphabet-nav .letter-link.active {
+    background-color: var(--mlb-navy);
+    color: var(--mlb-white);
+    border-color: var(--mlb-navy);
+}
+
+.alphabet-nav .letter-link.disabled {
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+.table-baseball {
+    --bs-table-bg: var(--bg-secondary);
+}
+
+.table-baseball thead {
+    background-color: var(--mlb-navy);
+    color: var(--mlb-white);
+}
+
+.table-baseball thead th {
+    border: none;
+    font-weight: 600;
+    padding: 0.75rem;
+    white-space: nowrap;
+}
+
+.table-baseball tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.table-baseball tbody tr:hover {
+    background-color: rgba(0, 45, 114, 0.05);
+}
+
+.table-baseball .stat-cell {
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    text-align: right;
+}
+
+.table-baseball .rank-cell {
+    font-weight: 700;
+    color: var(--mlb-navy);
+    text-align: center;
+    width: 3rem;
+}
+
+.table-sortable th {
+    cursor: pointer;
+}
+
+.table-sortable th:hover {
+    background-color: var(--mlb-navy-light);
+}
+
+.table-sortable th.sorted-asc::after {
+    content: ' \2191';
+}
+
+.table-sortable th.sorted-desc::after {
+    content: ' \2193';
+}
+
+/* --------------------------------------------------------------------------
+   Stat Badges
+   -------------------------------------------------------------------------- */
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.stat-badge-primary {
+    background-color: var(--mlb-navy);
+    color: var(--mlb-white);
+}
+
+.stat-badge-accent {
+    background-color: var(--mlb-red);
+    color: var(--mlb-white);
+}
+
+.stat-badge-team {
+    background-color: var(--team-primary);
+    color: var(--team-accent);
+}
+
+/* --------------------------------------------------------------------------
+   Modals
+   -------------------------------------------------------------------------- */
+.modal-baseball .modal-header {
+    background: linear-gradient(135deg, var(--mlb-navy) 0%, var(--mlb-navy-light) 100%);
+    color: var(--mlb-white);
+    border-bottom: 3px solid var(--mlb-red);
+}
+
+.modal-baseball .modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-team .modal-header {
+    background: linear-gradient(135deg, var(--team-primary) 0%, var(--team-secondary) 100%);
+    color: var(--team-accent);
+}
+
+.modal-team .modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Ensure modal container and backdrop have proper z-index */
+#modal-container {
+    position: relative;
+    z-index: 1050;
+}
+
+#modal-container .modal {
+    z-index: 1055;
+}
+
+#modal-container .modal-backdrop {
+    z-index: 1050;
+}
+
+/* Fix for modal content background */
+.modal-content {
+    background-color: var(--bg-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   Loading States
+   -------------------------------------------------------------------------- */
+.htmx-request .loading-indicator {
+    display: inline-block;
+}
+
+.loading-indicator {
+    display: none;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--mlb-white);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner 0.75s linear infinite;
+}
+
+.loading-spinner-dark {
+    border-color: var(--mlb-navy);
+    border-right-color: transparent;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Baseball spinner loading indicator */
+.loading-baseball {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--mlb-navy);
+}
+
+.loading-baseball-icon {
+    font-size: 3rem;
+    animation: baseball-spin 1s linear infinite;
+}
+
+@keyframes baseball-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-baseball-text {
+    margin-top: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/* Full page loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Inline loading indicator for content areas */
+.loading-content {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator {
+    opacity: 1;
+}
+
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}
+
+/* Skeleton loading */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 0.25rem;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Pagination
+   -------------------------------------------------------------------------- */
+.pagination-baseball .page-link {
+    color: var(--mlb-navy);
+    border-color: var(--card-border);
+}
+
+.pagination-baseball .page-link:hover {
+    background-color: var(--mlb-navy);
+    border-color: var(--mlb-navy);
+    color: var(--mlb-white);
+}
+
+.pagination-baseball .page-item.active .page-link {
+    background-color: var(--mlb-navy);
+    border-color: var(--mlb-navy);
+}
+
+.pagination-baseball .page-item.disabled .page-link {
+    color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Search
+   -------------------------------------------------------------------------- */
+.search-container {
+    position: relative;
+}
+
+.search-results-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--card-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1050;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background-color: rgba(0, 45, 114, 0.05);
+}
+
+.search-result-item .result-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--mlb-navy);
+    color: var(--mlb-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Empty States
+   -------------------------------------------------------------------------- */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.empty-state-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Hall of Fame Badge
+   -------------------------------------------------------------------------- */
+.hof-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);
+    color: #1a1a1a;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.footer-mlb {
+    background-color: var(--mlb-navy);
+    color: var(--mlb-white);
+    padding: 1.5rem 0;
+}
+
+.footer-mlb a {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-mlb a:hover {
+    color: var(--mlb-white);
+}
+
+/* --------------------------------------------------------------------------
+   Utility Classes
+   -------------------------------------------------------------------------- */
+.text-mlb-navy {
+    color: var(--mlb-navy);
+}
+
+.text-mlb-red {
+    color: var(--mlb-red);
+}
+
+.bg-mlb-navy {
+    background-color: var(--mlb-navy);
+}
+
+.bg-mlb-red {
+    background-color: var(--mlb-red);
+}
+
+.border-mlb-navy {
+    border-color: var(--mlb-navy) !important;
+}
+
+.border-mlb-red {
+    border-color: var(--mlb-red) !important;
+}
+
+/* Responsive utilities */
+@media (max-width: 576px) {
+    .alphabet-nav .letter-link {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+
+    .table-baseball {
+        font-size: 0.875rem;
+    }
 }

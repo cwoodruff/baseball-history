@@ -1,0 +1,118 @@
+@page
+@model baseball_history_web.Pages.HallOfFame.IndexModel
+@{
+    ViewData["Title"] = "Hall of Fame";
+}
+
+<!-- Header -->
+<div class="card mb-4 border-0">
+    <div class="card-body text-center py-4" style="background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);">
+        <h1 class="display-5 mb-2" style="color: #1a1a1a;">
+            Baseball Hall of Fame
+        </h1>
+        <p class="mb-0" style="color: #333;">
+            @Model.ViewModel.TotalInductees.ToString("N0") inductees enshrined in Cooperstown
+        </p>
+    </div>
+</div>
+
+<!-- Category Stats -->
+<div class="row mb-4">
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card h-100 text-center @(Model.ViewModel.SelectedCategory == "Player" ? "border-primary" : "")">
+            <a href="/HallOfFame?category=Player" class="card-body text-decoration-none"
+               hx-get="/HallOfFame?category=Player"
+               hx-target="#inductee-list"
+               hx-push-url="true">
+                <div class="h3 mb-0 text-mlb-navy">@Model.ViewModel.TotalPlayers.ToString("N0")</div>
+                <div class="text-muted">Players</div>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card h-100 text-center @(Model.ViewModel.SelectedCategory == "Manager" ? "border-primary" : "")">
+            <a href="/HallOfFame?category=Manager" class="card-body text-decoration-none"
+               hx-get="/HallOfFame?category=Manager"
+               hx-target="#inductee-list"
+               hx-push-url="true">
+                <div class="h3 mb-0 text-mlb-navy">@Model.ViewModel.TotalManagers.ToString("N0")</div>
+                <div class="text-muted">Managers</div>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card h-100 text-center @(Model.ViewModel.SelectedCategory == "Pioneer/Executive" ? "border-primary" : "")">
+            <a href="/HallOfFame?category=Pioneer%2FExecutive" class="card-body text-decoration-none"
+               hx-get="/HallOfFame?category=Pioneer%2FExecutive"
+               hx-target="#inductee-list"
+               hx-push-url="true">
+                <div class="h3 mb-0 text-mlb-navy">@Model.ViewModel.TotalPioneers.ToString("N0")</div>
+                <div class="text-muted">Pioneers</div>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card h-100 text-center @(Model.ViewModel.SelectedCategory == "Umpire" ? "border-primary" : "")">
+            <a href="/HallOfFame?category=Umpire" class="card-body text-decoration-none"
+               hx-get="/HallOfFame?category=Umpire"
+               hx-target="#inductee-list"
+               hx-push-url="true">
+                <div class="h3 mb-0 text-mlb-navy">@Model.ViewModel.TotalUmpires.ToString("N0")</div>
+                <div class="text-muted">Umpires</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="filter-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Induction Year</label>
+                    <select class="form-select" name="year"
+                            hx-get="/HallOfFame"
+                            hx-include="#filter-form"
+                            hx-target="#inductee-list"
+                            hx-push-url="true">
+                        <option value="">All Years</option>
+                        @foreach (var y in Model.ViewModel.AvailableYears.Take(50))
+                        {
+                            <option value="@y" selected="@(y == Model.ViewModel.SelectedYear)">@y</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" name="category"
+                            hx-get="/HallOfFame"
+                            hx-include="#filter-form"
+                            hx-target="#inductee-list"
+                            hx-push-url="true">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in Model.ViewModel.AvailableCategories)
+                        {
+                            <option value="@cat" selected="@(cat == Model.ViewModel.SelectedCategory)">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    @if (Model.ViewModel.SelectedYear.HasValue || !string.IsNullOrEmpty(Model.ViewModel.SelectedCategory))
+                    {
+                        <a href="/HallOfFame" class="btn btn-outline-secondary"
+                           hx-get="/HallOfFame"
+                           hx-target="#inductee-list"
+                           hx-push-url="true">
+                            Clear Filters
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="inductee-list">
+    @await Html.PartialAsync("_InducteeList", Model.ViewModel)
+</div>

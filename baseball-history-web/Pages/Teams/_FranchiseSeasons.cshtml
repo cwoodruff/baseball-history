@@ -1,0 +1,136 @@
+@model baseball_history_web.Pages.Teams.FranchiseModel
+
+@if (Model.Franchise == null)
+{
+    @await Html.PartialAsync("Components/_EmptyState", new baseball_history_web.ViewModels.EmptyStateModel
+    {
+        Title = "Franchise Not Found",
+        Message = "The requested franchise could not be found.",
+        ActionUrl = "/Teams",
+        ActionText = "Back to Teams"
+    })
+}
+else if (!Model.Seasons.Any())
+{
+    @await Html.PartialAsync("Components/_EmptyState", new baseball_history_web.ViewModels.EmptyStateModel
+    {
+        Title = "No Seasons Found",
+        Message = "No season data available for this franchise."
+    })
+}
+else
+{
+    <div data-team="@Model.Franchise.CurrentTeamId" data-franchise="@Model.Franchise.FranchiseId">
+        <!-- Franchise Header -->
+        <div class="card mb-4">
+            <div class="card-header card-header-team team-stripe-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">@Model.Franchise.FranchiseName</h1>
+                        <small>
+                            @Model.Franchise.FirstYear - @(Model.Franchise.IsActive ? "Present" : Model.Franchise.LastYear.ToString())
+                            @if (Model.Franchise.IsActive)
+                            {
+                                <span class="badge bg-success ms-2">Active</span>
+                            }
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        @if (Model.Franchise.WorldSeriesWins > 0)
+                        {
+                            <div class="h4 mb-0">@Model.Franchise.WorldSeriesWins</div>
+                            <small>World Series</small>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Franchise.TotalSeasons</div>
+                        <small class="text-muted">Seasons</small>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Franchise.TotalWins.ToString("N0")</div>
+                        <small class="text-muted">Wins</small>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Franchise.TotalLosses.ToString("N0")</div>
+                        <small class="text-muted">Losses</small>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Franchise.FormattedWinPct</div>
+                        <small class="text-muted">Win %</small>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Franchise.PennantWins</div>
+                        <small class="text-muted">Pennants</small>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Franchise.WorldSeriesWins</div>
+                        <small class="text-muted">Championships</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Season History Table -->
+        <div class="card">
+            <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+                <strong>Season History</strong>
+                <span class="badge bg-light text-dark">@Model.Seasons.Count seasons</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-baseball table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Team</th>
+                            <th>Lg</th>
+                            <th>Div</th>
+                            <th class="text-end">W</th>
+                            <th class="text-end">L</th>
+                            <th class="text-end">Pct</th>
+                            <th class="text-center">Rank</th>
+                            <th>Postseason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var season in Model.Seasons)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                                       class="text-decoration-none fw-bold">
+                                        @season.Year
+                                    </a>
+                                </td>
+                                <td>@season.TeamName</td>
+                                <td>@season.LgId</td>
+                                <td>@(season.DivId ?? "-")</td>
+                                <td class="text-end stat-cell">@season.Wins</td>
+                                <td class="text-end stat-cell">@season.Losses</td>
+                                <td class="text-end stat-cell">@season.FormattedWinPct</td>
+                                <td class="text-center rank-cell">@(season.Rank?.ToString() ?? "-")</td>
+                                <td>
+                                    @if (season.WonWorldSeries)
+                                    {
+                                        <span class="stat-badge stat-badge-accent">WS Champs</span>
+                                    }
+                                    else if (season.WonPennant)
+                                    {
+                                        <span class="stat-badge stat-badge-primary">Pennant</span>
+                                    }
+                                    else if (season.WonDivision)
+                                    {
+                                        <span class="stat-badge" style="background-color: var(--text-secondary); color: white;">Division</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

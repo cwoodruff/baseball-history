@@ -1,0 +1,25 @@
+@* Alphabet Navigation Component
+   Usage: @await Html.PartialAsync("Components/_AlphabetNav", new AlphabetNavModel { ... })
+*@
+
+@model baseball_history_web.ViewModels.AlphabetNavModel
+
+<div class="alphabet-nav">
+    @foreach (var letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    {
+        var isAvailable = Model.AvailableLetters.Contains(letter);
+        var isActive = Model.CurrentLetter?.ToString().ToUpper() == letter.ToString();
+
+        <a class="letter-link @(isActive ? "active" : "") @(!isAvailable ? "disabled" : "")"
+           @if (isAvailable && !isActive)
+           {
+               @:hx-get="@Model.GetLetterUrl(letter.ToString())"
+               @:hx-target="@Model.Target"
+               @:hx-swap="innerHTML"
+               @:hx-push-url="true"
+           }
+           title="@letter">
+            @letter
+        </a>
+    }
+</div>

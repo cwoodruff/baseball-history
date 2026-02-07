@@ -15,7 +15,7 @@ public class HealthModel : PageModel
 
     public bool DatabaseHealthy { get; set; }
     public string? ErrorMessage { get; set; }
-    public Teams? SampleTeam { get; set; }
+    public Models.Teams? SampleTeam { get; set; }
 
     public async Task OnGetAsync()
     {

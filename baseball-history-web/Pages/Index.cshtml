@@ -1,10 +1,210 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Baseball History";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Hero Section -->
+<div class="card mb-4 border-0">
+    <div class="card-body text-center py-5" style="background: linear-gradient(135deg, var(--mlb-navy) 0%, var(--mlb-navy-light) 100%);">
+        <h1 class="display-4 text-white mb-3">
+            <span class="me-3">&#9918;</span>Baseball History
+        </h1>
+        <p class="lead text-white-50 mb-4">
+            Explore @Model.TotalSeasons years of Major League Baseball history (@Model.FirstYear - @Model.LastYear)
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="/Players" class="btn btn-light btn-lg">
+                Browse Players
+            </a>
+            <a href="/Teams" class="btn btn-outline-light btn-lg">
+                View Teams
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Overview -->
+<div class="row mb-4">
+    <div class="col-md-4 col-6 mb-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="h2 mb-0 text-mlb-navy">@Model.TotalPlayers.ToString("N0")</div>
+                <div class="text-muted">Players</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-6 mb-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="h2 mb-0 text-mlb-navy">@Model.TotalFranchises.ToString("N0")</div>
+                <div class="text-muted">Franchises</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-6 mb-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="h2 mb-0 text-mlb-navy">@Model.HallOfFamers.ToString("N0")</div>
+                <div class="text-muted">Hall of Famers</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Career Leaders -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header card-header-mlb">
+                <strong>Career Home Run Leaders</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var leader in Model.CareerHrLeaders)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-secondary me-2">@leader.Rank</span>
+                            <a href="#" class="text-decoration-none"
+                               hx-get="/Players/Modal/@leader.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @leader.PlayerName
+                            </a>
+                            @if (leader.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </span>
+                        <span class="fw-bold text-mlb-navy">@leader.HomeRuns.ToString("N0")</span>
+                    </li>
+                }
+            </ul>
+            <div class="card-footer text-center">
+                <a href="/Stats/Batting?stat=hr" class="text-decoration-none">View All Leaders</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header card-header-mlb">
+                <strong>Career Wins Leaders</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var leader in Model.CareerWinsLeaders)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-secondary me-2">@leader.Rank</span>
+                            <a href="#" class="text-decoration-none"
+                               hx-get="/Players/Modal/@leader.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @leader.PlayerName
+                            </a>
+                            @if (leader.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </span>
+                        <span class="fw-bold text-mlb-navy">@leader.Wins.ToString("N0")</span>
+                    </li>
+                }
+            </ul>
+            <div class="card-footer text-center">
+                <a href="/Stats/Pitching?stat=w" class="text-decoration-none">View All Leaders</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Hall of Fame Inductees -->
+@if (Model.RecentHofInductees.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Recent Hall of Fame Inductees</strong>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                @foreach (var player in Model.RecentHofInductees)
+                {
+                    <div class="col-md-4 col-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3 rounded-circle bg-mlb-navy text-white d-flex align-items-center justify-content-center"
+                                 style="width: 50px; height: 50px; font-weight: bold;">
+                                @{
+                                    var initials = "";
+                                    if (!string.IsNullOrEmpty(player.FirstName) && !string.IsNullOrEmpty(player.LastName))
+                                    {
+                                        initials = $"{player.FirstName[0]}{player.LastName[0]}";
+                                    }
+                                }
+                                @initials.ToUpper()
+                            </div>
+                            <div>
+                                <a href="#" class="text-decoration-none fw-bold"
+                                   hx-get="/Players/Modal/@player.PlayerId"
+                                   hx-target="#modal-container"
+                                   hx-swap="innerHTML"
+                                   hx-boost="false">
+                                    @player.FullName
+                                </a>
+                                <span class="hof-badge ms-1">HOF</span>
+                                <div class="small text-muted">
+                                    @player.DebutYear - @player.FinalYear
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <a href="/HallOfFame" class="text-decoration-none">View All Hall of Famers</a>
+        </div>
+    </div>
+}
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col-md-3 col-6 mb-3">
+        <a href="/Players" class="card text-decoration-none h-100">
+            <div class="card-body text-center">
+                <div class="h4 mb-2">&#9917;</div>
+                <div class="fw-bold">Players</div>
+                <small class="text-muted">Browse A-Z</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <a href="/Teams" class="card text-decoration-none h-100">
+            <div class="card-body text-center">
+                <div class="h4 mb-2">&#127941;</div>
+                <div class="fw-bold">Teams</div>
+                <small class="text-muted">All Franchises</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <a href="/Stats/Batting" class="card text-decoration-none h-100">
+            <div class="card-body text-center">
+                <div class="h4 mb-2">&#128202;</div>
+                <div class="fw-bold">Batting Stats</div>
+                <small class="text-muted">Leaderboards</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <a href="/Stats/Pitching" class="card text-decoration-none h-100">
+            <div class="card-body text-center">
+                <div class="h4 mb-2">&#9918;</div>
+                <div class="fw-bold">Pitching Stats</div>
+                <small class="text-muted">Leaderboards</small>
+            </div>
+        </a>
+    </div>
 </div>

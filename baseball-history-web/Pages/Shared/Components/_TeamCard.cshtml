@@ -1,0 +1,68 @@
+@* Team Card Component
+   Usage: @await Html.PartialAsync("Components/_TeamCard", franchiseSummary)
+*@
+
+@model baseball_history_web.ViewModels.FranchiseSummary
+
+<div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+    <div class="card team-card h-100" data-team="@Model.CurrentTeamId" data-franchise="@Model.FranchiseId">
+        <div class="card-img-placeholder team-card-header">
+            @{
+                var initials = Model.FranchiseName.Split(' ')
+                    .Where(w => !string.IsNullOrEmpty(w))
+                    .Take(2)
+                    .Select(w => w[0])
+                    .ToArray();
+            }
+            @(initials.Length > 0 ? new string(initials) : Model.FranchiseId.Substring(0, Math.Min(2, Model.FranchiseId.Length)))
+        </div>
+        <div class="card-body">
+            <h6 class="card-title mb-1">
+                <a href="/Teams/Franchise/@Model.FranchiseId" class="text-decoration-none stretched-link">
+                    @Model.FranchiseName
+                </a>
+            </h6>
+            <p class="card-text small text-muted mb-2">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Defunct</span>
+                }
+                @if (Model.FirstYear.HasValue && Model.LastYear.HasValue)
+                {
+                    <span class="ms-2">@Model.FirstYear - @(Model.IsActive ? "Present" : Model.LastYear.ToString())</span>
+                }
+            </p>
+            <div class="row small">
+                <div class="col-6">
+                    <div class="fw-bold text-mlb-navy">@Model.TotalSeasons</div>
+                    <div class="text-muted">Seasons</div>
+                </div>
+                <div class="col-6">
+                    <div class="fw-bold text-mlb-navy">@Model.FormattedWinPct</div>
+                    <div class="text-muted">Win %</div>
+                </div>
+            </div>
+            @if (Model.WorldSeriesWins > 0 || Model.PennantWins > 0)
+            {
+                <div class="mt-2 d-flex gap-2">
+                    @if (Model.WorldSeriesWins > 0)
+                    {
+                        <span class="stat-badge stat-badge-accent">
+                            @Model.WorldSeriesWins WS
+                        </span>
+                    }
+                    @if (Model.PennantWins > 0)
+                    {
+                        <span class="stat-badge stat-badge-primary">
+                            @Model.PennantWins Pennants
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

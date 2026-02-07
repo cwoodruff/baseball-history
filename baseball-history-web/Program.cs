@@ -1,4 +1,5 @@
 using baseball_history_web.Models;
+using baseball_history_web.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,7 @@ builder.Services.AddDbContext<BaseballDbContext>(options =>
     options.UseSqlite("Data Source=lahman.db"));
 
 // Add services to the container.
+builder.Services.AddSingleton<TeamColorService>();
 builder.Services.AddRazorPages();
 
 var app = builder.Build();

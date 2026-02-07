@@ -1,0 +1,9 @@
+@page "{id}"
+@model baseball_history_web.Pages.Teams.FranchiseModel
+@{
+    ViewData["Title"] = Model.Franchise?.FranchiseName ?? "Franchise";
+}
+
+<div id="franchise-content">
+    @await Html.PartialAsync("_FranchiseSeasons", Model)
+</div>

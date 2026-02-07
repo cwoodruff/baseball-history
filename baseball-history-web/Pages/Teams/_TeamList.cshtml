@@ -1,0 +1,30 @@
+@model baseball_history_web.ViewModels.TeamListViewModel
+
+@if (!Model.ActiveFranchises.Any() && !Model.InactiveFranchises.Any())
+{
+    @await Html.PartialAsync("Components/_EmptyState", baseball_history_web.ViewModels.EmptyStateModel.NoTeams())
+}
+else
+{
+    @if (Model.ActiveFranchises.Any())
+    {
+        <h3 class="text-mlb-navy mb-3">Active Franchises (@Model.ActiveFranchises.Count)</h3>
+        <div class="row">
+            @foreach (var franchise in Model.ActiveFranchises)
+            {
+                @await Html.PartialAsync("Components/_TeamCard", franchise)
+            }
+        </div>
+    }
+
+    @if (Model.InactiveFranchises.Any())
+    {
+        <h3 class="text-muted mt-5 mb-3">Historical Franchises (@Model.InactiveFranchises.Count)</h3>
+        <div class="row">
+            @foreach (var franchise in Model.InactiveFranchises)
+            {
+                @await Html.PartialAsync("Components/_TeamCard", franchise)
+            }
+        </div>
+    }
+}

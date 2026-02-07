@@ -1,0 +1,29 @@
+@* Empty State Component
+   Usage: @await Html.PartialAsync("Components/_EmptyState", new EmptyStateModel { ... })
+*@
+
+@model baseball_history_web.ViewModels.EmptyStateModel
+
+<div class="empty-state">
+    <div class="empty-state-icon">
+        @if (!string.IsNullOrEmpty(Model.Icon))
+        {
+            @Html.Raw(Model.Icon)
+        }
+        else
+        {
+            <span>&#9918;</span>
+        }
+    </div>
+    <h4 class="empty-state-title">@Model.Title</h4>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="text-muted">@Model.Message</p>
+    }
+    @if (!string.IsNullOrEmpty(Model.ActionUrl))
+    {
+        <a href="@Model.ActionUrl" class="btn btn-primary mt-3">
+            @(Model.ActionText ?? "Go Back")
+        </a>
+    }
+</div>

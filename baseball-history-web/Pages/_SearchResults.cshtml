@@ -1,0 +1,72 @@
+@model baseball_history_web.ViewModels.SearchViewModel
+
+@if (!Model.HasResults)
+{
+    @if (!string.IsNullOrEmpty(Model.Query))
+    {
+        <div class="search-result-item text-center text-muted py-3">
+            No results found for "@Model.Query"
+        </div>
+    }
+}
+else
+{
+    @if (Model.Players.Any())
+    {
+        <div class="px-3 py-2 bg-light border-bottom">
+            <small class="text-muted fw-bold">PLAYERS</small>
+        </div>
+        @foreach (var player in Model.Players)
+        {
+            <a href="#" class="search-result-item text-decoration-none"
+               hx-get="/Players/Modal/@player.Id"
+               hx-target="#modal-container"
+               hx-swap="innerHTML"
+               hx-boost="false"
+               onclick="document.getElementById('search-results').innerHTML = '';">
+                <div class="result-icon">@player.Initials</div>
+                <div>
+                    <div class="fw-bold text-dark">
+                        @player.Title
+                        @if (player.IsInHallOfFame)
+                        {
+                            <span class="hof-badge ms-1">HOF</span>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(player.Subtitle))
+                    {
+                        <small class="text-muted">@player.Subtitle</small>
+                    }
+                </div>
+            </a>
+        }
+    }
+
+    @if (Model.Teams.Any())
+    {
+        <div class="px-3 py-2 bg-light border-bottom">
+            <small class="text-muted fw-bold">TEAMS</small>
+        </div>
+        @foreach (var team in Model.Teams)
+        {
+            <a href="/Teams/Franchise/@team.Id" class="search-result-item text-decoration-none"
+               data-team="@team.TeamId"
+               onclick="document.getElementById('search-results').innerHTML = '';">
+                <div class="result-icon bg-team-gradient">@team.Initials</div>
+                <div>
+                    <div class="fw-bold text-dark">@team.Title</div>
+                    @if (!string.IsNullOrEmpty(team.Subtitle))
+                    {
+                        <small class="text-muted">@team.Subtitle</small>
+                    }
+                </div>
+            </a>
+        }
+    }
+
+    <div class="px-3 py-2 text-center border-top">
+        <a href="/Players?q=@Uri.EscapeDataString(Model.Query)" class="small text-decoration-none">
+            View all results for "@Model.Query"
+        </a>
+    </div>
+}
