@@ -13,10 +13,10 @@
         <a class="letter-link @(isActive ? "active" : "") @(!isAvailable ? "disabled" : "")"
            @if (isAvailable && !isActive)
            {
-               @:hx-get="@Model.GetLetterUrl(letter.ToString())"
-               @:hx-target="@Model.Target"
-               @:hx-swap="innerHTML"
-               @:hx-push-url="true"
+           @:hx-get="@Model.GetLetterUrl(letter.ToString())"
+           @:hx-target="@Model.Target"
+           @:hx-swap="innerHTML"
+           @:hx-push-url="true"
            }
            title="@letter">
             @letter

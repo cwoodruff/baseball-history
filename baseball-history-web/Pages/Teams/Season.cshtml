@@ -32,7 +32,8 @@ else
                             @if (!string.IsNullOrEmpty(Model.Team.FranchiseName))
                             {
                                 <span class="ms-2">|</span>
-                                <a href="/Teams/Franchise/@Model.Team.FranchiseId" class="text-team-accent ms-2">@Model.Team.FranchiseName</a>
+                                <a href="/Teams/Franchise/@Model.Team.FranchiseId"
+                                   class="text-team-accent ms-2">@Model.Team.FranchiseName</a>
                             }
                         </small>
                     </div>
@@ -47,7 +48,8 @@ else
                         }
                         else if (Model.Team.WonDivision)
                         {
-                            <span class="stat-badge" style="background: var(--bg-secondary); color: var(--text-primary);">Division Winners</span>
+                            <span class="stat-badge"
+                                  style="background: var(--bg-secondary); color: var(--text-primary);">Division Winners</span>
                         }
                     </div>
                 </div>
@@ -87,7 +89,7 @@ else
                 </div>
                 @if (!string.IsNullOrEmpty(Model.Team.ParkName) || Model.Team.Attendance.HasValue)
                 {
-                    <hr />
+                    <hr/>
                     <div class="row">
                         @if (!string.IsNullOrEmpty(Model.Team.ParkName))
                         {
@@ -151,41 +153,41 @@ else
                         <div class="table-responsive" style="max-height: 500px;">
                             <table class="table table-sm table-baseball table-hover mb-0">
                                 <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th class="text-end">G</th>
-                                        <th class="text-end">AB</th>
-                                        <th class="text-end">H</th>
-                                        <th class="text-end">HR</th>
-                                        <th class="text-end">RBI</th>
-                                        <th class="text-end">AVG</th>
-                                    </tr>
+                                <tr>
+                                    <th>Player</th>
+                                    <th class="text-end">G</th>
+                                    <th class="text-end">AB</th>
+                                    <th class="text-end">H</th>
+                                    <th class="text-end">HR</th>
+                                    <th class="text-end">RBI</th>
+                                    <th class="text-end">AVG</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var batter in Model.Team.Batters.Take(25))
-                                    {
-                                        <tr>
-                                            <td>
-                                                <a href="#" class="text-decoration-none"
-                                                   hx-get="/Players/Modal/@batter.PlayerId"
-                                                   hx-target="#modal-container"
-                                                   hx-swap="innerHTML"
-                                                   hx-boost="false">
-                                                    @batter.FullName
-                                                </a>
-                                                @if (batter.IsInHallOfFame)
-                                                {
-                                                    <span class="hof-badge ms-1">HOF</span>
-                                                }
-                                            </td>
-                                            <td class="text-end stat-cell">@batter.Games</td>
-                                            <td class="text-end stat-cell">@batter.AtBats</td>
-                                            <td class="text-end stat-cell">@batter.Hits</td>
-                                            <td class="text-end stat-cell">@batter.HomeRuns</td>
-                                            <td class="text-end stat-cell">@(batter.Rbi?.ToString() ?? "-")</td>
-                                            <td class="text-end stat-cell">@batter.FormattedAvg</td>
-                                        </tr>
-                                    }
+                                @foreach (var batter in Model.Team.Batters.Take(25))
+                                {
+                                    <tr>
+                                        <td>
+                                            <a href="#" class="text-decoration-none"
+                                               hx-get="/Players/Modal/@batter.PlayerId"
+                                               hx-target="#modal-container"
+                                               hx-swap="innerHTML"
+                                               hx-boost="false">
+                                                @batter.FullName
+                                            </a>
+                                            @if (batter.IsInHallOfFame)
+                                            {
+                                                <span class="hof-badge ms-1">HOF</span>
+                                            }
+                                        </td>
+                                        <td class="text-end stat-cell">@batter.Games</td>
+                                        <td class="text-end stat-cell">@batter.AtBats</td>
+                                        <td class="text-end stat-cell">@batter.Hits</td>
+                                        <td class="text-end stat-cell">@batter.HomeRuns</td>
+                                        <td class="text-end stat-cell">@(batter.Rbi?.ToString() ?? "-")</td>
+                                        <td class="text-end stat-cell">@batter.FormattedAvg</td>
+                                    </tr>
+                                }
                                 </tbody>
                             </table>
                         </div>
@@ -204,39 +206,39 @@ else
                         <div class="table-responsive" style="max-height: 500px;">
                             <table class="table table-sm table-baseball table-hover mb-0">
                                 <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th class="text-end">G</th>
-                                        <th class="text-end">W-L</th>
-                                        <th class="text-end">ERA</th>
-                                        <th class="text-end">SO</th>
-                                        <th class="text-end">SV</th>
-                                    </tr>
+                                <tr>
+                                    <th>Player</th>
+                                    <th class="text-end">G</th>
+                                    <th class="text-end">W-L</th>
+                                    <th class="text-end">ERA</th>
+                                    <th class="text-end">SO</th>
+                                    <th class="text-end">SV</th>
+                                </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var pitcher in Model.Team.Pitchers.Take(25))
-                                    {
-                                        <tr>
-                                            <td>
-                                                <a href="#" class="text-decoration-none"
-                                                   hx-get="/Players/Modal/@pitcher.PlayerId"
-                                                   hx-target="#modal-container"
-                                                   hx-swap="innerHTML"
-                                                   hx-boost="false">
-                                                    @pitcher.FullName
-                                                </a>
-                                                @if (pitcher.IsInHallOfFame)
-                                                {
-                                                    <span class="hof-badge ms-1">HOF</span>
-                                                }
-                                            </td>
-                                            <td class="text-end stat-cell">@pitcher.Games</td>
-                                            <td class="text-end stat-cell">@pitcher.WinLossRecord</td>
-                                            <td class="text-end stat-cell">@pitcher.FormattedEra</td>
-                                            <td class="text-end stat-cell">@pitcher.Strikeouts</td>
-                                            <td class="text-end stat-cell">@pitcher.Saves</td>
-                                        </tr>
-                                    }
+                                @foreach (var pitcher in Model.Team.Pitchers.Take(25))
+                                {
+                                    <tr>
+                                        <td>
+                                            <a href="#" class="text-decoration-none"
+                                               hx-get="/Players/Modal/@pitcher.PlayerId"
+                                               hx-target="#modal-container"
+                                               hx-swap="innerHTML"
+                                               hx-boost="false">
+                                                @pitcher.FullName
+                                            </a>
+                                            @if (pitcher.IsInHallOfFame)
+                                            {
+                                                <span class="hof-badge ms-1">HOF</span>
+                                            }
+                                        </td>
+                                        <td class="text-end stat-cell">@pitcher.Games</td>
+                                        <td class="text-end stat-cell">@pitcher.WinLossRecord</td>
+                                        <td class="text-end stat-cell">@pitcher.FormattedEra</td>
+                                        <td class="text-end stat-cell">@pitcher.Strikeouts</td>
+                                        <td class="text-end stat-cell">@pitcher.Saves</td>
+                                    </tr>
+                                }
                                 </tbody>
                             </table>
                         </div>

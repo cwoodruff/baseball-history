@@ -6,7 +6,8 @@
 
 <!-- Header -->
 <div class="card mb-4 border-0">
-    <div class="card-body text-center py-4" style="background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);">
+    <div class="card-body text-center py-4"
+         style="background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);">
         <h1 class="display-5 mb-2" style="color: #1a1a1a;">
             Baseball Hall of Fame
         </h1>
@@ -41,7 +42,8 @@
         </div>
     </div>
     <div class="col-md-3 col-6 mb-3">
-        <div class="card h-100 text-center @(Model.ViewModel.SelectedCategory == "Pioneer/Executive" ? "border-primary" : "")">
+        <div
+            class="card h-100 text-center @(Model.ViewModel.SelectedCategory == "Pioneer/Executive" ? "border-primary" : "")">
             <a href="/HallOfFame?category=Pioneer%2FExecutive" class="card-body text-decoration-none"
                hx-get="/HallOfFame?category=Pioneer%2FExecutive"
                hx-target="#inductee-list"

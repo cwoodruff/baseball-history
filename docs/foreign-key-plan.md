@@ -1,44 +1,46 @@
 # Foreign Key Relationships Plan for Lahman Baseball Database
 
-This document outlines the primary keys and proposed foreign key relationships for the lahman.db SQLite database.
+This document outlines the primary keys and proposed foreign key relationships
+for the lahman.db SQLite database.
 
 ## Primary Keys Summary
 
-| Table | Primary Key |
-|-------|-------------|
-| People | `playerID` |
-| Teams | `(teamID, lgID, yearID)` |
-| TeamsFranchises | `franchID` |
-| Schools | `schoolID` |
-| Parks | `ID` (with UNIQUE on `parkkey`) |
-| Batting | `(playerID, yearID, stint, teamID, lgID)` |
-| BattingPost | `(yearID, round, playerID, teamID, lgID)` |
-| Pitching | `(playerID, yearID, stint)` |
-| PitchingPost | `(playerID, yearID, round)` |
-| Fielding | `(playerID, yearID, stint, teamID, lgID, POS)` |
-| FieldingOF | `(playerID, yearID, stint)` |
-| FieldingOFsplit | `(playerID, yearID, stint, teamID, lgID, POS)` |
-| FieldingPost | `(playerID, yearID, teamID, lgID, round, POS)` |
-| Appearances | `(playerID, lgID, teamID, yearID)` |
-| Salaries | `(playerID, teamID, lgID, yearID)` |
-| Managers | `(playerID, yearID, teamID, lgID, inseason)` |
-| ManagersHalf | `(playerID, yearID, teamID, lgID, half)` |
-| AllstarFull | `(playerID, yearID, lgID, teamID, gameID)` |
-| HallOfFame | `(playerID, yearid, votedBy)` |
-| AwardsPlayers | `(playerID, yearID, awardID, lgID, tie, notes)` |
-| AwardsManagers | `(playerID, awardID, yearID, lgID, tie)` |
-| AwardsSharePlayers | `(playerID, lgID, yearID, awardID)` |
-| AwardsShareManagers | `(playerID, lgID, yearID, awardID)` |
-| CollegePlaying | `(playerID, schoolID, yearID)` |
-| TeamsHalf | `(teamID, lgID, yearID, Half)` |
-| SeriesPost | `(teamIDwinner, lgIDwinner, yearID, round)` |
-| HomeGames | `(yearkey, leaguekey, teamkey, parkkey)` |
+| Table               | Primary Key                                     |
+|---------------------|-------------------------------------------------|
+| People              | `playerID`                                      |
+| Teams               | `(teamID, lgID, yearID)`                        |
+| TeamsFranchises     | `franchID`                                      |
+| Schools             | `schoolID`                                      |
+| Parks               | `ID` (with UNIQUE on `parkkey`)                 |
+| Batting             | `(playerID, yearID, stint, teamID, lgID)`       |
+| BattingPost         | `(yearID, round, playerID, teamID, lgID)`       |
+| Pitching            | `(playerID, yearID, stint)`                     |
+| PitchingPost        | `(playerID, yearID, round)`                     |
+| Fielding            | `(playerID, yearID, stint, teamID, lgID, POS)`  |
+| FieldingOF          | `(playerID, yearID, stint)`                     |
+| FieldingOFsplit     | `(playerID, yearID, stint, teamID, lgID, POS)`  |
+| FieldingPost        | `(playerID, yearID, teamID, lgID, round, POS)`  |
+| Appearances         | `(playerID, lgID, teamID, yearID)`              |
+| Salaries            | `(playerID, teamID, lgID, yearID)`              |
+| Managers            | `(playerID, yearID, teamID, lgID, inseason)`    |
+| ManagersHalf        | `(playerID, yearID, teamID, lgID, half)`        |
+| AllstarFull         | `(playerID, yearID, lgID, teamID, gameID)`      |
+| HallOfFame          | `(playerID, yearid, votedBy)`                   |
+| AwardsPlayers       | `(playerID, yearID, awardID, lgID, tie, notes)` |
+| AwardsManagers      | `(playerID, awardID, yearID, lgID, tie)`        |
+| AwardsSharePlayers  | `(playerID, lgID, yearID, awardID)`             |
+| AwardsShareManagers | `(playerID, lgID, yearID, awardID)`             |
+| CollegePlaying      | `(playerID, schoolID, yearID)`                  |
+| TeamsHalf           | `(teamID, lgID, yearID, Half)`                  |
+| SeriesPost          | `(teamIDwinner, lgIDwinner, yearID, round)`     |
+| HomeGames           | `(yearkey, leaguekey, teamkey, parkkey)`        |
 
 ## Foreign Key Relationships
 
 ### Category 1: Player References (playerID → People.playerID)
 
-All tables with `playerID` column reference the `People` table. Data integrity verified: **0 orphan records**.
+All tables with `playerID` column reference the `People` table. Data integrity
+verified: **0 orphan records**.
 
 ```sql
 -- Batting → People
@@ -120,7 +122,8 @@ ALTER TABLE CollegePlaying ADD CONSTRAINT FK_CollegePlaying_People
 
 ### Category 2: Team References (teamID, lgID, yearID → Teams)
 
-Tables referencing Teams with the composite key. Data integrity verified: **0 orphan records** (except AllstarFull - see notes).
+Tables referencing Teams with the composite key. Data integrity verified: **0
+orphan records** (except AllstarFull - see notes).
 
 ```sql
 -- Batting → Teams
@@ -215,16 +218,21 @@ ALTER TABLE SeriesPost ADD CONSTRAINT FK_SeriesPost_TeamsLoser
 ## Data Integrity Notes
 
 ### AllstarFull Table
-The AllstarFull table has **689 records** that reference teams not in the Teams table. These are from historical leagues:
+
+The AllstarFull table has **689 records** that reference teams not in the Teams
+table. These are from historical leagues:
+
 - EAS (Eastern Colored League)
 - WES (Western League)
 - Teams like CAG, KCM, HG, MRS, NE, BEG, NYC, PS, PC, BBB
 
-**Recommendation**: Either add these historical teams to the Teams table or exclude AllstarFull from the Teams foreign key constraint.
+**Recommendation**: Either add these historical teams to the Teams table or
+exclude AllstarFull from the Teams foreign key constraint.
 
 ## SQLite Implementation Note
 
-SQLite does not support `ALTER TABLE ADD CONSTRAINT` for foreign keys. To implement these relationships in SQLite, you must:
+SQLite does not support `ALTER TABLE ADD CONSTRAINT` for foreign keys. To
+implement these relationships in SQLite, you must:
 
 1. Create new tables with foreign key constraints
 2. Copy data from old tables

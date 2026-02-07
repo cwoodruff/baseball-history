@@ -83,51 +83,52 @@ else
             <div class="table-responsive">
                 <table class="table table-baseball table-hover mb-0">
                     <thead>
-                        <tr>
-                            <th>Year</th>
-                            <th>Team</th>
-                            <th>Lg</th>
-                            <th>Div</th>
-                            <th class="text-end">W</th>
-                            <th class="text-end">L</th>
-                            <th class="text-end">Pct</th>
-                            <th class="text-center">Rank</th>
-                            <th>Postseason</th>
-                        </tr>
+                    <tr>
+                        <th>Year</th>
+                        <th>Team</th>
+                        <th>Lg</th>
+                        <th>Div</th>
+                        <th class="text-end">W</th>
+                        <th class="text-end">L</th>
+                        <th class="text-end">Pct</th>
+                        <th class="text-center">Rank</th>
+                        <th>Postseason</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var season in Model.Seasons)
-                        {
-                            <tr>
-                                <td>
-                                    <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
-                                       class="text-decoration-none fw-bold">
-                                        @season.Year
-                                    </a>
-                                </td>
-                                <td>@season.TeamName</td>
-                                <td>@season.LgId</td>
-                                <td>@(season.DivId ?? "-")</td>
-                                <td class="text-end stat-cell">@season.Wins</td>
-                                <td class="text-end stat-cell">@season.Losses</td>
-                                <td class="text-end stat-cell">@season.FormattedWinPct</td>
-                                <td class="text-center rank-cell">@(season.Rank?.ToString() ?? "-")</td>
-                                <td>
-                                    @if (season.WonWorldSeries)
-                                    {
-                                        <span class="stat-badge stat-badge-accent">WS Champs</span>
-                                    }
-                                    else if (season.WonPennant)
-                                    {
-                                        <span class="stat-badge stat-badge-primary">Pennant</span>
-                                    }
-                                    else if (season.WonDivision)
-                                    {
-                                        <span class="stat-badge" style="background-color: var(--text-secondary); color: white;">Division</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var season in Model.Seasons)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                                   class="text-decoration-none fw-bold">
+                                    @season.Year
+                                </a>
+                            </td>
+                            <td>@season.TeamName</td>
+                            <td>@season.LgId</td>
+                            <td>@(season.DivId ?? "-")</td>
+                            <td class="text-end stat-cell">@season.Wins</td>
+                            <td class="text-end stat-cell">@season.Losses</td>
+                            <td class="text-end stat-cell">@season.FormattedWinPct</td>
+                            <td class="text-center rank-cell">@(season.Rank?.ToString() ?? "-")</td>
+                            <td>
+                                @if (season.WonWorldSeries)
+                                {
+                                    <span class="stat-badge stat-badge-accent">WS Champs</span>
+                                }
+                                else if (season.WonPennant)
+                                {
+                                    <span class="stat-badge stat-badge-primary">Pennant</span>
+                                }
+                                else if (season.WonDivision)
+                                {
+                                    <span class="stat-badge"
+                                          style="background-color: var(--text-secondary); color: white;">Division</span>
+                                }
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>

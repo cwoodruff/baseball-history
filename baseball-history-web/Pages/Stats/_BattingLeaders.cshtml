@@ -14,61 +14,61 @@ else
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
                 <thead>
-                    <tr>
-                        <th class="text-center" style="width: 50px;">Rank</th>
-                        <th>Player</th>
-                        @if (Model.SingleSeason)
-                        {
-                            <th>Year</th>
-                            <th>Team</th>
-                        }
-                        <th class="text-end">G</th>
-                        <th class="text-end">AB</th>
-                        <th class="text-end">H</th>
-                        <th class="text-end">2B</th>
-                        <th class="text-end">3B</th>
-                        <th class="text-end bg-mlb-navy text-white">HR</th>
-                        <th class="text-end">R</th>
-                        <th class="text-end">BB</th>
-                        <th class="text-end">AVG</th>
-                        <th class="text-end">OPS</th>
-                    </tr>
+                <tr>
+                    <th class="text-center" style="width: 50px;">Rank</th>
+                    <th>Player</th>
+                    @if (Model.SingleSeason)
+                    {
+                        <th>Year</th>
+                        <th>Team</th>
+                    }
+                    <th class="text-end">G</th>
+                    <th class="text-end">AB</th>
+                    <th class="text-end">H</th>
+                    <th class="text-end">2B</th>
+                    <th class="text-end">3B</th>
+                    <th class="text-end bg-mlb-navy text-white">HR</th>
+                    <th class="text-end">R</th>
+                    <th class="text-end">BB</th>
+                    <th class="text-end">AVG</th>
+                    <th class="text-end">OPS</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var leader in Model.BattingLeaders)
-                    {
-                        <tr data-team="@leader.TeamId">
-                            <td class="text-center rank-cell">@leader.Rank</td>
-                            <td>
-                                <a href="#" class="text-decoration-none"
-                                   hx-get="/Players/Modal/@leader.PlayerId"
-                                   hx-target="#modal-container"
-                                   hx-swap="innerHTML"
-                                   hx-boost="false">
-                                    @leader.PlayerName
-                                </a>
-                                @if (leader.IsInHallOfFame)
-                                {
-                                    <span class="hof-badge ms-1">HOF</span>
-                                }
-                            </td>
-                            @if (Model.SingleSeason)
+                @foreach (var leader in Model.BattingLeaders)
+                {
+                    <tr data-team="@leader.TeamId">
+                        <td class="text-center rank-cell">@leader.Rank</td>
+                        <td>
+                            <a href="#" class="text-decoration-none"
+                               hx-get="/Players/Modal/@leader.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @leader.PlayerName
+                            </a>
+                            @if (leader.IsInHallOfFame)
                             {
-                                <td>@leader.Year</td>
-                                <td>@(leader.TeamName ?? leader.TeamId)</td>
+                                <span class="hof-badge ms-1">HOF</span>
                             }
-                            <td class="text-end stat-cell">@leader.Games.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.AtBats.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.Hits.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.Doubles.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.Triples.ToString("N0")</td>
-                            <td class="text-end stat-cell fw-bold">@leader.HomeRuns.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.Runs.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.Walks.ToString("N0")</td>
-                            <td class="text-end stat-cell">@leader.FormattedAvg</td>
-                            <td class="text-end stat-cell">@leader.FormattedOps</td>
-                        </tr>
-                    }
+                        </td>
+                        @if (Model.SingleSeason)
+                        {
+                            <td>@leader.Year</td>
+                            <td>@(leader.TeamName ?? leader.TeamId)</td>
+                        }
+                        <td class="text-end stat-cell">@leader.Games.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.AtBats.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.Hits.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.Doubles.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.Triples.ToString("N0")</td>
+                        <td class="text-end stat-cell fw-bold">@leader.HomeRuns.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.Runs.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.Walks.ToString("N0")</td>
+                        <td class="text-end stat-cell">@leader.FormattedAvg</td>
+                        <td class="text-end stat-cell">@leader.FormattedOps</td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>

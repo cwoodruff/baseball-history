@@ -4,7 +4,8 @@
     var primaryTeamId = Model.Teams.FirstOrDefault()?.TeamId ?? "";
 }
 
-<div class="modal fade modal-baseball" id="playerModal" tabindex="-1" aria-labelledby="playerModalLabel" aria-hidden="true"
+<div class="modal fade modal-baseball" id="playerModal" tabindex="-1" aria-labelledby="playerModalLabel"
+     aria-hidden="true"
      data-team="@primaryTeamId">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -40,7 +41,8 @@
                                             @Model.BirthDate
                                             @if (!string.IsNullOrEmpty(Model.BirthPlace))
                                             {
-                                                <br /><small class="text-muted">@Model.BirthPlace</small>
+                                                <br/>
+                                                <small class="text-muted">@Model.BirthPlace</small>
                                             }
                                         </dd>
                                     }
@@ -99,7 +101,8 @@
                                 <ul class="list-group list-group-flush">
                                     @foreach (var team in Model.Teams)
                                     {
-                                        <li class="list-group-item d-flex justify-content-between align-items-center" data-team="@team.TeamId">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            data-team="@team.TeamId">
                                             <span>@(team.TeamName ?? team.TeamId)</span>
                                             <small class="text-muted">@team.FirstYear-@team.LastYear</small>
                                         </li>
@@ -149,7 +152,8 @@
                                 <div class="card-body">
                                     <div class="row text-center">
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Games.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Games.ToString("N0")</div>
                                             <small class="text-muted">G</small>
                                         </div>
                                         <div class="col">
@@ -157,15 +161,18 @@
                                             <small class="text-muted">AVG</small>
                                         </div>
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Hits.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Hits.ToString("N0")</div>
                                             <small class="text-muted">H</small>
                                         </div>
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.HomeRuns.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.BattingStats.HomeRuns.ToString("N0")</div>
                                             <small class="text-muted">HR</small>
                                         </div>
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Rbi.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Rbi.ToString("N0")</div>
                                             <small class="text-muted">RBI</small>
                                         </div>
                                         <div class="col">
@@ -194,15 +201,18 @@
                                             <small class="text-muted">ERA</small>
                                         </div>
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Games.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Games.ToString("N0")</div>
                                             <small class="text-muted">G</small>
                                         </div>
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Strikeouts.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Strikeouts.ToString("N0")</div>
                                             <small class="text-muted">SO</small>
                                         </div>
                                         <div class="col">
-                                            <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Saves.ToString("N0")</div>
+                                            <div
+                                                class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Saves.ToString("N0")</div>
                                             <small class="text-muted">SV</small>
                                         </div>
                                         <div class="col">
@@ -223,35 +233,35 @@
                                 <div class="table-responsive" style="max-height: 400px;">
                                     <table class="table table-sm table-baseball mb-0">
                                         <thead>
-                                            <tr>
-                                                <th>Year</th>
-                                                <th>Team</th>
-                                                <th class="text-end">G</th>
-                                                <th class="text-end">AB</th>
-                                                <th class="text-end">H</th>
-                                                <th class="text-end">2B</th>
-                                                <th class="text-end">3B</th>
-                                                <th class="text-end">HR</th>
-                                                <th class="text-end">R</th>
-                                                <th class="text-end">AVG</th>
-                                            </tr>
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Team</th>
+                                            <th class="text-end">G</th>
+                                            <th class="text-end">AB</th>
+                                            <th class="text-end">H</th>
+                                            <th class="text-end">2B</th>
+                                            <th class="text-end">3B</th>
+                                            <th class="text-end">HR</th>
+                                            <th class="text-end">R</th>
+                                            <th class="text-end">AVG</th>
+                                        </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach (var season in Model.BattingSeasons)
-                                            {
-                                                <tr data-team="@season.TeamId">
-                                                    <td>@season.Year</td>
-                                                    <td>@(season.TeamName ?? season.TeamId)</td>
-                                                    <td class="text-end stat-cell">@season.Games</td>
-                                                    <td class="text-end stat-cell">@season.AtBats</td>
-                                                    <td class="text-end stat-cell">@season.Hits</td>
-                                                    <td class="text-end stat-cell">@season.Doubles</td>
-                                                    <td class="text-end stat-cell">@season.Triples</td>
-                                                    <td class="text-end stat-cell">@season.HomeRuns</td>
-                                                    <td class="text-end stat-cell">@season.Runs</td>
-                                                    <td class="text-end stat-cell">@season.FormattedAvg</td>
-                                                </tr>
-                                            }
+                                        @foreach (var season in Model.BattingSeasons)
+                                        {
+                                            <tr data-team="@season.TeamId">
+                                                <td>@season.Year</td>
+                                                <td>@(season.TeamName ?? season.TeamId)</td>
+                                                <td class="text-end stat-cell">@season.Games</td>
+                                                <td class="text-end stat-cell">@season.AtBats</td>
+                                                <td class="text-end stat-cell">@season.Hits</td>
+                                                <td class="text-end stat-cell">@season.Doubles</td>
+                                                <td class="text-end stat-cell">@season.Triples</td>
+                                                <td class="text-end stat-cell">@season.HomeRuns</td>
+                                                <td class="text-end stat-cell">@season.Runs</td>
+                                                <td class="text-end stat-cell">@season.FormattedAvg</td>
+                                            </tr>
+                                        }
                                         </tbody>
                                     </table>
                                 </div>

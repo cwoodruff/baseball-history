@@ -20,62 +20,62 @@ else
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
                 <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th class="text-center">Year</th>
-                        <th>Category</th>
-                        <th>Voted By</th>
-                        <th class="text-end">Vote %</th>
-                        <th>Career</th>
-                    </tr>
+                <tr>
+                    <th>Name</th>
+                    <th class="text-center">Year</th>
+                    <th>Category</th>
+                    <th>Voted By</th>
+                    <th class="text-end">Vote %</th>
+                    <th>Career</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var inductee in Model.Inductees)
-                    {
-                        <tr>
-                            <td>
-                                <a href="#" class="text-decoration-none fw-bold"
-                                   hx-get="/Players/Modal/@inductee.PlayerId"
-                                   hx-target="#modal-container"
-                                   hx-swap="innerHTML"
-                                   hx-boost="false">
-                                    @inductee.FullName
-                                </a>
-                                <span class="hof-badge ms-2">HOF</span>
-                            </td>
-                            <td class="text-center">
-                                <span class="fw-bold text-mlb-navy">@inductee.InductionYear</span>
-                            </td>
-                            <td>
-                                @switch (inductee.Category)
-                                {
-                                    case "Player":
-                                        <span class="badge bg-primary">Player</span>
-                                        break;
-                                    case "Manager":
-                                        <span class="badge bg-success">Manager</span>
-                                        break;
-                                    case "Pioneer/Executive":
-                                        <span class="badge bg-secondary">Pioneer</span>
-                                        break;
-                                    case "Umpire":
-                                        <span class="badge bg-info">Umpire</span>
-                                        break;
-                                    default:
-                                        <span class="badge bg-light text-dark">@inductee.Category</span>
-                                        break;
-                                }
-                            </td>
-                            <td class="small text-muted">@inductee.VotedBy</td>
-                            <td class="text-end stat-cell">@inductee.FormattedVotePct</td>
-                            <td class="small text-muted">
-                                @if (!string.IsNullOrEmpty(inductee.DebutYear) && !string.IsNullOrEmpty(inductee.FinalYear))
-                                {
-                                    <span>@inductee.DebutYear - @inductee.FinalYear</span>
-                                }
-                            </td>
-                        </tr>
-                    }
+                @foreach (var inductee in Model.Inductees)
+                {
+                    <tr>
+                        <td>
+                            <a href="#" class="text-decoration-none fw-bold"
+                               hx-get="/Players/Modal/@inductee.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @inductee.FullName
+                            </a>
+                            <span class="hof-badge ms-2">HOF</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold text-mlb-navy">@inductee.InductionYear</span>
+                        </td>
+                        <td>
+                            @switch (inductee.Category)
+                            {
+                                case "Player":
+                                    <span class="badge bg-primary">Player</span>
+                                    break;
+                                case "Manager":
+                                    <span class="badge bg-success">Manager</span>
+                                    break;
+                                case "Pioneer/Executive":
+                                    <span class="badge bg-secondary">Pioneer</span>
+                                    break;
+                                case "Umpire":
+                                    <span class="badge bg-info">Umpire</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-light text-dark">@inductee.Category</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="small text-muted">@inductee.VotedBy</td>
+                        <td class="text-end stat-cell">@inductee.FormattedVotePct</td>
+                        <td class="small text-muted">
+                            @if (!string.IsNullOrEmpty(inductee.DebutYear) && !string.IsNullOrEmpty(inductee.FinalYear))
+                            {
+                                <span>@inductee.DebutYear - @inductee.FinalYear</span>
+                            }
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
