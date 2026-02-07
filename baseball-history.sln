@@ -21,7 +21,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03C0A8B8-3
 		docs\FRONTEND.md = docs\FRONTEND.md
 		docs\DATABASE.md = docs\DATABASE.md
 		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
-		docs\README.md = docs\README.md
 	EndProjectSection
 EndProject
 Global
