@@ -26,6 +26,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          include-prerelease: true
 
       - name: Restore dependencies
         run: dotnet restore
@@ -37,7 +38,7 @@ jobs:
         run: dotnet test --configuration Release --no-build --verbosity normal
 
       - name: Publish
-        run: dotnet publish baseball-history-web/baseball-history-web.csproj --configuration Release --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        run: dotnet publish baseball-history-web/baseball-history-web.csproj --configuration Release --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
