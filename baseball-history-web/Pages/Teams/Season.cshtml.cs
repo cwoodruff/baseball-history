@@ -73,6 +73,7 @@ public class SeasonModel : PageModel
             {
                 batter.Rbi = rbiVal;
             }
+
             batter.IsInHallOfFame = hofPlayerIds.Contains(batter.PlayerId);
         }
 

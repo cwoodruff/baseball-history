@@ -37,7 +37,8 @@ public class IndexModel : PageModel
         TotalFranchises = await _context.TeamsFranchises.CountAsync();
         TotalTeams = await _context.Teams.Select(t => t.TeamId).Distinct().CountAsync();
         TotalSeasons = await _context.Teams.Select(t => t.YearId).Distinct().CountAsync();
-        HallOfFamers = await _context.HallOfFame.Where(h => h.Inducted == "Y").Select(h => h.PlayerId).Distinct().CountAsync();
+        HallOfFamers = await _context.HallOfFame.Where(h => h.Inducted == "Y").Select(h => h.PlayerId).Distinct()
+            .CountAsync();
 
         var years = await _context.Teams.Select(t => (int)t.YearId).Distinct().ToListAsync();
         if (years.Any())

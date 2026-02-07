@@ -148,7 +148,11 @@ public class PitchingModel : PageModel
             ViewModel.PitchingLeaders = leaders
                 .Skip((ViewModel.CurrentPage - 1) * PageSize)
                 .Take(PageSize)
-                .Select((e, i) => { e.Rank = (ViewModel.CurrentPage - 1) * PageSize + i + 1; return e; })
+                .Select((e, i) =>
+                {
+                    e.Rank = (ViewModel.CurrentPage - 1) * PageSize + i + 1;
+                    return e;
+                })
                 .ToList();
         }
         else
@@ -220,7 +224,11 @@ public class PitchingModel : PageModel
             ViewModel.PitchingLeaders = leaders
                 .Skip((ViewModel.CurrentPage - 1) * PageSize)
                 .Take(PageSize)
-                .Select((e, i) => { e.Rank = (ViewModel.CurrentPage - 1) * PageSize + i + 1; return e; })
+                .Select((e, i) =>
+                {
+                    e.Rank = (ViewModel.CurrentPage - 1) * PageSize + i + 1;
+                    return e;
+                })
                 .ToList();
         }
 

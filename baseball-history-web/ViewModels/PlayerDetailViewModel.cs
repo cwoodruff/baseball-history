@@ -74,7 +74,8 @@ public class PlayerDetailViewModel
             var parts = new List<string>();
             if (!string.IsNullOrEmpty(person.BirthMonth) && !string.IsNullOrEmpty(person.BirthDay))
             {
-                if (int.TryParse(person.BirthMonth, out var month) && int.TryParse(person.BirthDay, out var day) && int.TryParse(person.BirthYear, out var year))
+                if (int.TryParse(person.BirthMonth, out var month) && int.TryParse(person.BirthDay, out var day) &&
+                    int.TryParse(person.BirthYear, out var year))
                 {
                     try
                     {
@@ -102,7 +103,8 @@ public class PlayerDetailViewModel
         {
             if (!string.IsNullOrEmpty(person.DeathMonth) && !string.IsNullOrEmpty(person.DeathDay))
             {
-                if (int.TryParse(person.DeathMonth, out var month) && int.TryParse(person.DeathDay, out var day) && int.TryParse(person.DeathYear, out var year))
+                if (int.TryParse(person.DeathMonth, out var month) && int.TryParse(person.DeathDay, out var day) &&
+                    int.TryParse(person.DeathYear, out var year))
                 {
                     try
                     {

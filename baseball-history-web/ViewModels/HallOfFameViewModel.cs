@@ -18,7 +18,9 @@ public class HallOfFameViewModel
 
     // Available filters
     public List<int> AvailableYears { get; set; } = new();
-    public List<string> AvailableCategories { get; set; } = new() { "Player", "Manager", "Pioneer/Executive", "Umpire" };
+
+    public List<string> AvailableCategories { get; set; } =
+        new() { "Player", "Manager", "Pioneer/Executive", "Umpire" };
 
     // Pagination
     public int CurrentPage { get; set; } = 1;

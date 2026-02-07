@@ -35,7 +35,8 @@ public class PlayerSummary
     public string? PrimaryPosition { get; set; }
     public string? LastTeamId { get; set; }
 
-    public static PlayerSummary FromPeople(People person, bool isHof = false, int? games = null, int? hits = null, int? hrs = null)
+    public static PlayerSummary FromPeople(People person, bool isHof = false, int? games = null, int? hits = null,
+        int? hrs = null)
     {
         return new PlayerSummary
         {

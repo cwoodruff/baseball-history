@@ -71,11 +71,6 @@ public partial class BaseballDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Value converter for DateOnly that handles empty strings as null
-        var dateOnlyConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateOnly?, string?>(
-            v => v.HasValue ? v.Value.ToString("yyyy-MM-dd") : null,
-            v => string.IsNullOrWhiteSpace(v) ? null : DateOnly.Parse(v));
-
         modelBuilder.Entity<AllstarFull>(entity =>
         {
             entity.HasKey(e => new { e.PlayerId, e.YearId, e.LgId, e.TeamId, e.GameId });
@@ -701,11 +696,11 @@ public partial class BaseballDbContext : DbContext
                 .HasColumnType("smallint")
                 .HasColumnName("openings");
             entity.Property(e => e.Spanfirst)
-                .HasConversion(dateOnlyConverter)
+                .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
                 .HasColumnName("spanfirst");
             entity.Property(e => e.Spanlast)
-                .HasConversion(dateOnlyConverter)
+                .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
                 .HasColumnName("spanlast");
         });
@@ -868,11 +863,11 @@ public partial class BaseballDbContext : DbContext
                 .HasColumnType("INT")
                 .HasColumnName("deathYear");
             entity.Property(e => e.Debut)
-                .HasConversion(dateOnlyConverter)
+                .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("debut");
             entity.Property(e => e.FinalGame)
-                .HasConversion(dateOnlyConverter)
+                .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("finalGame");
             entity.Property(e => e.Height)

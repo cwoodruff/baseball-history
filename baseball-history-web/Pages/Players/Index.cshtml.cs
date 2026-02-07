@@ -68,7 +68,7 @@ public class IndexModel : PageModel
                 TotalHits = p.Battings.Sum(b => (int?)b.H) ?? 0,
                 TotalHR = p.Battings.Sum(b => (int?)b.Hr) ?? 0,
                 LastTeam = p.Battings.OrderByDescending(b => b.YearId).Select(b => b.TeamId).FirstOrDefault()
-                    ?? p.Pitchings.OrderByDescending(pi => pi.YearId).Select(pi => pi.TeamId).FirstOrDefault()
+                           ?? p.Pitchings.OrderByDescending(pi => pi.YearId).Select(pi => pi.TeamId).FirstOrDefault()
             })
             .ToListAsync();
 

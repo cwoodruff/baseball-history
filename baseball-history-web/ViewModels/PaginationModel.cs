@@ -76,7 +76,8 @@ public class PaginationModel
         yield return TotalPages;
     }
 
-    public static PaginationModel Create(int currentPage, int totalItems, int pageSize, string baseUrl, Dictionary<string, string>? queryParams = null)
+    public static PaginationModel Create(int currentPage, int totalItems, int pageSize, string baseUrl,
+        Dictionary<string, string>? queryParams = null)
     {
         return new PaginationModel
         {

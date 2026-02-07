@@ -149,5 +149,6 @@ public record TeamColors(
     /// <summary>
     /// Gets CSS inline style for gradient background
     /// </summary>
-    public string GradientStyle => $"background: linear-gradient(135deg, {Primary} 0%, {Secondary} 100%); color: {Accent};";
+    public string GradientStyle =>
+        $"background: linear-gradient(135deg, {Primary} 0%, {Secondary} 100%); color: {Accent};";
 }

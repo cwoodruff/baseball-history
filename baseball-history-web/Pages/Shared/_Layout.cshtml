@@ -40,8 +40,11 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="statsDropdown">
                             <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Batting">Batting Leaders</a></li>
-                            <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Pitching">Pitching Leaders</a></li>
-                            <li><hr class="dropdown-divider"/></li>
+                            <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Pitching">Pitching Leaders</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider"/>
+                            </li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/HallOfFame/Index">Hall of Fame</a></li>
                         </ul>
                     </li>
@@ -86,13 +89,15 @@
     </div>
 </footer>
 
-<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/htmx.org@2.0.4"
+        integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+        crossorigin="anonymous"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 
 <script>
     // HTMX configuration
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
         // Initialize any Bootstrap modals loaded via HTMX
         if (evt.detail.target.id === 'modal-container') {
             var modal = evt.detail.target.querySelector('.modal');
@@ -104,13 +109,13 @@
                 bsModal.show();
 
                 // Clean up modal and backdrop when hidden
-                modal.addEventListener('hidden.bs.modal', function() {
+                modal.addEventListener('hidden.bs.modal', function () {
                     // Dispose the modal instance
                     bsModal.dispose();
                     // Clear the container
                     evt.detail.target.innerHTML = '';
                     // Remove any leftover backdrops
-                    document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+                    document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
                         backdrop.remove();
                     });
                     // Remove modal-open class from body
@@ -123,16 +128,16 @@
 
         // Reinitialize Bootstrap dropdowns after any HTMX swap
         var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-        dropdowns.forEach(function(dropdown) {
+        dropdowns.forEach(function (dropdown) {
             new bootstrap.Dropdown(dropdown);
         });
     });
 
     // Also reinitialize on page load via htmx:afterSettle for boosted navigation
-    document.body.addEventListener('htmx:afterSettle', function(evt) {
+    document.body.addEventListener('htmx:afterSettle', function (evt) {
         // Reinitialize Bootstrap dropdowns
         var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-        dropdowns.forEach(function(dropdown) {
+        dropdowns.forEach(function (dropdown) {
             // Check if already initialized
             if (!bootstrap.Dropdown.getInstance(dropdown)) {
                 new bootstrap.Dropdown(dropdown);
@@ -141,7 +146,7 @@
     });
 
     // Hide search results when clicking outside
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         var searchContainer = document.querySelector('.search-container');
         var searchResults = document.getElementById('search-results');
         if (searchContainer && !searchContainer.contains(e.target)) {
