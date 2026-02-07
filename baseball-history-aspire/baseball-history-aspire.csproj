@@ -10,7 +10,6 @@
 
     <ItemGroup>
       <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.0" />
-      <PackageReference Include="CommunityToolkit.Aspire.Hosting.Sqlite" Version="13.1.2-beta.515" />
     </ItemGroup>
 
     <ItemGroup>

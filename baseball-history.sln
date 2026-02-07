@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-aspire", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-web", "baseball-history-web\baseball-history-web.csproj", "{35A1EB6B-7170-4B94-A2D0-1ECFB2E1DBF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-tests", "baseball-history-tests\baseball-history-tests.csproj", "{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{35A1EB6B-7170-4B94-A2D0-1ECFB2E1DBF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35A1EB6B-7170-4B94-A2D0-1ECFB2E1DBF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35A1EB6B-7170-4B94-A2D0-1ECFB2E1DBF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -3,12 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// var connectionString = builder.Configuration.GetConnectionString("Lahman") ??
-//                        throw new InvalidOperationException("Connection string 'Lahman' not found.");
-// builder.Services.AddDbContext<BaseballDbContext>(options =>
-//     options.UseSqlite(connectionString));
-
-builder.AddSqliteConnection("sqlite");
+builder.Services.AddDbContext<BaseballDbContext>(options =>
+    options.UseSqlite("Data Source=lahman.db"));
 
 // Add services to the container.
 builder.Services.AddRazorPages();

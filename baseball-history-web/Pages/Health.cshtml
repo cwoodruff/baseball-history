@@ -1,0 +1,65 @@
+@page
+@model HealthModel
+@{
+    ViewData["Title"] = "Health Check";
+}
+
+<div class="container">
+    <h1>Health Check</h1>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            Database Status
+        </div>
+        <div class="card-body">
+            @if (Model.DatabaseHealthy)
+            {
+                <div class="alert alert-success" role="alert">
+                    SQLite database is accessible
+                </div>
+
+                @if (Model.SampleTeam != null)
+                {
+                    <h5 class="card-title">Sample Team Record</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Team ID</th>
+                            <td>@Model.SampleTeam.TeamId</td>
+                        </tr>
+                        <tr>
+                            <th>Name</th>
+                            <td>@Model.SampleTeam.Name</td>
+                        </tr>
+                        <tr>
+                            <th>Year</th>
+                            <td>@Model.SampleTeam.YearId</td>
+                        </tr>
+                        <tr>
+                            <th>League</th>
+                            <td>@Model.SampleTeam.LgId</td>
+                        </tr>
+                        <tr>
+                            <th>Wins</th>
+                            <td>@Model.SampleTeam.W</td>
+                        </tr>
+                        <tr>
+                            <th>Losses</th>
+                            <td>@Model.SampleTeam.L</td>
+                        </tr>
+                    </table>
+                }
+            }
+            else
+            {
+                <div class="alert alert-danger" role="alert">
+                    Database is not accessible
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <p><strong>Error:</strong> @Model.ErrorMessage</p>
+                }
+            }
+        </div>
+    </div>
+</div>
