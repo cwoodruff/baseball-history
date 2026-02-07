@@ -10,7 +10,7 @@ env:
   AZURE_WEBAPP_NAME: baseball-history # Set this to your Azure Web App name
   AZURE_RESOURCE_GROUP: rg-app-260207113456g # Set this to your resource group
   AZURE_WEBAPP_PACKAGE_PATH: "./publish"
-  DOTNET_VERSION: "10.0.x"
+  DOTNET_VERSION: "9.0.x"
 
 jobs:
   build-and-test:
