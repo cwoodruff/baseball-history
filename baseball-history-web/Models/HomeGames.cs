@@ -1,14 +1,17 @@
-﻿namespace baseball_history_web.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace baseball_history_web.Models;
 
 public partial class HomeGames
 {
-    public int? Yearkey { get; set; }
+    public int Yearkey { get; set; }
 
-    public string? Leaguekey { get; set; }
+    public string Leaguekey { get; set; } = null!;
 
-    public string? Teamkey { get; set; }
+    public string Teamkey { get; set; } = null!;
 
-    public string? Parkkey { get; set; }
+    public string Parkkey { get; set; } = null!;
 
     public DateOnly? Spanfirst { get; set; }
 

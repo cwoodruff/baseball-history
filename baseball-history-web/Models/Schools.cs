@@ -1,4 +1,7 @@
-﻿namespace baseball_history_web.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace baseball_history_web.Models;
 
 public partial class Schools
 {

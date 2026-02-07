@@ -1,4 +1,7 @@
-﻿namespace baseball_history_web.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace baseball_history_web.Models;
 
 public partial class FieldingOfsplit
 {
@@ -8,9 +11,9 @@ public partial class FieldingOfsplit
 
     public byte Stint { get; set; }
 
-    public string? TeamId { get; set; }
+    public string TeamId { get; set; } = null!;
 
-    public string? LgId { get; set; }
+    public string LgId { get; set; } = null!;
 
     public string Pos { get; set; } = null!;
 

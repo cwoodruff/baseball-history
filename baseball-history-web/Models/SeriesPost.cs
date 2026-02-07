@@ -1,4 +1,7 @@
-﻿namespace baseball_history_web.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace baseball_history_web.Models;
 
 public partial class SeriesPost
 {
@@ -6,9 +9,9 @@ public partial class SeriesPost
 
     public string Round { get; set; } = null!;
 
-    public string? TeamIdwinner { get; set; }
+    public string TeamIdwinner { get; set; } = null!;
 
-    public string? LgIdwinner { get; set; }
+    public string LgIdwinner { get; set; } = null!;
 
     public string? TeamIdloser { get; set; }
 

@@ -1,16 +1,19 @@
-﻿namespace baseball_history_web.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace baseball_history_web.Models;
 
 public partial class AwardsPlayers
 {
-    public string? PlayerId { get; set; }
+    public string PlayerId { get; set; } = null!;
 
-    public string? AwardId { get; set; }
+    public string AwardId { get; set; } = null!;
 
-    public int? YearId { get; set; }
+    public int YearId { get; set; }
 
-    public string? LgId { get; set; }
+    public string LgId { get; set; } = null!;
 
-    public string? Tie { get; set; }
+    public string Tie { get; set; } = null!;
 
-    public string? Notes { get; set; }
+    public string Notes { get; set; } = null!;
 }

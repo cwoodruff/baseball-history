@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Models;
 
@@ -71,8 +73,22 @@ public partial class BaseballDbContext : DbContext
     {
         modelBuilder.Entity<AllstarFull>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.LgId, e.TeamId, e.GameId });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
             entity.Property(e => e.GameId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
@@ -83,17 +99,24 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Gp)
                 .HasColumnType("tinyint")
                 .HasColumnName("GP");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.StartingPos)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
                 .HasColumnName("startingPos");
+        });
+
+        modelBuilder.Entity<Appearances>(entity =>
+        {
+            entity.HasKey(e => new { e.PlayerId, e.LgId, e.TeamId, e.YearId });
+
+            entity.Property(e => e.PlayerId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
             entity.Property(e => e.TeamId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(4)")
@@ -101,12 +124,6 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.YearId)
                 .HasColumnType("smallint")
                 .HasColumnName("yearID");
-        });
-
-        modelBuilder.Entity<Appearances>(entity =>
-        {
-            entity.HasNoKey();
-
             entity.Property(e => e.G1b)
                 .HasColumnType("smallint")
                 .HasColumnName("G_1b");
@@ -158,55 +175,46 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Gs)
                 .HasColumnType("smallint")
                 .HasColumnName("GS");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<AwardsManagers>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.AwardId, e.YearId, e.LgId, e.Tie });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
             entity.Property(e => e.AwardId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(255)")
                 .HasColumnName("awardID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
             entity.Property(e => e.LgId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(3)")
                 .HasColumnName("lgID");
-            entity.Property(e => e.Notes)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(255)")
-                .HasColumnName("notes");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.Tie)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1)")
                 .HasColumnName("tie");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
+            entity.Property(e => e.Notes)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(255)")
+                .HasColumnName("notes");
         });
 
         modelBuilder.Entity<AwardsPlayers>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.AwardId, e.LgId, e.Tie, e.Notes });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("INT")
+                .HasColumnName("yearID");
             entity.Property(e => e.AwardId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(255)")
@@ -215,37 +223,34 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(3)")
                 .HasColumnName("lgID");
-            entity.Property(e => e.Notes)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(255)")
-                .HasColumnName("notes");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.Tie)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1)")
                 .HasColumnName("tie");
-            entity.Property(e => e.YearId)
-                .HasColumnType("INT")
-                .HasColumnName("yearID");
+            entity.Property(e => e.Notes)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(255)")
+                .HasColumnName("notes");
         });
 
         modelBuilder.Entity<AwardsShareManagers>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.LgId, e.YearId, e.AwardId });
 
-            entity.Property(e => e.AwardId)
-                .HasColumnType("nvarchar(255)")
-                .HasColumnName("awardID");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.PlayerId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("playerID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.AwardId)
+                .HasColumnType("nvarchar(255)")
+                .HasColumnName("awardID");
             entity.Property(e => e.PointsMax)
                 .HasColumnType("smallint")
                 .HasColumnName("pointsMax");
@@ -255,26 +260,26 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.VotesFirst)
                 .HasColumnType("smallint")
                 .HasColumnName("votesFirst");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<AwardsSharePlayers>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.LgId, e.YearId, e.AwardId });
 
-            entity.Property(e => e.AwardId)
-                .HasColumnType("nvarchar(255)")
-                .HasColumnName("awardID");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.PlayerId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("playerID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.AwardId)
+                .HasColumnType("nvarchar(255)")
+                .HasColumnName("awardID");
             entity.Property(e => e.PointsMax)
                 .HasColumnType("smallint")
                 .HasColumnName("pointsMax");
@@ -284,15 +289,29 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.VotesFirst)
                 .HasColumnType("smallint")
                 .HasColumnName("votesFirst");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<Batting>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.Stint, e.TeamId, e.LgId });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Stint)
+                .HasColumnType("tinyint")
+                .HasColumnName("stint");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
             entity.Property(e => e.Ab)
                 .HasColumnType("smallint")
                 .HasColumnName("AB");
@@ -316,13 +335,6 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Ibb)
                 .HasColumnType("smallint")
                 .HasColumnName("IBB");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.R).HasColumnType("smallint");
             entity.Property(e => e.Rbi)
                 .HasColumnType("smallint")
@@ -339,16 +351,6 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.So)
                 .HasColumnType("smallint")
                 .HasColumnName("SO");
-            entity.Property(e => e.Stint)
-                .HasColumnType("tinyint")
-                .HasColumnName("stint");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
             entity.Property(e => e._2b)
                 .HasColumnType("smallint")
                 .HasColumnName("2B");
@@ -359,8 +361,27 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<BattingPost>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.YearId, e.Round, e.PlayerId, e.TeamId, e.LgId });
 
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Round)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(10)")
+                .HasColumnName("round");
+            entity.Property(e => e.PlayerId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
             entity.Property(e => e.Ab)
                 .HasColumnType("smallint")
                 .HasColumnName("AB");
@@ -384,22 +405,10 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Ibb)
                 .HasColumnType("smallint")
                 .HasColumnName("IBB");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.R).HasColumnType("smallint");
             entity.Property(e => e.Rbi)
                 .HasColumnType("smallint")
                 .HasColumnName("RBI");
-            entity.Property(e => e.Round)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(10)")
-                .HasColumnName("round");
             entity.Property(e => e.Sb)
                 .HasColumnType("smallint")
                 .HasColumnName("SB");
@@ -412,13 +421,6 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.So)
                 .HasColumnType("smallint")
                 .HasColumnName("SO");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
             entity.Property(e => e._2b)
                 .HasColumnType("smallint")
                 .HasColumnName("2B");
@@ -429,7 +431,7 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<CollegePlaying>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.SchoolId, e.YearId });
 
             entity.Property(e => e.PlayerId)
                 .HasColumnType("nvarchar(20)")
@@ -445,8 +447,29 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<Fielding>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.Stint, e.TeamId, e.LgId, e.Pos });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Stint)
+                .HasColumnType("tinyint")
+                .HasColumnName("stint");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.Pos)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(2)")
+                .HasColumnName("POS");
             entity.Property(e => e.A).HasColumnType("smallint");
             entity.Property(e => e.Cs)
                 .HasColumnType("smallint")
@@ -460,39 +483,18 @@ public partial class BaseballDbContext : DbContext
                 .HasColumnType("smallint")
                 .HasColumnName("GS");
             entity.Property(e => e.InnOuts).HasColumnType("smallint");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.Pb)
                 .HasColumnType("smallint")
                 .HasColumnName("PB");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.Po)
                 .HasColumnType("smallint")
                 .HasColumnName("PO");
-            entity.Property(e => e.Pos)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(2)")
-                .HasColumnName("POS");
             entity.Property(e => e.Sb)
                 .HasColumnType("smallint")
                 .HasColumnName("SB");
-            entity.Property(e => e.Stint)
-                .HasColumnType("tinyint")
-                .HasColumnName("stint");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
             entity.Property(e => e.Wp)
                 .HasColumnType("smallint")
                 .HasColumnName("WP");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
             entity.Property(e => e.Zr)
                 .HasColumnType("float")
                 .HasColumnName("ZR");
@@ -500,30 +502,51 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<FieldingOf>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("FieldingOF");
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.Stint });
 
-            entity.Property(e => e.Gcf).HasColumnType("smallint");
-            entity.Property(e => e.Glf).HasColumnType("smallint");
-            entity.Property(e => e.Grf).HasColumnType("smallint");
+            entity.ToTable("FieldingOF");
+
             entity.Property(e => e.PlayerId)
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("playerID");
-            entity.Property(e => e.Stint)
-                .HasColumnType("tinyint")
-                .HasColumnName("stint");
             entity.Property(e => e.YearId)
                 .HasColumnType("smallint")
                 .HasColumnName("yearID");
+            entity.Property(e => e.Stint)
+                .HasColumnType("tinyint")
+                .HasColumnName("stint");
+            entity.Property(e => e.Gcf).HasColumnType("smallint");
+            entity.Property(e => e.Glf).HasColumnType("smallint");
+            entity.Property(e => e.Grf).HasColumnType("smallint");
         });
 
         modelBuilder.Entity<FieldingOfsplit>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("FieldingOFsplit");
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.Stint, e.TeamId, e.LgId, e.Pos });
 
+            entity.ToTable("FieldingOFsplit");
+
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Stint)
+                .HasColumnType("tinyint")
+                .HasColumnName("stint");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.Pos)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(2)")
+                .HasColumnName("POS");
             entity.Property(e => e.A).HasColumnType("smallint");
             entity.Property(e => e.Cs)
                 .HasColumnType("smallint")
@@ -537,39 +560,18 @@ public partial class BaseballDbContext : DbContext
                 .HasColumnType("smallint")
                 .HasColumnName("GS");
             entity.Property(e => e.InnOuts).HasColumnType("smallint");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.Pb)
                 .HasColumnType("smallint")
                 .HasColumnName("PB");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.Po)
                 .HasColumnType("smallint")
                 .HasColumnName("PO");
-            entity.Property(e => e.Pos)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(2)")
-                .HasColumnName("POS");
             entity.Property(e => e.Sb)
                 .HasColumnType("smallint")
                 .HasColumnName("SB");
-            entity.Property(e => e.Stint)
-                .HasColumnType("tinyint")
-                .HasColumnName("stint");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
             entity.Property(e => e.Wp)
                 .HasColumnType("smallint")
                 .HasColumnName("WP");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
             entity.Property(e => e.Zr)
                 .HasColumnType("float")
                 .HasColumnName("ZR");
@@ -577,8 +579,30 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<FieldingPost>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.TeamId, e.LgId, e.Round, e.Pos });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.Round)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(10)")
+                .HasColumnName("round");
+            entity.Property(e => e.Pos)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(2)")
+                .HasColumnName("POS");
             entity.Property(e => e.A).HasColumnType("smallint");
             entity.Property(e => e.Cs)
                 .HasColumnType("smallint")
@@ -592,46 +616,34 @@ public partial class BaseballDbContext : DbContext
                 .HasColumnType("smallint")
                 .HasColumnName("GS");
             entity.Property(e => e.InnOuts).HasColumnType("smallint");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.Pb)
                 .HasColumnType("smallint")
                 .HasColumnName("PB");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.Po)
                 .HasColumnType("smallint")
                 .HasColumnName("PO");
-            entity.Property(e => e.Pos)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(2)")
-                .HasColumnName("POS");
-            entity.Property(e => e.Round)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(10)")
-                .HasColumnName("round");
             entity.Property(e => e.Sb)
                 .HasColumnType("smallint")
                 .HasColumnName("SB");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
             entity.Property(e => e.Tp)
                 .HasColumnType("smallint")
                 .HasColumnName("TP");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<HallOfFame>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.Yearid, e.VotedBy });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.Yearid)
+                .HasColumnType("smallint")
+                .HasColumnName("yearid");
+            entity.Property(e => e.VotedBy)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(255)")
+                .HasColumnName("votedBy");
             entity.Property(e => e.Ballots)
                 .HasColumnType("smallint")
                 .HasColumnName("ballots");
@@ -650,42 +662,39 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1000)")
                 .HasColumnName("needed_note");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
-            entity.Property(e => e.VotedBy)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(255)")
-                .HasColumnName("votedBy");
             entity.Property(e => e.Votes)
                 .HasColumnType("smallint")
                 .HasColumnName("votes");
-            entity.Property(e => e.Yearid)
-                .HasColumnType("smallint")
-                .HasColumnName("yearid");
         });
 
         modelBuilder.Entity<HomeGames>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.Yearkey, e.Leaguekey, e.Teamkey, e.Parkkey });
 
+            entity.Property(e => e.Yearkey)
+                .HasColumnType("INT")
+                .HasColumnName("yearkey");
+            entity.Property(e => e.Leaguekey)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("leaguekey");
+            entity.Property(e => e.Teamkey)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamkey");
+            entity.Property(e => e.Parkkey)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("parkkey");
             entity.Property(e => e.Attendance)
                 .HasColumnType("INT")
                 .HasColumnName("attendance");
             entity.Property(e => e.Games)
                 .HasColumnType("smallint")
                 .HasColumnName("games");
-            entity.Property(e => e.Leaguekey)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("leaguekey");
             entity.Property(e => e.Openings)
                 .HasColumnType("smallint")
                 .HasColumnName("openings");
-            entity.Property(e => e.Parkkey)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("parkkey");
             entity.Property(e => e.Spanfirst)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
@@ -694,31 +703,31 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(10)")
                 .HasColumnName("spanlast");
-            entity.Property(e => e.Teamkey)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamkey");
-            entity.Property(e => e.Yearkey)
-                .HasColumnType("INT")
-                .HasColumnName("yearkey");
         });
 
         modelBuilder.Entity<Managers>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.TeamId, e.LgId, e.Inseason });
 
-            entity.Property(e => e.G).HasColumnType("smallint");
-            entity.Property(e => e.Inseason)
-                .HasColumnType("tinyint")
-                .HasColumnName("inseason");
-            entity.Property(e => e.L).HasColumnType("smallint");
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
             entity.Property(e => e.LgId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(3)")
                 .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
+            entity.Property(e => e.Inseason)
+                .HasColumnType("tinyint")
+                .HasColumnName("inseason");
+            entity.Property(e => e.G).HasColumnType("smallint");
+            entity.Property(e => e.L).HasColumnType("smallint");
             entity.Property(e => e.PlyrMgr)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1)")
@@ -726,52 +735,49 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Rank)
                 .HasColumnType("tinyint")
                 .HasColumnName("rank");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
             entity.Property(e => e.W).HasColumnType("smallint");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<ManagersHalf>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.TeamId, e.LgId, e.Half });
 
-            entity.Property(e => e.G).HasColumnType("smallint");
-            entity.Property(e => e.Half)
-                .HasColumnType("tinyint")
-                .HasColumnName("half");
-            entity.Property(e => e.Inseason)
-                .HasColumnType("tinyint")
-                .HasColumnName("inseason");
-            entity.Property(e => e.L).HasColumnType("smallint");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.PlayerId)
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("playerID");
-            entity.Property(e => e.Rank)
-                .HasColumnType("tinyint")
-                .HasColumnName("rank");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
             entity.Property(e => e.TeamId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(4)")
                 .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.Half)
+                .HasColumnType("tinyint")
+                .HasColumnName("half");
+            entity.Property(e => e.G).HasColumnType("smallint");
+            entity.Property(e => e.Inseason)
+                .HasColumnType("tinyint")
+                .HasColumnName("inseason");
+            entity.Property(e => e.L).HasColumnType("smallint");
+            entity.Property(e => e.Rank)
+                .HasColumnType("tinyint")
+                .HasColumnName("rank");
             entity.Property(e => e.W).HasColumnType("smallint");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<Parks>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasIndex(e => e.Parkkey, "IX_Parks_parkkey").IsUnique();
 
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnType("INT")
+                .HasColumnName("ID");
             entity.Property(e => e.City)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(100)")
@@ -780,9 +786,6 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(50)")
                 .HasColumnName("country");
-            entity.Property(e => e.Id)
-                .HasColumnType("INT")
-                .HasColumnName("ID");
             entity.Property(e => e.Parkalias)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(512)")
@@ -902,8 +905,17 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<Pitching>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.Stint });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Stint)
+                .HasColumnType("tinyint")
+                .HasColumnName("stint");
             entity.Property(e => e.Baopp)
                 .HasColumnType("float")
                 .HasColumnName("BAOpp");
@@ -953,9 +965,6 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(3)")
                 .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.R).HasColumnType("smallint");
             entity.Property(e => e.Sf)
                 .HasColumnType("smallint")
@@ -969,9 +978,6 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.So)
                 .HasColumnType("smallint")
                 .HasColumnName("SO");
-            entity.Property(e => e.Stint)
-                .HasColumnType("tinyint")
-                .HasColumnName("stint");
             entity.Property(e => e.Sv)
                 .HasColumnType("smallint")
                 .HasColumnName("SV");
@@ -983,15 +989,22 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Wp)
                 .HasColumnType("smallint")
                 .HasColumnName("WP");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<PitchingPost>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.YearId, e.Round });
 
+            entity.Property(e => e.PlayerId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("playerID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Round)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(10)")
+                .HasColumnName("round");
             entity.Property(e => e.Baopp)
                 .HasColumnType("float")
                 .HasColumnName("BAOpp");
@@ -1041,14 +1054,7 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(3)")
                 .HasColumnName("lgID");
-            entity.Property(e => e.PlayerId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("playerID");
             entity.Property(e => e.R).HasColumnType("smallint");
-            entity.Property(e => e.Round)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(10)")
-                .HasColumnName("round");
             entity.Property(e => e.Sf)
                 .HasColumnType("smallint")
                 .HasColumnName("SF");
@@ -1072,39 +1078,39 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Wp)
                 .HasColumnType("smallint")
                 .HasColumnName("WP");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<Salaries>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.PlayerId, e.TeamId, e.LgId, e.YearId });
 
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.PlayerId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(20)")
                 .HasColumnName("playerID");
-            entity.Property(e => e.Salary)
-                .HasColumnType("bigint")
-                .HasColumnName("salary");
             entity.Property(e => e.TeamId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(4)")
                 .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
             entity.Property(e => e.YearId)
                 .HasColumnType("smallint")
                 .HasColumnName("yearID");
+            entity.Property(e => e.Salary)
+                .HasColumnType("bigint")
+                .HasColumnName("salary");
         });
 
         modelBuilder.Entity<Schools>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => e.SchoolId);
 
+            entity.Property(e => e.SchoolId)
+                .HasColumnType("nvarchar(20)")
+                .HasColumnName("schoolID");
             entity.Property(e => e.City)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(100)")
@@ -1117,9 +1123,6 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(255)")
                 .HasColumnName("name_full");
-            entity.Property(e => e.SchoolId)
-                .HasColumnType("nvarchar(20)")
-                .HasColumnName("schoolID");
             entity.Property(e => e.State)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(50)")
@@ -1128,46 +1131,57 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<SeriesPost>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.TeamIdwinner, e.LgIdwinner, e.YearId, e.Round });
 
-            entity.Property(e => e.LgIdloser)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgIDloser");
-            entity.Property(e => e.LgIdwinner)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgIDwinner");
-            entity.Property(e => e.Losses)
-                .HasColumnType("smallint")
-                .HasColumnName("losses");
-            entity.Property(e => e.Round)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(10)")
-                .HasColumnName("round");
-            entity.Property(e => e.TeamIdloser)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamIDloser");
             entity.Property(e => e.TeamIdwinner)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(4)")
                 .HasColumnName("teamIDwinner");
+            entity.Property(e => e.LgIdwinner)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgIDwinner");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Round)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(10)")
+                .HasColumnName("round");
+            entity.Property(e => e.LgIdloser)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgIDloser");
+            entity.Property(e => e.Losses)
+                .HasColumnType("smallint")
+                .HasColumnName("losses");
+            entity.Property(e => e.TeamIdloser)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamIDloser");
             entity.Property(e => e.Ties)
                 .HasColumnType("smallint")
                 .HasColumnName("ties");
             entity.Property(e => e.Wins)
                 .HasColumnType("smallint")
                 .HasColumnName("wins");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         modelBuilder.Entity<Teams>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.TeamId, e.LgId, e.YearId });
 
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
             entity.Property(e => e.Ab)
                 .HasColumnType("smallint")
                 .HasColumnName("AB");
@@ -1232,10 +1246,6 @@ public partial class BaseballDbContext : DbContext
                 .HasColumnType("smallint")
                 .HasColumnName("IPouts");
             entity.Property(e => e.L).HasColumnType("smallint");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.LgWin)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1)");
@@ -1273,10 +1283,6 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.Sv)
                 .HasColumnType("smallint")
                 .HasColumnName("SV");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
             entity.Property(e => e.TeamIdbr)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(4)")
@@ -1298,9 +1304,6 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1)")
                 .HasColumnName("WSWin");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
             entity.Property(e => e._2b)
                 .HasColumnType("smallint")
                 .HasColumnName("2B");
@@ -1311,15 +1314,15 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<TeamsFranchises>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => e.FranchId);
 
+            entity.Property(e => e.FranchId)
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("franchID");
             entity.Property(e => e.Active)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(2)")
                 .HasColumnName("active");
-            entity.Property(e => e.FranchId)
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("franchID");
             entity.Property(e => e.FranchName)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(100)")
@@ -1332,8 +1335,20 @@ public partial class BaseballDbContext : DbContext
 
         modelBuilder.Entity<TeamsHalf>(entity =>
         {
-            entity.HasNoKey();
+            entity.HasKey(e => new { e.TeamId, e.LgId, e.YearId, e.Half });
 
+            entity.Property(e => e.TeamId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(4)")
+                .HasColumnName("teamID");
+            entity.Property(e => e.LgId)
+                .UseCollation("NOCASE")
+                .HasColumnType("nvarchar(3)")
+                .HasColumnName("lgID");
+            entity.Property(e => e.YearId)
+                .HasColumnType("smallint")
+                .HasColumnName("yearID");
+            entity.Property(e => e.Half).HasColumnType("tinyint");
             entity.Property(e => e.DivId)
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(2)")
@@ -1342,21 +1357,9 @@ public partial class BaseballDbContext : DbContext
                 .UseCollation("NOCASE")
                 .HasColumnType("nvarchar(1)");
             entity.Property(e => e.G).HasColumnType("smallint");
-            entity.Property(e => e.Half).HasColumnType("tinyint");
             entity.Property(e => e.L).HasColumnType("smallint");
-            entity.Property(e => e.LgId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(3)")
-                .HasColumnName("lgID");
             entity.Property(e => e.Rank).HasColumnType("tinyint");
-            entity.Property(e => e.TeamId)
-                .UseCollation("NOCASE")
-                .HasColumnType("nvarchar(4)")
-                .HasColumnName("teamID");
             entity.Property(e => e.W).HasColumnType("smallint");
-            entity.Property(e => e.YearId)
-                .HasColumnType("smallint")
-                .HasColumnName("yearID");
         });
 
         OnModelCreatingPartial(modelBuilder);

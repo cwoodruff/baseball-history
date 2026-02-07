@@ -1,18 +1,21 @@
-﻿namespace baseball_history_web.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace baseball_history_web.Models;
 
 public partial class AllstarFull
 {
-    public string? PlayerId { get; set; }
+    public string PlayerId { get; set; } = null!;
 
-    public short? YearId { get; set; }
+    public short YearId { get; set; }
 
     public string? GameNum { get; set; }
 
-    public string? GameId { get; set; }
+    public string GameId { get; set; } = null!;
 
-    public string? TeamId { get; set; }
+    public string TeamId { get; set; } = null!;
 
-    public string? LgId { get; set; }
+    public string LgId { get; set; } = null!;
 
     public byte? Gp { get; set; }
 
