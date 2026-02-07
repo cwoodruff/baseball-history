@@ -46,4 +46,8 @@ public partial class Appearances
     public string? GPh { get; set; }
 
     public string? GPr { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

@@ -16,4 +16,7 @@ public partial class AwardsPlayers
     public string Tie { get; set; } = null!;
 
     public string Notes { get; set; } = null!;
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
 }

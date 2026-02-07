@@ -5,7 +5,7 @@ namespace baseball_history_web.Models;
 
 public partial class HomeGames
 {
-    public int Yearkey { get; set; }
+    public short Yearkey { get; set; }
 
     public string Leaguekey { get; set; } = null!;
 
@@ -22,4 +22,8 @@ public partial class HomeGames
     public short? Openings { get; set; }
 
     public int? Attendance { get; set; }
+
+    // Navigation properties
+    public virtual Parks Park { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

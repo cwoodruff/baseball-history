@@ -24,4 +24,8 @@ public partial class ManagersHalf
     public short? L { get; set; }
 
     public byte? Rank { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

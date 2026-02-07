@@ -1362,6 +1362,267 @@ public partial class BaseballDbContext : DbContext
             entity.Property(e => e.W).HasColumnType("smallint");
         });
 
+        // Configure relationships
+
+        // Teams -> TeamsFranchises
+        modelBuilder.Entity<Teams>()
+            .HasOne(t => t.Franchise)
+            .WithMany(f => f.Teams)
+            .HasForeignKey(t => t.FranchId)
+            .HasPrincipalKey(f => f.FranchId);
+
+        // TeamsHalf -> Teams
+        modelBuilder.Entity<TeamsHalf>()
+            .HasOne(th => th.Team)
+            .WithMany(t => t.TeamsHalves)
+            .HasForeignKey(th => new { th.TeamId, th.LgId, th.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // Batting -> People
+        modelBuilder.Entity<Batting>()
+            .HasOne(b => b.Player)
+            .WithMany(p => p.Battings)
+            .HasForeignKey(b => b.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // Batting -> Teams
+        modelBuilder.Entity<Batting>()
+            .HasOne(b => b.Team)
+            .WithMany(t => t.Battings)
+            .HasForeignKey(b => new { b.TeamId, b.LgId, b.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // BattingPost -> People
+        modelBuilder.Entity<BattingPost>()
+            .HasOne(b => b.Player)
+            .WithMany(p => p.BattingPosts)
+            .HasForeignKey(b => b.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // BattingPost -> Teams
+        modelBuilder.Entity<BattingPost>()
+            .HasOne(b => b.Team)
+            .WithMany(t => t.BattingPosts)
+            .HasForeignKey(b => new { b.TeamId, b.LgId, b.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // Pitching -> People
+        modelBuilder.Entity<Pitching>()
+            .HasOne(p => p.Player)
+            .WithMany(pe => pe.Pitchings)
+            .HasForeignKey(p => p.PlayerId)
+            .HasPrincipalKey(pe => pe.PlayerId);
+
+        // Pitching -> Teams
+        modelBuilder.Entity<Pitching>()
+            .HasOne(p => p.Team)
+            .WithMany(t => t.Pitchings)
+            .HasForeignKey(p => new { p.TeamId, p.LgId, p.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // PitchingPost -> People
+        modelBuilder.Entity<PitchingPost>()
+            .HasOne(p => p.Player)
+            .WithMany(pe => pe.PitchingPosts)
+            .HasForeignKey(p => p.PlayerId)
+            .HasPrincipalKey(pe => pe.PlayerId);
+
+        // PitchingPost -> Teams
+        modelBuilder.Entity<PitchingPost>()
+            .HasOne(p => p.Team)
+            .WithMany(t => t.PitchingPosts)
+            .HasForeignKey(p => new { p.TeamId, p.LgId, p.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // Fielding -> People
+        modelBuilder.Entity<Fielding>()
+            .HasOne(f => f.Player)
+            .WithMany(p => p.Fieldings)
+            .HasForeignKey(f => f.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // Fielding -> Teams
+        modelBuilder.Entity<Fielding>()
+            .HasOne(f => f.Team)
+            .WithMany(t => t.Fieldings)
+            .HasForeignKey(f => new { f.TeamId, f.LgId, f.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // FieldingOf -> People
+        modelBuilder.Entity<FieldingOf>()
+            .HasOne(f => f.Player)
+            .WithMany(p => p.FieldingOfs)
+            .HasForeignKey(f => f.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // FieldingOfsplit -> People
+        modelBuilder.Entity<FieldingOfsplit>()
+            .HasOne(f => f.Player)
+            .WithMany(p => p.FieldingOfsplits)
+            .HasForeignKey(f => f.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // FieldingOfsplit -> Teams
+        modelBuilder.Entity<FieldingOfsplit>()
+            .HasOne(f => f.Team)
+            .WithMany(t => t.FieldingOfsplits)
+            .HasForeignKey(f => new { f.TeamId, f.LgId, f.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // FieldingPost -> People
+        modelBuilder.Entity<FieldingPost>()
+            .HasOne(f => f.Player)
+            .WithMany(p => p.FieldingPosts)
+            .HasForeignKey(f => f.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // FieldingPost -> Teams
+        modelBuilder.Entity<FieldingPost>()
+            .HasOne(f => f.Team)
+            .WithMany(t => t.FieldingPosts)
+            .HasForeignKey(f => new { f.TeamId, f.LgId, f.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // Appearances -> People
+        modelBuilder.Entity<Appearances>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.Appearances)
+            .HasForeignKey(a => a.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // Appearances -> Teams
+        modelBuilder.Entity<Appearances>()
+            .HasOne(a => a.Team)
+            .WithMany(t => t.Appearances)
+            .HasForeignKey(a => new { a.TeamId, a.LgId, a.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // Salaries -> People
+        modelBuilder.Entity<Salaries>()
+            .HasOne(s => s.Player)
+            .WithMany(p => p.Salaries)
+            .HasForeignKey(s => s.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // Salaries -> Teams
+        modelBuilder.Entity<Salaries>()
+            .HasOne(s => s.Team)
+            .WithMany(t => t.Salaries)
+            .HasForeignKey(s => new { s.TeamId, s.LgId, s.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // Managers -> People
+        modelBuilder.Entity<Managers>()
+            .HasOne(m => m.Player)
+            .WithMany(p => p.Managers)
+            .HasForeignKey(m => m.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // Managers -> Teams
+        modelBuilder.Entity<Managers>()
+            .HasOne(m => m.Team)
+            .WithMany(t => t.Managers)
+            .HasForeignKey(m => new { m.TeamId, m.LgId, m.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // ManagersHalf -> People
+        modelBuilder.Entity<ManagersHalf>()
+            .HasOne(m => m.Player)
+            .WithMany(p => p.ManagersHalves)
+            .HasForeignKey(m => m.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // ManagersHalf -> Teams
+        modelBuilder.Entity<ManagersHalf>()
+            .HasOne(m => m.Team)
+            .WithMany(t => t.ManagersHalves)
+            .HasForeignKey(m => new { m.TeamId, m.LgId, m.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // AllstarFull -> People (no Teams FK due to historical leagues)
+        modelBuilder.Entity<AllstarFull>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.AllstarFulls)
+            .HasForeignKey(a => a.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // HallOfFame -> People
+        modelBuilder.Entity<HallOfFame>()
+            .HasOne(h => h.Player)
+            .WithMany(p => p.HallOfFames)
+            .HasForeignKey(h => h.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // AwardsPlayers -> People
+        modelBuilder.Entity<AwardsPlayers>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.AwardsPlayers)
+            .HasForeignKey(a => a.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // AwardsManagers -> People
+        modelBuilder.Entity<AwardsManagers>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.AwardsManagers)
+            .HasForeignKey(a => a.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // AwardsSharePlayers -> People
+        modelBuilder.Entity<AwardsSharePlayers>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.AwardsSharePlayers)
+            .HasForeignKey(a => a.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // AwardsShareManagers -> People
+        modelBuilder.Entity<AwardsShareManagers>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.AwardsShareManagers)
+            .HasForeignKey(a => a.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // CollegePlaying -> People
+        modelBuilder.Entity<CollegePlaying>()
+            .HasOne(c => c.Player)
+            .WithMany(p => p.CollegePlayings)
+            .HasForeignKey(c => c.PlayerId)
+            .HasPrincipalKey(p => p.PlayerId);
+
+        // CollegePlaying -> Schools
+        modelBuilder.Entity<CollegePlaying>()
+            .HasOne(c => c.School)
+            .WithMany(s => s.CollegePlayings)
+            .HasForeignKey(c => c.SchoolId)
+            .HasPrincipalKey(s => s.SchoolId);
+
+        // HomeGames -> Parks
+        modelBuilder.Entity<HomeGames>()
+            .HasOne(h => h.Park)
+            .WithMany(p => p.HomeGames)
+            .HasForeignKey(h => h.Parkkey)
+            .HasPrincipalKey(p => p.Parkkey);
+
+        // HomeGames -> Teams
+        modelBuilder.Entity<HomeGames>()
+            .HasOne(h => h.Team)
+            .WithMany(t => t.HomeGames)
+            .HasForeignKey(h => new { h.Teamkey, h.Leaguekey, h.Yearkey })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // SeriesPost -> Teams (Winner)
+        modelBuilder.Entity<SeriesPost>()
+            .HasOne(s => s.TeamWinner)
+            .WithMany(t => t.SeriesPostsWon)
+            .HasForeignKey(s => new { s.TeamIdwinner, s.LgIdwinner, s.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
+        // SeriesPost -> Teams (Loser)
+        modelBuilder.Entity<SeriesPost>()
+            .HasOne(s => s.TeamLoser)
+            .WithMany(t => t.SeriesPostsLost)
+            .HasForeignKey(s => new { s.TeamIdloser, s.LgIdloser, s.YearId })
+            .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
+
         OnModelCreatingPartial(modelBuilder);
     }
 

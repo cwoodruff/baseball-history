@@ -14,4 +14,8 @@ public partial class Salaries
     public string PlayerId { get; set; } = null!;
 
     public long? Salary { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

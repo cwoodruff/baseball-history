@@ -22,4 +22,8 @@ public partial class SeriesPost
     public short? Losses { get; set; }
 
     public short? Ties { get; set; }
+
+    // Navigation properties
+    public virtual Teams TeamWinner { get; set; } = null!;
+    public virtual Teams? TeamLoser { get; set; }
 }

@@ -24,4 +24,8 @@ public partial class Managers
     public byte? Rank { get; set; }
 
     public string? PlyrMgr { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

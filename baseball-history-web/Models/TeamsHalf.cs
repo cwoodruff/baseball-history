@@ -24,4 +24,7 @@ public partial class TeamsHalf
     public string? W { get; set; }
 
     public string? L { get; set; }
+
+    // Navigation properties
+    public virtual Teams Team { get; set; } = null!;
 }

@@ -20,4 +20,7 @@ public partial class AllstarFull
     public byte? Gp { get; set; }
 
     public string? StartingPos { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
 }

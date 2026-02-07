@@ -48,4 +48,8 @@ public partial class BattingPost
     public string? Sf { get; set; }
 
     public string? Gidp { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

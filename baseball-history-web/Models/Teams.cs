@@ -100,4 +100,22 @@ public partial class Teams
     public string? TeamIdlahman45 { get; set; }
 
     public string? TeamIdretro { get; set; }
+
+    // Navigation properties
+    public virtual TeamsFranchises? Franchise { get; set; }
+    public virtual ICollection<Appearances> Appearances { get; set; } = new List<Appearances>();
+    public virtual ICollection<Batting> Battings { get; set; } = new List<Batting>();
+    public virtual ICollection<BattingPost> BattingPosts { get; set; } = new List<BattingPost>();
+    public virtual ICollection<Fielding> Fieldings { get; set; } = new List<Fielding>();
+    public virtual ICollection<FieldingOfsplit> FieldingOfsplits { get; set; } = new List<FieldingOfsplit>();
+    public virtual ICollection<FieldingPost> FieldingPosts { get; set; } = new List<FieldingPost>();
+    public virtual ICollection<HomeGames> HomeGames { get; set; } = new List<HomeGames>();
+    public virtual ICollection<Managers> Managers { get; set; } = new List<Managers>();
+    public virtual ICollection<ManagersHalf> ManagersHalves { get; set; } = new List<ManagersHalf>();
+    public virtual ICollection<Pitching> Pitchings { get; set; } = new List<Pitching>();
+    public virtual ICollection<PitchingPost> PitchingPosts { get; set; } = new List<PitchingPost>();
+    public virtual ICollection<Salaries> Salaries { get; set; } = new List<Salaries>();
+    public virtual ICollection<SeriesPost> SeriesPostsWon { get; set; } = new List<SeriesPost>();
+    public virtual ICollection<SeriesPost> SeriesPostsLost { get; set; } = new List<SeriesPost>();
+    public virtual ICollection<TeamsHalf> TeamsHalves { get; set; } = new List<TeamsHalf>();
 }

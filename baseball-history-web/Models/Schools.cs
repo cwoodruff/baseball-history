@@ -14,4 +14,7 @@ public partial class Schools
     public string? State { get; set; }
 
     public string? Country { get; set; }
+
+    // Navigation properties
+    public virtual ICollection<CollegePlaying> CollegePlayings { get; set; } = new List<CollegePlaying>();
 }

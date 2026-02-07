@@ -18,4 +18,7 @@ public partial class AwardsShareManagers
     public short? PointsMax { get; set; }
 
     public short? VotesFirst { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
 }

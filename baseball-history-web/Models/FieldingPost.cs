@@ -38,4 +38,8 @@ public partial class FieldingPost
     public string? Sb { get; set; }
 
     public string? Cs { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
+    public virtual Teams Team { get; set; } = null!;
 }

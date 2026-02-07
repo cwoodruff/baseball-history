@@ -18,4 +18,7 @@ public partial class Parks
     public string? State { get; set; }
 
     public string? Country { get; set; }
+
+    // Navigation properties
+    public virtual ICollection<HomeGames> HomeGames { get; set; } = new List<HomeGames>();
 }

@@ -16,4 +16,7 @@ public partial class FieldingOf
     public string? Gcf { get; set; }
 
     public string? Grf { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
 }

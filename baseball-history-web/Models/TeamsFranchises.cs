@@ -12,4 +12,7 @@ public partial class TeamsFranchises
     public string? Active { get; set; }
 
     public string? Naassoc { get; set; }
+
+    // Navigation properties
+    public virtual ICollection<Teams> Teams { get; set; } = new List<Teams>();
 }

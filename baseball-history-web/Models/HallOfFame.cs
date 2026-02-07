@@ -22,4 +22,7 @@ public partial class HallOfFame
     public string? Category { get; set; }
 
     public string? NeededNote { get; set; }
+
+    // Navigation properties
+    public virtual People Player { get; set; } = null!;
 }
