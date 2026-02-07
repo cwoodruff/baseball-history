@@ -1,8 +1,8 @@
-# Baseball History Web Application
+# Baseball History Web App
 
 A web application for exploring Major League Baseball history using the Lahman
-Baseball Database. Built with ASP.NET Core Razor Pages, Entity Framework Core,
-HTMX, and Bootstrap.
+Baseball Database. Baseball data and statistics from 1871 to 2025. Built with ASP.NET Core Razor Pages, Entity Framework Core,
+htmx, and Bootstrap.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ over 150 years of Major League Baseball statistics, including:
 | Backend   | ASP.NET Core 10.0, Razor Pages       |
 | Database  | SQLite with Lahman Baseball Database |
 | ORM       | Entity Framework Core 10.0           |
-| Frontend  | HTMX 2.0.4, Bootstrap 5              |
+| Frontend  | htmx 2.0.4, Bootstrap 5              |
 | Hosting   | .NET Aspire (optional)               |
 
 ## Documentation
@@ -39,7 +39,7 @@ over 150 years of Major League Baseball statistics, including:
   patterns
 - [Database Design](./docs/DATABASE.md) - Database schema and Entity Framework
   configuration
-- [Frontend Design](./docs/FRONTEND.md) - HTMX patterns, Bootstrap theming, and CSS
+- [Frontend Design](./docs/FRONTEND.md) - htmx patterns, Bootstrap theming, and CSS
   architecture
 - [Features](./docs/FEATURES.md) - Detailed feature documentation
 - [API Reference](./docs/API.md) - Page models and data flow
@@ -89,7 +89,7 @@ baseball-history/
 │   │   ├── Stats/                 # Statistical leaderboards
 │   │   ├── HallOfFame/            # Hall of Fame browser
 │   │   └── Shared/                # Layouts and components
-│   ├── Extensions/                # Helper extensions (HTMX, etc.)
+│   ├── Extensions/                # Helper extensions (htmx, etc.)
 │   ├── wwwroot/                   # Static files (CSS, JS)
 │   └── Program.cs                 # Application entry point
 ├── baseball-history-aspire/       # .NET Aspire orchestration
@@ -98,10 +98,10 @@ baseball-history/
 
 ## Key Features
 
-- **No JavaScript Required**: Uses HTMX for dynamic content loading
+- **No JavaScript Required**: Uses htmx for dynamic content loading
 - **MLB Theming**: Official MLB color scheme with team-specific colors
 - **Responsive Design**: Mobile-friendly Bootstrap layout
-- **Fast Navigation**: HTMX boost for SPA-like navigation
+- **Fast Navigation**: htmx boost for SPA-like navigation
 - **Player Modals**: Quick view of player details without page navigation
 - **Advanced Filtering**: Filter leaderboards by year, league, and minimums
 
