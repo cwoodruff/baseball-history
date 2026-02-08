@@ -77,7 +77,8 @@ else
                         </a>
                     </th>
                     <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "rbi" ? "fw-bold" : "")"
+                        <a href="#"
+                           class="text-black text-decoration-none @(Model.StatColumn == "rbi" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=rbi"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -113,7 +114,8 @@ else
                         </a>
                     </th>
                     <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "avg" ? "fw-bold" : "")"
+                        <a href="#"
+                           class="text-black text-decoration-none @(Model.StatColumn == "avg" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=avg"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -122,7 +124,8 @@ else
                         </a>
                     </th>
                     <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "ops" ? "fw-bold" : "")"
+                        <a href="#"
+                           class="text-black text-decoration-none @(Model.StatColumn == "ops" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=ops"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"

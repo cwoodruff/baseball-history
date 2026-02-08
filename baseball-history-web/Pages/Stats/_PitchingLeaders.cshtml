@@ -95,7 +95,8 @@ else
                         </a>
                     </th>
                     <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "era" ? "fw-bold" : "")"
+                        <a href="#"
+                           class="text-black text-decoration-none @(Model.StatColumn == "era" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=era"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -104,7 +105,8 @@ else
                         </a>
                     </th>
                     <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "whip" ? "fw-bold" : "")"
+                        <a href="#"
+                           class="text-black text-decoration-none @(Model.StatColumn == "whip" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=whip"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"

@@ -81,7 +81,6 @@ baseball-history/
 │   │   ├── js/
 │   │   └── lib/
 │   └── Program.cs            # Entry point
-├── baseball-history-aspire/  # Aspire orchestration
 └── docs/                     # Documentation
 ```
 
