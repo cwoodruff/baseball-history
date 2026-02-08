@@ -22,16 +22,114 @@ else
                         <th>Year</th>
                         <th>Team</th>
                     }
-                    <th class="text-end">G</th>
-                    <th class="text-end">AB</th>
-                    <th class="text-end">H</th>
-                    <th class="text-end">2B</th>
-                    <th class="text-end">3B</th>
-                    <th class="text-end bg-mlb-navy text-white">HR</th>
-                    <th class="text-end">R</th>
-                    <th class="text-end">BB</th>
-                    <th class="text-end">AVG</th>
-                    <th class="text-end">OPS</th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "g" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=g"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            G @(Model.StatColumn == "g" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "ab" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=ab"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            AB @(Model.StatColumn == "ab" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "h" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=h"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            H @(Model.StatColumn == "h" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "2b" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=2b"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            2B @(Model.StatColumn == "2b" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "3b" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=3b"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            3B @(Model.StatColumn == "3b" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "hr" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=hr"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            HR @(Model.StatColumn == "hr" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "rbi" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=rbi"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            RBI @(Model.StatColumn == "rbi" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "r" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=r"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            R @(Model.StatColumn == "r" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "sb" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=sb"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            SB @(Model.StatColumn == "sb" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "bb" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=bb"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            BB @(Model.StatColumn == "bb" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "avg" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=avg"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            AVG @(Model.StatColumn == "avg" ? "↓" : "")
+                        </a>
+                    </th>
+                    <th class="text-end">
+                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "ops" ? "fw-bold" : "")"
+                           hx-get="/Stats/Batting?stat=ops"
+                           hx-include="#filter-form"
+                           hx-target="#leaderboard"
+                           hx-push-url="true">
+                            OPS @(Model.StatColumn == "ops" ? "↓" : "")
+                        </a>
+                    </th>
                 </tr>
                 </thead>
                 <tbody>
@@ -57,16 +155,18 @@ else
                             <td>@leader.Year</td>
                             <td>@(leader.TeamName ?? leader.TeamId)</td>
                         }
-                        <td class="text-end stat-cell">@leader.Games.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.AtBats.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.Hits.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.Doubles.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.Triples.ToString("N0")</td>
-                        <td class="text-end stat-cell fw-bold">@leader.HomeRuns.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.Runs.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.Walks.ToString("N0")</td>
-                        <td class="text-end stat-cell">@leader.FormattedAvg</td>
-                        <td class="text-end stat-cell">@leader.FormattedOps</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "g" ? "fw-bold" : "")">@leader.Games.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "ab" ? "fw-bold" : "")">@leader.AtBats.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "h" ? "fw-bold" : "")">@leader.Hits.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "2b" ? "fw-bold" : "")">@leader.Doubles.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "3b" ? "fw-bold" : "")">@leader.Triples.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "hr" ? "fw-bold" : "")">@leader.HomeRuns.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "rbi" ? "fw-bold" : "")">@leader.Rbi.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "r" ? "fw-bold" : "")">@leader.Runs.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "sb" ? "fw-bold" : "")">@leader.StolenBases.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "bb" ? "fw-bold" : "")">@leader.Walks.ToString("N0")</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "avg" ? "fw-bold" : "")">@leader.FormattedAvg</td>
+                        <td class="text-end stat-cell @(Model.StatColumn == "ops" ? "fw-bold" : "")">@leader.FormattedOps</td>
                     </tr>
                 }
                 </tbody>

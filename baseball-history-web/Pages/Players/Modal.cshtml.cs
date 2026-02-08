@@ -66,10 +66,9 @@ public class ModalModel : PageModel
                     Triples = battingData.Sum(b => b._3b ?? 0),
                     HomeRuns = battingData.Sum(b => b.Hr ?? 0),
                     Walks = battingData.Sum(b => b.Bb ?? 0),
-                    // Parse string fields safely in memory
-                    Rbi = battingData.Sum(b => int.TryParse(b.Rbi, out var rbi) ? rbi : 0),
-                    StolenBases = battingData.Sum(b => int.TryParse(b.Sb, out var sb) ? sb : 0),
-                    Strikeouts = battingData.Sum(b => int.TryParse(b.So, out var so) ? so : 0)
+                    Rbi = battingData.Sum(b => b.Rbi ?? 0),
+                    StolenBases = battingData.Sum(b => b.Sb ?? 0),
+                    Strikeouts = battingData.Sum(b => b.So ?? 0)
                 };
             }
         }
@@ -103,8 +102,8 @@ public class ModalModel : PageModel
             var erSum = pitchingData.Sum(p => p.Er ?? 0);
             Player.PitchingStats.EarnedRuns = erSum;
 
-            // Parse HR (stored as string)
-            var hrSum = pitchingData.Sum(p => int.TryParse(p.Hr, out var hr) ? hr : 0);
+            // Parse HR
+            var hrSum = pitchingData.Sum(p => p.Hr ?? 0);
             Player.PitchingStats.HomeRuns = hrSum;
         }
 

@@ -28,26 +28,16 @@ public partial class Batting
     public short? _3b { get; set; }
 
     public short? Hr { get; set; }
-
-    public string? Rbi { get; set; }
-
-    public string? Sb { get; set; }
-
-    public string? Cs { get; set; }
-
+    public short? Rbi { get; set; }
+    public short? Sb { get; set; }
+    public short? Cs { get; set; }
     public short? Bb { get; set; }
-
-    public string? So { get; set; }
-
-    public string? Ibb { get; set; }
-
-    public string? Hbp { get; set; }
-
-    public string? Sh { get; set; }
-
-    public string? Sf { get; set; }
-
-    public string? Gidp { get; set; }
+    public short? So { get; set; }
+    public short? Ibb { get; set; }
+    public short? Hbp { get; set; }
+    public short? Sh { get; set; }
+    public short? Sf { get; set; }
+    public short? Gidp { get; set; }
 
     // Navigation properties
     public virtual People Player { get; set; } = null!;

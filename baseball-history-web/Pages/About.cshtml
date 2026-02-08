@@ -1,0 +1,86 @@
+@page
+@model AboutModel
+@{
+    ViewData["Title"] = "About";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1 class="mb-4">@ViewData["Title"]</h1>
+
+            <section class="mb-5">
+                <h2>Overview</h2>
+                <p>
+                    <strong>Baseball History</strong> is an interactive web application that allows users to explore
+                    over 150 years of Major League Baseball statistics. This application provides a comprehensive look
+                    at the game's history from 1871 to 2025.
+                </p>
+                <p>
+                    Key features include:
+                </p>
+                <ul>
+                    <li><strong>Player Browser</strong>: Browse players alphabetically with career statistics.</li>
+                    <li><strong>Team Browser</strong>: Explore franchises and their season-by-season history.</li>
+                    <li><strong>Statistical Leaders</strong>: View batting and pitching leaderboards with advanced filters.</li>
+                    <li><strong>Hall of Fame</strong>: Browse Hall of Fame inductees by year and category.</li>
+                    <li><strong>Global Search</strong>: Quickly find players and teams across the entire history of the game.</li>
+                </ul>
+            </section>
+
+            <section class="mb-5">
+                <h2>Data Source</h2>
+                <p>
+                    The data for this application is provided by the 
+                    <a href="https://www.seanlahman.com/baseball-archive/statistics/" target="_blank" rel="noopener">Lahman Baseball Database</a>.
+                    This comprehensive database of Major League Baseball statistics has been maintained by Sean Lahman 
+                    and his contributors for many years and is a standard resource for baseball researchers and enthusiasts.
+                </p>
+                <div class="alert alert-info">
+                    <p class="mb-0">
+                        <strong>License Information:</strong> This project uses the Lahman Baseball Database, 
+                        which is available under the 
+                        <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.
+                    </p>
+                </div>
+            </section>
+
+            <section class="mb-5">
+                <h2>Technology Stack</h2>
+                <p>
+                    This application is built using modern web technologies to provide a fast and responsive experience:
+                </p>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Technology</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Backend</td>
+                            <td>ASP.NET Core 10.0, Razor Pages</td>
+                        </tr>
+                        <tr>
+                            <td>Database</td>
+                            <td>SQLite with Lahman Baseball Database</td>
+                        </tr>
+                        <tr>
+                            <td>ORM</td>
+                            <td>Entity Framework Core 10.0</td>
+                        </tr>
+                        <tr>
+                            <td>Frontend</td>
+                            <td>htmx 2.0.4, Bootstrap 5</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    By leveraging <strong>htmx</strong>, the application provides a smooth, "Single Page Application" feel 
+                    without the complexity of a heavy JavaScript framework.
+                </p>
+            </section>
+        </div>
+    </div>
+</div>

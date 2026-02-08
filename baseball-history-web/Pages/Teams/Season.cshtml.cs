@@ -69,9 +69,9 @@ public class SeasonModel : PageModel
         foreach (var batter in batters)
         {
             var rbi = rbiData.FirstOrDefault(r => r.PlayerId == batter.PlayerId);
-            if (rbi != null && int.TryParse(rbi.Rbi, out var rbiVal))
+            if (rbi != null)
             {
-                batter.Rbi = rbiVal;
+                batter.Rbi = rbi.Rbi ?? 0;
             }
 
             batter.IsInHallOfFame = hofPlayerIds.Contains(batter.PlayerId);

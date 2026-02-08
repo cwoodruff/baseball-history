@@ -34,36 +34,21 @@ public partial class Pitching
     public short? H { get; set; }
 
     public short? Er { get; set; }
-
-    public string? Hr { get; set; }
-
+    public short? Hr { get; set; }
     public short? Bb { get; set; }
-
     public short? So { get; set; }
-
-    public string? Baopp { get; set; }
-
-    public string? Era { get; set; }
-
-    public string? Ibb { get; set; }
-
-    public string? Wp { get; set; }
-
-    public string? Hbp { get; set; }
-
-    public string? Bk { get; set; }
-
-    public string? Bfp { get; set; }
-
-    public string? Gf { get; set; }
-
+    public double? Baopp { get; set; }
+    public double? Era { get; set; }
+    public short? Ibb { get; set; }
+    public short? Wp { get; set; }
+    public short? Hbp { get; set; }
+    public short? Bk { get; set; }
+    public short? Bfp { get; set; }
+    public short? Gf { get; set; }
     public short? R { get; set; }
-
-    public string? Sh { get; set; }
-
-    public string? Sf { get; set; }
-
-    public string? Gidp { get; set; }
+    public short? Sh { get; set; }
+    public short? Sf { get; set; }
+    public short? Gidp { get; set; }
 
     // Navigation properties
     public virtual People Player { get; set; } = null!;

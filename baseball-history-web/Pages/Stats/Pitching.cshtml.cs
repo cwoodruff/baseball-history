@@ -103,7 +103,7 @@ public class PitchingModel : PageModel
                     IPOuts = p.Ipouts ?? 0,
                     H = p.H ?? 0,
                     ER = p.Er ?? 0,
-                    HR = p.Hr, // String field
+                    HR = p.Hr ?? 0,
                     BB = p.Bb ?? 0,
                     SO = p.So ?? 0
                 })
@@ -127,7 +127,7 @@ public class PitchingModel : PageModel
                     InningsPitched = p.IPOuts / 3.0,
                     Hits = p.H,
                     EarnedRuns = p.ER,
-                    HomeRuns = int.TryParse(p.HR, out var hr) ? hr : 0,
+                    HomeRuns = p.HR,
                     Walks = p.BB,
                     Strikeouts = p.SO,
                     IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId)
@@ -175,7 +175,7 @@ public class PitchingModel : PageModel
                     IPOuts = g.Sum(p => p.Ipouts ?? 0),
                     H = g.Sum(p => p.H ?? 0),
                     ER = g.Sum(p => p.Er ?? 0),
-                    HR = g.Sum(p => int.TryParse(p.Hr, out var hr) ? hr : 0),
+                    HR = g.Sum(p => p.Hr ?? 0),
                     BB = g.Sum(p => p.Bb ?? 0),
                     SO = g.Sum(p => p.So ?? 0)
                 })

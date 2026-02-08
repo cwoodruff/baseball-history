@@ -28,6 +28,9 @@
                         <a class="nav-link" asp-area="" asp-page="/Index">Home</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" asp-area="" asp-page="/About">About</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" asp-area="" asp-page="/Players/Index">Players</a>
                     </li>
                     <li class="nav-item">
@@ -35,10 +38,10 @@
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="statsDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false" hx-boost="false">
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             Stats
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="statsDropdown">
+                        <ul class="dropdown-menu shadow" aria-labelledby="statsDropdown">
                             <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Batting">Batting Leaders</a></li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Pitching">Pitching Leaders</a>
                             </li>
@@ -81,6 +84,8 @@
                 <span>Data from the <a href="https://www.seanlahman.com/baseball-archive/statistics/" target="_blank">Lahman Baseball Database</a></span>
             </div>
             <div class="col-md-6 text-md-end">
+                <a asp-area="" asp-page="/About">About</a>
+                <span class="mx-2">|</span>
                 <a asp-area="" asp-page="/Privacy">Privacy</a>
                 <span class="mx-2">|</span>
                 <a asp-area="" asp-page="/Health">Health Check</a>
@@ -123,6 +128,7 @@
         }
     });
 
+    // Reinitialize Bootstrap components after HTMX swaps
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         // Initialize any Bootstrap modals loaded via HTMX
         if (evt.detail.target.id === 'modal-container') {
@@ -154,24 +160,26 @@
             }
         }
 
-        // Reinitialize Bootstrap dropdowns after any HTMX swap
-        var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-        dropdowns.forEach(function (dropdown) {
-            if (!bootstrap.Dropdown.getInstance(dropdown)) {
-                new bootstrap.Dropdown(dropdown);
-            }
-        });
-    });
-
-    // Also reinitialize on page load via htmx:afterSettle for boosted navigation
-    document.body.addEventListener('htmx:afterSettle', function (evt) {
         // Reinitialize Bootstrap dropdowns
         var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
         dropdowns.forEach(function (dropdown) {
-            // Check if already initialized
-            if (!bootstrap.Dropdown.getInstance(dropdown)) {
-                new bootstrap.Dropdown(dropdown);
+            var instance = bootstrap.Dropdown.getInstance(dropdown);
+            if (instance) {
+                instance.dispose();
             }
+            new bootstrap.Dropdown(dropdown);
+        });
+    });
+
+    // Also handle htmx:afterSettle for boosted navigation
+    document.body.addEventListener('htmx:afterSettle', function (evt) {
+        var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+        dropdowns.forEach(function (dropdown) {
+            var instance = bootstrap.Dropdown.getInstance(dropdown);
+            if (instance) {
+                instance.dispose();
+            }
+            new bootstrap.Dropdown(dropdown);
         });
     });
 

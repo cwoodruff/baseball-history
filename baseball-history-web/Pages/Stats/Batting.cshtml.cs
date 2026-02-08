@@ -96,6 +96,8 @@ public class BattingModel : PageModel
                     Doubles = b._2b ?? 0,
                     Triples = b._3b ?? 0,
                     HR = b.Hr ?? 0,
+                    RBI = b.Rbi ?? 0,
+                    SB = b.Sb ?? 0,
                     BB = b.Bb ?? 0
                 })
                 .ToListAsync();
@@ -115,6 +117,8 @@ public class BattingModel : PageModel
                     Doubles = b.Doubles,
                     Triples = b.Triples,
                     HomeRuns = b.HR,
+                    Rbi = b.RBI,
+                    StolenBases = b.SB,
                     Walks = b.BB,
                     IsInHallOfFame = hofPlayerIds.Contains(b.PlayerId)
                 })
@@ -150,6 +154,8 @@ public class BattingModel : PageModel
                     Doubles = g.Sum(b => b._2b ?? 0),
                     Triples = g.Sum(b => b._3b ?? 0),
                     HR = g.Sum(b => b.Hr ?? 0),
+                    RBI = g.Sum(b => b.Rbi ?? 0),
+                    SB = g.Sum(b => b.Sb ?? 0),
                     BB = g.Sum(b => b.Bb ?? 0)
                 })
                 .Where(x => x.AB >= minAb)
@@ -173,6 +179,8 @@ public class BattingModel : PageModel
                     Doubles = c.Doubles,
                     Triples = c.Triples,
                     HomeRuns = c.HR,
+                    Rbi = c.RBI,
+                    StolenBases = c.SB,
                     Walks = c.BB,
                     IsInHallOfFame = hofPlayerIds.Contains(c.PlayerId)
                 })
