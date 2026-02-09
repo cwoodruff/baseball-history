@@ -10,6 +10,8 @@ public class SearchViewModel
     public List<SearchResult> Teams { get; set; } = new();
     public int TotalResults => Players.Count + Teams.Count;
     public bool HasResults => TotalResults > 0;
+    public int TotalPlayerCount { get; set; }
+    public int TotalTeamCount { get; set; }
 }
 
 /// <summary>

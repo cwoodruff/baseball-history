@@ -1,0 +1,98 @@
+@model baseball_history_web.ViewModels.SearchViewModel
+
+<div class="modal fade" id="searchAllResultsModal" tabindex="-1" aria-labelledby="searchAllResultsModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="searchAllResultsModalLabel">
+                    Search Results for "@Model.Query"
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (!Model.HasResults)
+                {
+                    <div class="text-center text-muted py-4">
+                        No results found for "@Model.Query"
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        @if (Model.Players.Any())
+                        {
+                            <div class="@(Model.Teams.Any() ? "col-lg-8" : "col-12")">
+                                <h6 class="text-muted fw-bold mb-3">
+                                    PLAYERS
+                                    @if (Model.TotalPlayerCount > Model.Players.Count)
+                                    {
+                                        <small class="fw-normal">(showing @Model.Players.Count of @Model.TotalPlayerCount)</small>
+                                    }
+                                </h6>
+                                <div class="list-group list-group-flush">
+                                    @foreach (var player in Model.Players)
+                                    {
+                                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center"
+                                           hx-get="/Players/Modal/@player.Id"
+                                           hx-target="#modal-container"
+                                           hx-swap="innerHTML"
+                                           hx-boost="false">
+                                            <div class="result-icon me-3">@player.Initials</div>
+                                            <div>
+                                                <div class="fw-bold">
+                                                    @player.Title
+                                                    @if (player.IsInHallOfFame)
+                                                    {
+                                                        <span class="hof-badge ms-1">HOF</span>
+                                                    }
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(player.Subtitle))
+                                                {
+                                                    <small class="text-muted">@player.Subtitle</small>
+                                                }
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (Model.Teams.Any())
+                        {
+                            <div class="@(Model.Players.Any() ? "col-lg-4" : "col-12")">
+                                <h6 class="text-muted fw-bold mb-3">
+                                    TEAMS
+                                    @if (Model.TotalTeamCount > Model.Teams.Count)
+                                    {
+                                        <small class="fw-normal">(showing @Model.Teams.Count of @Model.TotalTeamCount)</small>
+                                    }
+                                </h6>
+                                <div class="list-group list-group-flush">
+                                    @foreach (var team in Model.Teams)
+                                    {
+                                        <a href="/Teams/Franchise/@team.Id" class="list-group-item list-group-item-action d-flex align-items-center"
+                                           data-team="@team.TeamId"
+                                           data-bs-dismiss="modal">
+                                            <div class="result-icon bg-team-gradient me-3">@team.Initials</div>
+                                            <div>
+                                                <div class="fw-bold">@team.Title</div>
+                                                @if (!string.IsNullOrEmpty(team.Subtitle))
+                                                {
+                                                    <small class="text-muted">@team.Subtitle</small>
+                                                }
+                                            </div>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

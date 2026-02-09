@@ -64,7 +64,7 @@ public class IndexModel : PageModel
             .Select(p => new
             {
                 Person = p,
-                TotalGames = p.Battings.Sum(b => (int?)b.G) ?? 0 + p.Pitchings.Sum(pi => (int?)pi.G) ?? 0,
+                TotalGames = (p.Battings.Sum(b => (int?)b.G) ?? 0) + (p.Pitchings.Sum(pi => (int?)pi.G) ?? 0),
                 TotalHits = p.Battings.Sum(b => (int?)b.H) ?? 0,
                 TotalHR = p.Battings.Sum(b => (int?)b.Hr) ?? 0,
                 LastTeam = p.Battings.OrderByDescending(b => b.YearId).Select(b => b.TeamId).FirstOrDefault()
