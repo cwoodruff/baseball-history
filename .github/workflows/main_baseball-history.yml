@@ -52,4 +52,4 @@ jobs:
           app-name: 'baseball-history'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_5C55F6ABAC294EFBBA38F275849B8C40 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E21EDEC1FA3B4E079F18B39DBEFCF737 }}
