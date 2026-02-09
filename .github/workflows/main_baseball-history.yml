@@ -27,7 +27,7 @@ jobs:
         run: dotnet build baseball-history-web/baseball-history-web.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish baseball-history-web/baseball-history-web.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish baseball-history-web/baseball-history-web.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp --no-build --verbosity normal
         
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -54,3 +54,4 @@ jobs:
           package: .
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E21EDEC1FA3B4E079F18B39DBEFCF737 }}
+
