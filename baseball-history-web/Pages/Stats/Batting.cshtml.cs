@@ -7,15 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Stats;
 
-public class BattingModel : PageModel
+public class BattingModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
     private const int PageSize = 100;
-
-    public BattingModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
 
     public LeaderboardViewModel ViewModel { get; set; } = new();
 
@@ -41,7 +35,7 @@ public class BattingModel : PageModel
         ViewModel.AvailableStats = LeaderboardStats.BattingStats;
 
         // Get available years
-        var years = await _context.Batting
+        var years = await context.Batting
             .Select(b => (int)b.YearId)
             .Distinct()
             .OrderByDescending(y => y)
@@ -49,21 +43,21 @@ public class BattingModel : PageModel
         ViewModel.AvailableYears = years;
 
         // Get available leagues
-        ViewModel.AvailableLeagues = await _context.Batting
+        ViewModel.AvailableLeagues = await context.Batting
             .Select(b => b.LgId)
             .Distinct()
             .OrderBy(l => l)
             .ToListAsync();
 
         // Get Hall of Fame player IDs
-        var hofPlayerIds = await _context.HallOfFame
+        var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => h.PlayerId)
             .Distinct()
             .ToHashSetAsync();
 
         // Build query
-        var query = _context.Batting
+        var query = context.Batting
             .Include(b => b.Player)
             .AsQueryable();
 
@@ -163,7 +157,7 @@ public class BattingModel : PageModel
 
             // Get player names
             var playerIds = careerData.Select(c => c.PlayerId).ToList();
-            var players = await _context.People
+            var players = await context.People
                 .Where(p => playerIds.Contains(p.PlayerId))
                 .ToDictionaryAsync(p => p.PlayerId, p => (p.NameFirst ?? "") + " " + (p.NameLast ?? ""));
 

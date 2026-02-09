@@ -7,15 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Teams;
 
-public class IndexModel : PageModel
+public class IndexModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public IndexModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     public TeamListViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string? league)
@@ -23,7 +16,7 @@ public class IndexModel : PageModel
         ViewModel.SelectedLeague = league;
 
         // Get all franchises with their teams
-        var franchises = await _context.TeamsFranchises
+        var franchises = await context.TeamsFranchises
             .Include(f => f.Teams)
             .ToListAsync();
 

@@ -5,15 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages;
 
-public class IndexModel : PageModel
+public class IndexModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public IndexModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     // Database stats
     public int TotalPlayers { get; set; }
     public int TotalTeams { get; set; }
@@ -33,14 +26,14 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         // Get database stats
-        TotalPlayers = await _context.People.CountAsync();
-        TotalFranchises = await _context.TeamsFranchises.CountAsync();
-        TotalTeams = await _context.Teams.Select(t => t.TeamId).Distinct().CountAsync();
-        TotalSeasons = await _context.Teams.Select(t => t.YearId).Distinct().CountAsync();
-        HallOfFamers = await _context.HallOfFame.Where(h => h.Inducted == "Y").Select(h => h.PlayerId).Distinct()
+        TotalPlayers = await context.People.CountAsync();
+        TotalFranchises = await context.TeamsFranchises.CountAsync();
+        TotalTeams = await context.Teams.Select(t => t.TeamId).Distinct().CountAsync();
+        TotalSeasons = await context.Teams.Select(t => t.YearId).Distinct().CountAsync();
+        HallOfFamers = await context.HallOfFame.Where(h => h.Inducted == "Y").Select(h => h.PlayerId).Distinct()
             .CountAsync();
 
-        var years = await _context.Teams.Select(t => (int)t.YearId).Distinct().ToListAsync();
+        var years = await context.Teams.Select(t => (int)t.YearId).Distinct().ToListAsync();
         if (years.Any())
         {
             FirstYear = years.Min();
@@ -48,7 +41,7 @@ public class IndexModel : PageModel
         }
 
         // Get recent HOF inductees
-        var recentHof = await _context.HallOfFame
+        var recentHof = await context.HallOfFame
             .Include(h => h.Player)
             .Where(h => h.Inducted == "Y")
             .OrderByDescending(h => h.Yearid)
@@ -68,7 +61,7 @@ public class IndexModel : PageModel
         }).ToList();
 
         // Get career HR leaders (top 5)
-        var hrData = await _context.Batting
+        var hrData = await context.Batting
             .GroupBy(b => b.PlayerId)
             .Select(g => new { PlayerId = g.Key, HR = g.Sum(b => b.Hr ?? 0) })
             .OrderByDescending(x => x.HR)
@@ -76,11 +69,11 @@ public class IndexModel : PageModel
             .ToListAsync();
 
         var hrPlayerIds = hrData.Select(h => h.PlayerId).ToList();
-        var hrPlayers = await _context.People
+        var hrPlayers = await context.People
             .Where(p => hrPlayerIds.Contains(p.PlayerId))
             .ToDictionaryAsync(p => p.PlayerId, p => $"{p.NameFirst} {p.NameLast}");
 
-        var hofSet = await _context.HallOfFame
+        var hofSet = await context.HallOfFame
             .Where(h => h.Inducted == "Y" && hrPlayerIds.Contains(h.PlayerId))
             .Select(h => h.PlayerId)
             .ToHashSetAsync();
@@ -95,7 +88,7 @@ public class IndexModel : PageModel
         }).ToList();
 
         // Get career wins leaders (top 5)
-        var winsData = await _context.Pitching
+        var winsData = await context.Pitching
             .GroupBy(p => p.PlayerId)
             .Select(g => new { PlayerId = g.Key, W = g.Sum(p => p.W ?? 0) })
             .OrderByDescending(x => x.W)
@@ -103,11 +96,11 @@ public class IndexModel : PageModel
             .ToListAsync();
 
         var winsPlayerIds = winsData.Select(w => w.PlayerId).ToList();
-        var winsPlayers = await _context.People
+        var winsPlayers = await context.People
             .Where(p => winsPlayerIds.Contains(p.PlayerId))
             .ToDictionaryAsync(p => p.PlayerId, p => $"{p.NameFirst} {p.NameLast}");
 
-        var winsHofSet = await _context.HallOfFame
+        var winsHofSet = await context.HallOfFame
             .Where(h => h.Inducted == "Y" && winsPlayerIds.Contains(h.PlayerId))
             .Select(h => h.PlayerId)
             .ToHashSetAsync();

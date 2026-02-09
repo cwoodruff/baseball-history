@@ -7,15 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Stats;
 
-public class PitchingModel : PageModel
+public class PitchingModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
     private const int PageSize = 100;
-
-    public PitchingModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
 
     public LeaderboardViewModel ViewModel { get; set; } = new();
 
@@ -41,7 +35,7 @@ public class PitchingModel : PageModel
         ViewModel.AvailableStats = LeaderboardStats.PitchingStats;
 
         // Get available years
-        var years = await _context.Pitching
+        var years = await context.Pitching
             .Select(p => (int)p.YearId)
             .Distinct()
             .OrderByDescending(y => y)
@@ -49,7 +43,7 @@ public class PitchingModel : PageModel
         ViewModel.AvailableYears = years;
 
         // Get available leagues
-        ViewModel.AvailableLeagues = await _context.Pitching
+        ViewModel.AvailableLeagues = await context.Pitching
             .Where(p => p.LgId != null)
             .Select(p => p.LgId!)
             .Distinct()
@@ -57,14 +51,14 @@ public class PitchingModel : PageModel
             .ToListAsync();
 
         // Get Hall of Fame player IDs
-        var hofPlayerIds = await _context.HallOfFame
+        var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => h.PlayerId)
             .Distinct()
             .ToHashSetAsync();
 
         // Build query
-        var query = _context.Pitching
+        var query = context.Pitching
             .Include(p => p.Player)
             .AsQueryable();
 
@@ -184,7 +178,7 @@ public class PitchingModel : PageModel
 
             // Get player names
             var playerIds = careerData.Select(c => c.PlayerId).ToList();
-            var players = await _context.People
+            var players = await context.People
                 .Where(p => playerIds.Contains(p.PlayerId))
                 .ToDictionaryAsync(p => p.PlayerId, p => (p.NameFirst ?? "") + " " + (p.NameLast ?? ""));
 

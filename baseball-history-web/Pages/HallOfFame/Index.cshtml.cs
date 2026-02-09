@@ -7,15 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.HallOfFame;
 
-public class IndexModel : PageModel
+public class IndexModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
     private const int PageSize = 50;
-
-    public IndexModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
 
     public HallOfFameViewModel ViewModel { get; set; } = new();
 
@@ -26,7 +20,7 @@ public class IndexModel : PageModel
         ViewModel.CurrentPage = page;
 
         // Get available years
-        ViewModel.AvailableYears = await _context.HallOfFame
+        ViewModel.AvailableYears = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => (int)h.Yearid)
             .Distinct()
@@ -34,7 +28,7 @@ public class IndexModel : PageModel
             .ToListAsync();
 
         // Build query
-        var query = _context.HallOfFame
+        var query = context.HallOfFame
             .Include(h => h.Player)
             .Where(h => h.Inducted == "Y");
 
@@ -92,7 +86,7 @@ public class IndexModel : PageModel
         }).ToList();
 
         // Get category counts
-        var categoryCounts = await _context.HallOfFame
+        var categoryCounts = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .GroupBy(h => h.Category)
             .Select(g => new { Category = g.Key, Count = g.Count() })

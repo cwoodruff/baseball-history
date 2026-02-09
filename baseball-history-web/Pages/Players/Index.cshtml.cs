@@ -7,22 +7,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Players;
 
-public class IndexModel : PageModel
+public class IndexModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
     private const int PageSize = 48;
-
-    public IndexModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
 
     public PlayerListViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string? letter, int page = 1)
     {
         // Get all available first letters
-        var availableLetters = await _context.People
+        var availableLetters = await context.People
             .Where(p => p.NameLast != null && p.NameLast.Length > 0)
             .Select(p => p.NameLast!.Substring(0, 1).ToUpper())
             .Distinct()
@@ -39,14 +33,14 @@ public class IndexModel : PageModel
         ViewModel.CurrentLetter = currentLetter.ToString();
 
         // Get Hall of Fame player IDs for highlighting
-        var hofPlayerIds = await _context.HallOfFame
+        var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => h.PlayerId)
             .Distinct()
             .ToHashSetAsync();
 
         // Query players by last name starting letter
-        var query = _context.People
+        var query = context.People
             .Where(p => p.NameLast != null && p.NameLast.ToUpper().StartsWith(currentLetter.ToString()))
             .OrderBy(p => p.NameLast)
             .ThenBy(p => p.NameFirst);

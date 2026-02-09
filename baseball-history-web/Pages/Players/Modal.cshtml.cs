@@ -6,15 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Players;
 
-public class ModalModel : PageModel
+public class ModalModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public ModalModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     public PlayerDetailViewModel? Player { get; set; }
 
     public async Task<IActionResult> OnGetAsync(string id)
@@ -24,7 +17,7 @@ public class ModalModel : PageModel
             return NotFound();
         }
 
-        var person = await _context.People
+        var person = await context.People
             .FirstOrDefaultAsync(p => p.PlayerId == id);
 
         if (person == null)
@@ -35,7 +28,7 @@ public class ModalModel : PageModel
         Player = PlayerDetailViewModel.FromPeople(person);
 
         // Check Hall of Fame status
-        var hof = await _context.HallOfFame
+        var hof = await context.HallOfFame
             .Where(h => h.PlayerId == id && h.Inducted == "Y")
             .OrderBy(h => h.Yearid)
             .FirstOrDefaultAsync();
@@ -47,7 +40,7 @@ public class ModalModel : PageModel
         }
 
         // Get career batting stats - fetch data first, then aggregate in memory for string fields
-        var battingData = await _context.Batting
+        var battingData = await context.Batting
             .Where(b => b.PlayerId == id)
             .ToListAsync();
 
@@ -74,7 +67,7 @@ public class ModalModel : PageModel
         }
 
         // Get career pitching stats
-        var pitchingData = await _context.Pitching
+        var pitchingData = await context.Pitching
             .Where(p => p.PlayerId == id)
             .ToListAsync();
 
@@ -108,7 +101,7 @@ public class ModalModel : PageModel
         }
 
         // Get season-by-season batting records
-        Player.BattingSeasons = await _context.Batting
+        Player.BattingSeasons = await context.Batting
             .Where(b => b.PlayerId == id)
             .OrderByDescending(b => b.YearId)
             .ThenBy(b => b.Stint)
@@ -129,7 +122,7 @@ public class ModalModel : PageModel
             .ToListAsync();
 
         // Get teams played for
-        var teamGroups = await _context.Batting
+        var teamGroups = await context.Batting
             .Where(b => b.PlayerId == id)
             .GroupBy(b => b.TeamId)
             .Select(g => new
@@ -142,7 +135,7 @@ public class ModalModel : PageModel
             .ToListAsync();
 
         var existingTeamIds = teamGroups.Select(t => t.TeamId).ToHashSet();
-        var pitchingTeams = await _context.Pitching
+        var pitchingTeams = await context.Pitching
             .Where(p => p.PlayerId == id && p.TeamId != null && !existingTeamIds.Contains(p.TeamId))
             .GroupBy(p => p.TeamId!)
             .Select(g => new
@@ -162,7 +155,7 @@ public class ModalModel : PageModel
 
         // Get team names
         var teamIds = allTeams.Select(t => t.TeamId).Distinct().ToList();
-        var teamNames = await _context.Teams
+        var teamNames = await context.Teams
             .Where(t => teamIds.Contains(t.TeamId))
             .GroupBy(t => t.TeamId)
             .Select(g => new { TeamId = g.Key, Name = g.OrderByDescending(t => t.YearId).First().Name })
@@ -178,7 +171,7 @@ public class ModalModel : PageModel
         }).ToList();
 
         // Get awards
-        Player.Awards = await _context.AwardsPlayers
+        Player.Awards = await context.AwardsPlayers
             .Where(a => a.PlayerId == id)
             .OrderByDescending(a => a.YearId)
             .Select(a => new AwardRecord
@@ -191,7 +184,7 @@ public class ModalModel : PageModel
             .ToListAsync();
 
         // Get All-Star appearances
-        var allStarData = await _context.AllstarFull
+        var allStarData = await context.AllstarFull
             .Where(a => a.PlayerId == id)
             .OrderByDescending(a => a.YearId)
             .Select(a => new { a.YearId, a.LgId, a.TeamId, a.GameNum })

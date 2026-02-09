@@ -7,15 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Teams;
 
-public class FranchiseModel : PageModel
+public class FranchiseModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public FranchiseModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     public FranchiseSummary? Franchise { get; set; }
     public List<TeamSeasonSummary> Seasons { get; set; } = new();
 
@@ -26,7 +19,7 @@ public class FranchiseModel : PageModel
             return NotFound();
         }
 
-        var franchise = await _context.TeamsFranchises
+        var franchise = await context.TeamsFranchises
             .Include(f => f.Teams)
             .FirstOrDefaultAsync(f => f.FranchId == id);
 

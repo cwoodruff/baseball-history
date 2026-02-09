@@ -7,15 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Teams;
 
-public class SeasonModel : PageModel
+public class SeasonModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public SeasonModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     public TeamSeasonViewModel? Team { get; set; }
 
     public async Task<IActionResult> OnGetAsync(string teamId, string lgId, short year)
@@ -25,7 +18,7 @@ public class SeasonModel : PageModel
             return NotFound();
         }
 
-        var team = await _context.Teams
+        var team = await context.Teams
             .Include(t => t.Franchise)
             .FirstOrDefaultAsync(t => t.TeamId == teamId && t.LgId == lgId && t.YearId == year);
 
@@ -37,14 +30,14 @@ public class SeasonModel : PageModel
         Team = TeamSeasonViewModel.FromTeam(team);
 
         // Get Hall of Fame player IDs
-        var hofPlayerIds = await _context.HallOfFame
+        var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => h.PlayerId)
             .Distinct()
             .ToHashSetAsync();
 
         // Get batting roster
-        var batters = await _context.Batting
+        var batters = await context.Batting
             .Include(b => b.Player)
             .Where(b => b.TeamId == teamId && b.LgId == lgId && b.YearId == year)
             .OrderByDescending(b => b.Ab ?? 0)
@@ -61,7 +54,7 @@ public class SeasonModel : PageModel
             .ToListAsync();
 
         // Parse RBI from string
-        var rbiData = await _context.Batting
+        var rbiData = await context.Batting
             .Where(b => b.TeamId == teamId && b.LgId == lgId && b.YearId == year && b.Rbi != null)
             .Select(b => new { b.PlayerId, Rbi = b.Rbi })
             .ToListAsync();
@@ -80,7 +73,7 @@ public class SeasonModel : PageModel
         Team.Batters = batters;
 
         // Get pitching roster
-        var pitchers = await _context.Pitching
+        var pitchers = await context.Pitching
             .Include(p => p.Player)
             .Where(p => p.TeamId == teamId && p.LgId == lgId && p.YearId == year)
             .OrderByDescending(p => p.Ipouts ?? 0)
@@ -105,7 +98,7 @@ public class SeasonModel : PageModel
         Team.Pitchers = pitchers;
 
         // Get managers
-        var managers = await _context.Managers
+        var managers = await context.Managers
             .Include(m => m.Player)
             .Where(m => m.TeamId == teamId && m.LgId == lgId && m.YearId == year)
             .OrderBy(m => m.Inseason)
@@ -130,7 +123,7 @@ public class SeasonModel : PageModel
         // Get available years for this franchise
         if (!string.IsNullOrEmpty(team.FranchId))
         {
-            Team.AvailableYears = await _context.Teams
+            Team.AvailableYears = await context.Teams
                 .Where(t => t.FranchId == team.FranchId)
                 .Select(t => t.YearId)
                 .Distinct()

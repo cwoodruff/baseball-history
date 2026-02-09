@@ -7,15 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages;
 
-public class SearchModel : PageModel
+public class SearchModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public SearchModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     public SearchViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string? q)
@@ -29,14 +22,14 @@ public class SearchModel : PageModel
         var searchTerm = q.Trim().ToLower();
 
         // Get Hall of Fame player IDs
-        var hofPlayerIds = await _context.HallOfFame
+        var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => h.PlayerId)
             .Distinct()
             .ToHashSetAsync();
 
         // Search players (by first name, last name, or full name) - case insensitive
-        var players = await _context.People
+        var players = await context.People
             .Where(p =>
                 (p.NameFirst != null && p.NameFirst.ToLower().Contains(searchTerm)) ||
                 (p.NameLast != null && p.NameLast.ToLower().Contains(searchTerm)) ||
@@ -61,7 +54,7 @@ public class SearchModel : PageModel
         }).ToList();
 
         // Search franchises - case insensitive
-        var franchises = await _context.TeamsFranchises
+        var franchises = await context.TeamsFranchises
             .Where(f => f.FranchName != null && f.FranchName.ToLower().Contains(searchTerm))
             .OrderByDescending(f => f.Active == "Y")
             .ThenBy(f => f.FranchName)
@@ -70,7 +63,7 @@ public class SearchModel : PageModel
 
         // Get latest team ID for each franchise
         var franchiseIds = franchises.Select(f => f.FranchId).ToList();
-        var latestTeams = await _context.Teams
+        var latestTeams = await context.Teams
             .Where(t => t.FranchId != null && franchiseIds.Contains(t.FranchId))
             .GroupBy(t => t.FranchId)
             .Select(g => new { FranchId = g.Key, TeamId = g.OrderByDescending(t => t.YearId).First().TeamId })
@@ -100,14 +93,14 @@ public class SearchModel : PageModel
         var searchTerm = q.Trim().ToLower();
 
         // Get Hall of Fame player IDs
-        var hofPlayerIds = await _context.HallOfFame
+        var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")
             .Select(h => h.PlayerId)
             .Distinct()
             .ToHashSetAsync();
 
         // Search players with higher limit
-        var playerQuery = _context.People
+        var playerQuery = context.People
             .Where(p =>
                 (p.NameFirst != null && p.NameFirst.ToLower().Contains(searchTerm)) ||
                 (p.NameLast != null && p.NameLast.ToLower().Contains(searchTerm)) ||
@@ -136,7 +129,7 @@ public class SearchModel : PageModel
         }).ToList();
 
         // Search franchises with higher limit
-        var franchiseQuery = _context.TeamsFranchises
+        var franchiseQuery = context.TeamsFranchises
             .Where(f => f.FranchName != null && f.FranchName.ToLower().Contains(searchTerm));
 
         ViewModel.TotalTeamCount = await franchiseQuery.CountAsync();
@@ -149,7 +142,7 @@ public class SearchModel : PageModel
 
         // Get latest team ID for each franchise
         var franchiseIds = franchises.Select(f => f.FranchId).ToList();
-        var latestTeams = await _context.Teams
+        var latestTeams = await context.Teams
             .Where(t => t.FranchId != null && franchiseIds.Contains(t.FranchId))
             .GroupBy(t => t.FranchId)
             .Select(g => new { FranchId = g.Key, TeamId = g.OrderByDescending(t => t.YearId).First().TeamId })

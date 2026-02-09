@@ -4,15 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages;
 
-public class HealthModel : PageModel
+public class HealthModel(BaseballDbContext context) : PageModel
 {
-    private readonly BaseballDbContext _context;
-
-    public HealthModel(BaseballDbContext context)
-    {
-        _context = context;
-    }
-
     public bool DatabaseHealthy { get; set; }
     public string? ErrorMessage { get; set; }
     public Models.Teams? SampleTeam { get; set; }
@@ -21,7 +14,7 @@ public class HealthModel : PageModel
     {
         try
         {
-            SampleTeam = await _context.Teams.FirstOrDefaultAsync();
+            SampleTeam = await context.Teams.FirstOrDefaultAsync();
             DatabaseHealthy = SampleTeam != null;
         }
         catch (Exception ex)
