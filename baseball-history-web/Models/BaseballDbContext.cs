@@ -82,10 +82,9 @@ public partial class BaseballDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Value converter for DateOnly? that handles empty strings from the database
-        var dateOnlyConverter =
-            new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateOnly?, string?>(
-                v => v.HasValue ? v.Value.ToString("yyyy-MM-dd") : null,
-                v => ConvertToDateOnly(v));
+        var dateOnlyConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateOnly?, string?>(
+            v => v.HasValue ? v.Value.ToString("yyyy-MM-dd") : null,
+            v => ConvertToDateOnly(v));
 
         modelBuilder.Entity<AllstarFull>(entity =>
         {

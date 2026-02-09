@@ -216,11 +216,11 @@ public class DatabaseIntegrationTests
 
         var team = context.Teams
             .Include(t => t.Battings)
-            .ThenInclude(b => b.Player)
+                .ThenInclude(b => b.Player)
             .Include(t => t.Pitchings)
-            .ThenInclude(p => p.Player)
+                .ThenInclude(p => p.Player)
             .Include(t => t.Managers)
-            .ThenInclude(m => m.Player)
+                .ThenInclude(m => m.Player)
             .Where(t => t.YearId >= 2000)
             .FirstOrDefault();
 

@@ -138,7 +138,7 @@
                 cleanupModals();
 
                 // Small delay to ensure DOM is ready
-                setTimeout(function () {
+                setTimeout(function() {
                     var bsModal = new bootstrap.Modal(modal, {
                         backdrop: true,
                         keyboard: true
@@ -150,13 +150,12 @@
                         // Dispose the modal instance
                         try {
                             bsModal.dispose();
-                        } catch (e) {
-                        }
+                        } catch (e) {}
                         // Clear the container
                         document.getElementById('modal-container').innerHTML = '';
                         // Clean up
                         cleanupModals();
-                    }, {once: true});
+                    }, { once: true });
                 }, 10);
             }
         }
@@ -194,7 +193,7 @@
     });
 
     // Clean up on page unload
-    window.addEventListener('beforeunload', function () {
+    window.addEventListener('beforeunload', function() {
         cleanupModals();
     });
 </script>
