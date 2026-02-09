@@ -33,7 +33,6 @@ over 150 years of Major League Baseball statistics, including:
 | Database  | SQLite with Lahman Baseball Database |
 | ORM       | Entity Framework Core 10.0           |
 | Frontend  | htmx 2.0.4, Bootstrap 5              |
-| Hosting   | .NET Aspire (optional)               |
 
 ## Documentation
 
@@ -62,9 +61,6 @@ cd baseball-history
 
 # Run the web application
 dotnet run --project baseball-history-web
-
-# Or run with Aspire (includes dashboard)
-dotnet run --project baseball-history-aspire/AppHost.cs
 ```
 
 The application will be available at `https://localhost:5001` or
@@ -94,7 +90,6 @@ baseball-history/
 │   ├── Extensions/                # Helper extensions (htmx, etc.)
 │   ├── wwwroot/                   # Static files (CSS, JS)
 │   └── Program.cs                 # Application entry point
-├── baseball-history-aspire/       # .NET Aspire orchestration
 └── docs/                          # Documentation
 ```
 
