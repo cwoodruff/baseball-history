@@ -40,6 +40,9 @@ public class PlayerDetailViewModel
     // Career pitching stats
     public CareerPitchingStats? PitchingStats { get; set; }
 
+    // A player is primarily a pitcher if they have significant pitching innings
+    public bool IsPitcher => PitchingStats != null && PitchingStats.InningsPitched > 0;
+
     // Season-by-season records
     public List<SeasonBattingRecord> BattingSeasons { get; set; } = new();
     public List<SeasonPitchingRecord> PitchingSeasons { get; set; } = new();
@@ -235,6 +238,7 @@ public class SeasonPitchingRecord
 
     public double Era => InningsPitched > 0 ? (EarnedRuns * 9.0) / InningsPitched : 0;
     public string FormattedEra => Era.ToString("0.00");
+    public string FormattedInningsPitched => $"{(int)InningsPitched}.{(int)((InningsPitched - (int)InningsPitched) * 3)}";
     public string WinLossRecord => $"{Wins}-{Losses}";
 }
 

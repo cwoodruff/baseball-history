@@ -121,6 +121,30 @@ public class ModalModel(BaseballDbContext context) : PageModel
             })
             .ToListAsync();
 
+        // Get season-by-season pitching records
+        Player.PitchingSeasons = await context.Pitching
+            .Where(p => p.PlayerId == id)
+            .OrderByDescending(p => p.YearId)
+            .ThenBy(p => p.Stint)
+            .Select(p => new SeasonPitchingRecord
+            {
+                Year = p.YearId,
+                TeamId = p.TeamId ?? "",
+                TeamName = p.Team != null ? p.Team.Name : null,
+                LgId = p.LgId ?? "",
+                Games = p.G ?? 0,
+                GamesStarted = p.Gs ?? 0,
+                Wins = p.W ?? 0,
+                Losses = p.L ?? 0,
+                Saves = p.Sv ?? 0,
+                InningsPitched = (p.Ipouts ?? 0) / 3.0,
+                Hits = p.H ?? 0,
+                EarnedRuns = p.Er ?? 0,
+                Strikeouts = p.So ?? 0,
+                Walks = p.Bb ?? 0
+            })
+            .ToListAsync();
+
         // Get teams played for
         var teamGroups = await context.Batting
             .Where(b => b.PlayerId == id)

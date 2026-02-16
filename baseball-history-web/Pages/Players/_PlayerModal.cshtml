@@ -224,11 +224,56 @@
                             </div>
                         }
 
-                        @if (Model.BattingSeasons.Any())
+                        @if (Model.IsPitcher && Model.PitchingSeasons.Any())
                         {
                             <div class="card">
                                 <div class="card-header card-header-mlb">
-                                    <strong>Season by Season</strong>
+                                    <strong>Pitching Season by Season</strong>
+                                </div>
+                                <div class="table-responsive" style="max-height: 400px;">
+                                    <table class="table table-sm table-baseball mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Team</th>
+                                            <th class="text-end">W</th>
+                                            <th class="text-end">L</th>
+                                            <th class="text-end">ERA</th>
+                                            <th class="text-end">G</th>
+                                            <th class="text-end">GS</th>
+                                            <th class="text-end">SV</th>
+                                            <th class="text-end">IP</th>
+                                            <th class="text-end">SO</th>
+                                            <th class="text-end">BB</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        @foreach (var season in Model.PitchingSeasons)
+                                        {
+                                            <tr data-team="@season.TeamId">
+                                                <td>@season.Year</td>
+                                                <td>@(season.TeamName ?? season.TeamId)</td>
+                                                <td class="text-end stat-cell">@season.Wins</td>
+                                                <td class="text-end stat-cell">@season.Losses</td>
+                                                <td class="text-end stat-cell">@season.FormattedEra</td>
+                                                <td class="text-end stat-cell">@season.Games</td>
+                                                <td class="text-end stat-cell">@season.GamesStarted</td>
+                                                <td class="text-end stat-cell">@season.Saves</td>
+                                                <td class="text-end stat-cell">@season.FormattedInningsPitched</td>
+                                                <td class="text-end stat-cell">@season.Strikeouts</td>
+                                                <td class="text-end stat-cell">@season.Walks</td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                        else if (Model.BattingSeasons.Any())
+                        {
+                            <div class="card">
+                                <div class="card-header card-header-mlb">
+                                    <strong>Batting Season by Season</strong>
                                 </div>
                                 <div class="table-responsive" style="max-height: 400px;">
                                     <table class="table table-sm table-baseball mb-0">
