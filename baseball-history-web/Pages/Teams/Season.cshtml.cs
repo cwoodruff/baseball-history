@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Teams;
 
+[ResponseCache(Duration = 3600, VaryByQueryKeys = ["teamId", "lgId", "year"])]
 public class SeasonModel(BaseballDbContext context) : PageModel
 {
     public TeamSeasonViewModel? Team { get; set; }

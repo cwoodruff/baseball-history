@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Players;
 
+[ResponseCache(Duration = 3600, VaryByQueryKeys = ["letter", "page"])]
 public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);

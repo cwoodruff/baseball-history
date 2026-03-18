@@ -1,11 +1,13 @@
 using baseball_history_web.Models;
 using baseball_history_web.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages;
 
+[ResponseCache(Duration = 3600)]
 public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);

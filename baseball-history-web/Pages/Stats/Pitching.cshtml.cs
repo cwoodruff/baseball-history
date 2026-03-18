@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Stats;
 
+[ResponseCache(Duration = 3600, VaryByQueryKeys = ["stat", "fromYear", "toYear", "league", "minIp", "singleSeason", "page"])]
 public class PitchingModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan FilterCacheDuration = TimeSpan.FromHours(24);

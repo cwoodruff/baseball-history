@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Teams;
 
+[ResponseCache(Duration = 3600, VaryByQueryKeys = ["id"])]
 public class FranchiseModel(BaseballDbContext context) : PageModel
 {
     public FranchiseSummary? Franchise { get; set; }

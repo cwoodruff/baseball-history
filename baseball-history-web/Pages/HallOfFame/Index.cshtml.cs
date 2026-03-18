@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.HallOfFame;
 
+[ResponseCache(Duration = 3600, VaryByQueryKeys = ["year", "category", "page"])]
 public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);

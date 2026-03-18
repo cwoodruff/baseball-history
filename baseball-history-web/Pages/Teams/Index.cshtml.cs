@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Teams;
 
+[ResponseCache(Duration = 3600, VaryByQueryKeys = ["league"])]
 public class IndexModel(BaseballDbContext context) : PageModel
 {
     public TeamListViewModel ViewModel { get; set; } = new();
