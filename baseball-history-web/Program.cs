@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<BaseballDbContext>(options =>
-    options.UseSqlite("Data Source=lahman.db"));
+    options.UseSqlite("Data Source=lahman.db")
+        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+
+builder.Services.AddMemoryCache();
 
 // Add services to the container.
 builder.Services.AddSingleton<TeamColorService>();

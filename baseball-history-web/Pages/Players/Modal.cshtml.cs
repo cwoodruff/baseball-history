@@ -39,65 +39,84 @@ public class ModalModel(BaseballDbContext context) : PageModel
             Player.HofInductionYear = hof.Yearid;
         }
 
-        // Get career batting stats - fetch data first, then aggregate in memory for string fields
-        var battingData = await context.Batting
+        // Get career batting stats - aggregate in database
+        var battingAgg = await context.Batting
             .Where(b => b.PlayerId == id)
-            .ToListAsync();
-
-        if (battingData.Any())
-        {
-            var totalAtBats = battingData.Sum(b => b.Ab ?? 0);
-            if (totalAtBats > 0)
+            .GroupBy(b => b.PlayerId)
+            .Select(g => new
             {
-                Player.BattingStats = new CareerBattingStats
-                {
-                    Games = battingData.Sum(b => b.G ?? 0),
-                    AtBats = totalAtBats,
-                    Runs = battingData.Sum(b => b.R ?? 0),
-                    Hits = battingData.Sum(b => b.H ?? 0),
-                    Doubles = battingData.Sum(b => b._2b ?? 0),
-                    Triples = battingData.Sum(b => b._3b ?? 0),
-                    HomeRuns = battingData.Sum(b => b.Hr ?? 0),
-                    Walks = battingData.Sum(b => b.Bb ?? 0),
-                    Rbi = battingData.Sum(b => b.Rbi ?? 0),
-                    StolenBases = battingData.Sum(b => b.Sb ?? 0),
-                    Strikeouts = battingData.Sum(b => b.So ?? 0)
-                };
-            }
+                G = g.Sum(b => b.G ?? 0),
+                AB = g.Sum(b => b.Ab ?? 0),
+                R = g.Sum(b => b.R ?? 0),
+                H = g.Sum(b => b.H ?? 0),
+                Doubles = g.Sum(b => b._2b ?? 0),
+                Triples = g.Sum(b => b._3b ?? 0),
+                HR = g.Sum(b => b.Hr ?? 0),
+                BB = g.Sum(b => b.Bb ?? 0),
+                RBI = g.Sum(b => b.Rbi ?? 0),
+                SB = g.Sum(b => b.Sb ?? 0),
+                SO = g.Sum(b => b.So ?? 0)
+            })
+            .FirstOrDefaultAsync();
+
+        if (battingAgg is { AB: > 0 })
+        {
+            Player.BattingStats = new CareerBattingStats
+            {
+                Games = battingAgg.G,
+                AtBats = battingAgg.AB,
+                Runs = battingAgg.R,
+                Hits = battingAgg.H,
+                Doubles = battingAgg.Doubles,
+                Triples = battingAgg.Triples,
+                HomeRuns = battingAgg.HR,
+                Walks = battingAgg.BB,
+                Rbi = battingAgg.RBI,
+                StolenBases = battingAgg.SB,
+                Strikeouts = battingAgg.SO
+            };
         }
 
-        // Get career pitching stats
-        var pitchingData = await context.Pitching
+        // Get career pitching stats - aggregate in database
+        var pitchingAgg = await context.Pitching
             .Where(p => p.PlayerId == id)
-            .ToListAsync();
+            .GroupBy(p => p.PlayerId)
+            .Select(g => new
+            {
+                G = g.Sum(p => p.G ?? 0),
+                GS = g.Sum(p => p.Gs ?? 0),
+                W = g.Sum(p => p.W ?? 0),
+                L = g.Sum(p => p.L ?? 0),
+                SV = g.Sum(p => p.Sv ?? 0),
+                CG = g.Sum(p => p.Cg ?? 0),
+                SHO = g.Sum(p => p.Sho ?? 0),
+                IPOuts = g.Sum(p => p.Ipouts ?? 0),
+                H = g.Sum(p => p.H ?? 0),
+                ER = g.Sum(p => p.Er ?? 0),
+                HR = g.Sum(p => p.Hr ?? 0),
+                BB = g.Sum(p => p.Bb ?? 0),
+                SO = g.Sum(p => p.So ?? 0)
+            })
+            .FirstOrDefaultAsync();
 
-        if (pitchingData.Any())
+        if (pitchingAgg is { G: > 0 })
         {
             Player.PitchingStats = new CareerPitchingStats
             {
-                Games = pitchingData.Sum(p => p.G ?? 0),
-                GamesStarted = pitchingData.Sum(p => p.Gs ?? 0),
-                Wins = pitchingData.Sum(p => p.W ?? 0),
-                Losses = pitchingData.Sum(p => p.L ?? 0),
-                Saves = pitchingData.Sum(p => p.Sv ?? 0),
-                CompleteGames = pitchingData.Sum(p => p.Cg ?? 0),
-                Shutouts = pitchingData.Sum(p => p.Sho ?? 0),
-                Hits = pitchingData.Sum(p => p.H ?? 0),
-                Walks = pitchingData.Sum(p => p.Bb ?? 0),
-                Strikeouts = pitchingData.Sum(p => p.So ?? 0)
+                Games = pitchingAgg.G,
+                GamesStarted = pitchingAgg.GS,
+                Wins = pitchingAgg.W,
+                Losses = pitchingAgg.L,
+                Saves = pitchingAgg.SV,
+                CompleteGames = pitchingAgg.CG,
+                Shutouts = pitchingAgg.SHO,
+                InningsPitched = pitchingAgg.IPOuts / 3.0,
+                Hits = pitchingAgg.H,
+                EarnedRuns = pitchingAgg.ER,
+                HomeRuns = pitchingAgg.HR,
+                Walks = pitchingAgg.BB,
+                Strikeouts = pitchingAgg.SO
             };
-
-            // Calculate innings pitched from outs
-            var totalOuts = pitchingData.Sum(p => p.Ipouts ?? 0);
-            Player.PitchingStats.InningsPitched = totalOuts / 3.0;
-
-            // Parse earned runs
-            var erSum = pitchingData.Sum(p => p.Er ?? 0);
-            Player.PitchingStats.EarnedRuns = erSum;
-
-            // Parse HR
-            var hrSum = pitchingData.Sum(p => p.Hr ?? 0);
-            Player.PitchingStats.HomeRuns = hrSum;
         }
 
         // Get season-by-season batting records

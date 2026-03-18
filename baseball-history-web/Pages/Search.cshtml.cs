@@ -4,11 +4,13 @@ using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages;
 
-public class SearchModel(BaseballDbContext context) : PageModel
+public class SearchModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
     public SearchViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string? q)
@@ -21,12 +23,16 @@ public class SearchModel(BaseballDbContext context) : PageModel
         ViewModel.Query = q;
         var searchTerm = q.Trim().ToLower();
 
-        // Get Hall of Fame player IDs
-        var hofPlayerIds = await context.HallOfFame
-            .Where(h => h.Inducted == "Y")
-            .Select(h => h.PlayerId)
-            .Distinct()
-            .ToHashSetAsync();
+        // Get Hall of Fame player IDs (cached)
+        var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => h.PlayerId)
+                .Distinct()
+                .ToHashSetAsync();
+        }))!;
 
         // Search players (by first name, last name, or full name) - case insensitive
         var players = await context.People
@@ -92,12 +98,16 @@ public class SearchModel(BaseballDbContext context) : PageModel
         ViewModel.Query = q;
         var searchTerm = q.Trim().ToLower();
 
-        // Get Hall of Fame player IDs
-        var hofPlayerIds = await context.HallOfFame
-            .Where(h => h.Inducted == "Y")
-            .Select(h => h.PlayerId)
-            .Distinct()
-            .ToHashSetAsync();
+        // Get Hall of Fame player IDs (cached)
+        var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => h.PlayerId)
+                .Distinct()
+                .ToHashSetAsync();
+        }))!;
 
         // Search players with higher limit
         var playerQuery = context.People

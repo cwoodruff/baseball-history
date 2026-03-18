@@ -4,11 +4,13 @@ using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.HallOfFame;
 
-public class IndexModel(BaseballDbContext context) : PageModel
+public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
     private const int PageSize = 50;
 
     public HallOfFameViewModel ViewModel { get; set; } = new();
@@ -19,13 +21,17 @@ public class IndexModel(BaseballDbContext context) : PageModel
         ViewModel.SelectedCategory = category;
         ViewModel.CurrentPage = page;
 
-        // Get available years
-        ViewModel.AvailableYears = await context.HallOfFame
-            .Where(h => h.Inducted == "Y")
-            .Select(h => (int)h.Yearid)
-            .Distinct()
-            .OrderByDescending(y => y)
-            .ToListAsync();
+        // Get available years (cached)
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("hof_years", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => (int)h.Yearid)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+        }))!;
 
         // Build query
         var query = context.HallOfFame
@@ -85,17 +91,21 @@ public class IndexModel(BaseballDbContext context) : PageModel
             };
         }).ToList();
 
-        // Get category counts
-        var categoryCounts = await context.HallOfFame
-            .Where(h => h.Inducted == "Y")
-            .GroupBy(h => h.Category)
-            .Select(g => new { Category = g.Key, Count = g.Count() })
-            .ToListAsync();
+        // Get category counts (cached)
+        var categoryCounts = (await cache.GetOrCreateAsync("hof_category_counts", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .GroupBy(h => h.Category)
+                .Select(g => new { Category = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.Category ?? "", g => g.Count);
+        }))!;
 
-        ViewModel.TotalPlayers = categoryCounts.FirstOrDefault(c => c.Category == "Player")?.Count ?? 0;
-        ViewModel.TotalManagers = categoryCounts.FirstOrDefault(c => c.Category == "Manager")?.Count ?? 0;
-        ViewModel.TotalPioneers = categoryCounts.FirstOrDefault(c => c.Category == "Pioneer/Executive")?.Count ?? 0;
-        ViewModel.TotalUmpires = categoryCounts.FirstOrDefault(c => c.Category == "Umpire")?.Count ?? 0;
+        ViewModel.TotalPlayers = categoryCounts.GetValueOrDefault("Player");
+        ViewModel.TotalManagers = categoryCounts.GetValueOrDefault("Manager");
+        ViewModel.TotalPioneers = categoryCounts.GetValueOrDefault("Pioneer/Executive");
+        ViewModel.TotalUmpires = categoryCounts.GetValueOrDefault("Umpire");
 
         if (Request.IsHtmxNonBoostedRequest())
         {

@@ -4,40 +4,49 @@ using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Players;
 
-public class IndexModel(BaseballDbContext context) : PageModel
+public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
     private const int PageSize = 48;
 
     public PlayerListViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string? letter, int page = 1)
     {
-        // Get all available first letters
-        var availableLetters = await context.People
-            .Where(p => p.NameLast != null && p.NameLast.Length > 0)
-            .Select(p => p.NameLast!.Substring(0, 1).ToUpper())
-            .Distinct()
-            .OrderBy(l => l)
-            .ToListAsync();
-
-        ViewModel.AvailableLetters = availableLetters
-            .Where(l => l.Length == 1 && char.IsLetter(l[0]))
-            .Select(l => l[0])
-            .ToList();
+        // Get all available first letters (cached)
+        ViewModel.AvailableLetters = (await cache.GetOrCreateAsync("player_letters", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            var letters = await context.People
+                .Where(p => p.NameLast != null && p.NameLast.Length > 0)
+                .Select(p => p.NameLast!.Substring(0, 1).ToUpper())
+                .Distinct()
+                .OrderBy(l => l)
+                .ToListAsync();
+            return letters
+                .Where(l => l.Length == 1 && char.IsLetter(l[0]))
+                .Select(l => l[0])
+                .ToList();
+        }))!;
 
         // Default to 'A' if no letter specified
         var currentLetter = letter?.ToUpper().FirstOrDefault() ?? 'A';
         ViewModel.CurrentLetter = currentLetter.ToString();
 
-        // Get Hall of Fame player IDs for highlighting
-        var hofPlayerIds = await context.HallOfFame
-            .Where(h => h.Inducted == "Y")
-            .Select(h => h.PlayerId)
-            .Distinct()
-            .ToHashSetAsync();
+        // Get Hall of Fame player IDs for highlighting (cached)
+        var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => h.PlayerId)
+                .Distinct()
+                .ToHashSetAsync();
+        }))!;
 
         // Query players by last name starting letter
         var query = context.People

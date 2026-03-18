@@ -4,11 +4,13 @@ using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Stats;
 
-public class BattingModel(BaseballDbContext context) : PageModel
+public class BattingModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
+    private static readonly TimeSpan FilterCacheDuration = TimeSpan.FromHours(24);
     private const int PageSize = 100;
 
     public LeaderboardViewModel ViewModel { get; set; } = new();
@@ -34,31 +36,41 @@ public class BattingModel(BaseballDbContext context) : PageModel
         ViewModel.CurrentPage = page;
         ViewModel.AvailableStats = LeaderboardStats.BattingStats;
 
-        // Get available years
-        var years = await context.Batting
-            .Select(b => (int)b.YearId)
-            .Distinct()
-            .OrderByDescending(y => y)
-            .ToListAsync();
-        ViewModel.AvailableYears = years;
+        // Get available years (cached)
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("batting_years", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FilterCacheDuration;
+            return await context.Batting
+                .Select(b => (int)b.YearId)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+        }))!;
 
-        // Get available leagues
-        ViewModel.AvailableLeagues = await context.Batting
-            .Select(b => b.LgId)
-            .Distinct()
-            .OrderBy(l => l)
-            .ToListAsync();
+        // Get available leagues (cached)
+        ViewModel.AvailableLeagues = (await cache.GetOrCreateAsync("batting_leagues", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FilterCacheDuration;
+            return await context.Batting
+                .Select(b => b.LgId)
+                .Distinct()
+                .OrderBy(l => l)
+                .ToListAsync();
+        }))!;
 
-        // Get Hall of Fame player IDs
-        var hofPlayerIds = await context.HallOfFame
-            .Where(h => h.Inducted == "Y")
-            .Select(h => h.PlayerId)
-            .Distinct()
-            .ToHashSetAsync();
+        // Get Hall of Fame player IDs (cached)
+        var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FilterCacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => h.PlayerId)
+                .Distinct()
+                .ToHashSetAsync();
+        }))!;
 
         // Build query
         var query = context.Batting
-            .Include(b => b.Player)
             .AsQueryable();
 
         // Apply year filter

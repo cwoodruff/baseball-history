@@ -53,18 +53,16 @@ public class SeasonModel(BaseballDbContext context) : PageModel
             })
             .ToListAsync();
 
-        // Parse RBI from string
-        var rbiData = await context.Batting
+        // Parse RBI
+        var rbiDict = await context.Batting
             .Where(b => b.TeamId == teamId && b.LgId == lgId && b.YearId == year && b.Rbi != null)
-            .Select(b => new { b.PlayerId, Rbi = b.Rbi })
-            .ToListAsync();
+            .ToDictionaryAsync(b => b.PlayerId, b => b.Rbi ?? 0);
 
         foreach (var batter in batters)
         {
-            var rbi = rbiData.FirstOrDefault(r => r.PlayerId == batter.PlayerId);
-            if (rbi != null)
+            if (rbiDict.TryGetValue(batter.PlayerId, out var rbi))
             {
-                batter.Rbi = rbi.Rbi ?? 0;
+                batter.Rbi = rbi;
             }
 
             batter.IsInHallOfFame = hofPlayerIds.Contains(batter.PlayerId);
