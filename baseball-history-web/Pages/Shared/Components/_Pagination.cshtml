@@ -15,6 +15,7 @@
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
                    hx-push-url="@Model.PushUrl.ToString().ToLower()"
+                   hx-boost="false"
                    aria-label="First">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
@@ -27,6 +28,7 @@
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
                    hx-push-url="@Model.PushUrl.ToString().ToLower()"
+                   hx-boost="false"
                    aria-label="Previous">
                     <span aria-hidden="true">&laquo;</span>
                 </a>
@@ -48,7 +50,8 @@
                            hx-get="@Model.GetPageUrl(pageNum)"
                            hx-target="@Model.Target"
                            hx-swap="innerHTML"
-                           hx-push-url="@Model.PushUrl.ToString().ToLower()">
+                           hx-push-url="@Model.PushUrl.ToString().ToLower()"
+                           hx-boost="false">
                             @pageNum
                         </a>
                     </li>
@@ -62,6 +65,7 @@
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
                    hx-push-url="@Model.PushUrl.ToString().ToLower()"
+                   hx-boost="false"
                    aria-label="Next">
                     <span aria-hidden="true">&raquo;</span>
                 </a>
@@ -74,6 +78,7 @@
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
                    hx-push-url="@Model.PushUrl.ToString().ToLower()"
+                   hx-boost="false"
                    aria-label="Last">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Players;
 
-[ResponseCache(Duration = 3600, VaryByQueryKeys = ["id"])]
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
 public class ModalModel(BaseballDbContext context) : PageModel
 {
     public PlayerDetailViewModel? Player { get; set; }

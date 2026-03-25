@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Stats;
 
-[ResponseCache(Duration = 3600, VaryByQueryKeys = ["stat", "fromYear", "toYear", "league", "minAb", "singleSeason", "page"])]
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
 public class BattingModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan FilterCacheDuration = TimeSpan.FromHours(24);
@@ -23,7 +23,7 @@ public class BattingModel(BaseballDbContext context, IMemoryCache cache) : PageM
         string? league = null,
         int minAb = 0,
         bool singleSeason = false,
-        int page = 1)
+        [FromQuery] int page = 1)
     {
         ViewModel.Type = LeaderboardType.Batting;
         ViewModel.StatColumn = stat;

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Players;
 
-[ResponseCache(Duration = 3600, VaryByQueryKeys = ["letter", "page"])]
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
 public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
@@ -16,7 +16,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     public PlayerListViewModel ViewModel { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync(string? letter, int page = 1)
+    public async Task<IActionResult> OnGetAsync(string? letter, [FromQuery] int page = 1)
     {
         // Get all available first letters (cached)
         ViewModel.AvailableLetters = (await cache.GetOrCreateAsync("player_letters", async entry =>

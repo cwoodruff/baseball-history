@@ -37,8 +37,6 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Fastest);
 
-builder.Services.AddResponseCaching();
-
 // Add services to the container.
 builder.Services.AddSingleton<TeamColorService>();
 builder.Services.AddRazorPages();
@@ -64,7 +62,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseResponseCompression();
-app.UseResponseCaching();
 
 app.UseRouting();
 

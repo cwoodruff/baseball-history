@@ -8,7 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.HallOfFame;
 
-[ResponseCache(Duration = 3600, VaryByQueryKeys = ["year", "category", "page"])]
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
 public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
@@ -16,7 +16,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     public HallOfFameViewModel ViewModel { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync(int? year = null, string? category = null, int page = 1)
+    public async Task<IActionResult> OnGetAsync(int? year = null, string? category = null, [FromQuery] int page = 1)
     {
         ViewModel.SelectedYear = year;
         ViewModel.SelectedCategory = category;

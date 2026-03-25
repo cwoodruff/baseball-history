@@ -420,3 +420,4 @@ FodyWeavers.xsd
 /.idea
 /.claude
 CLAUDE.md
+.gstack/
