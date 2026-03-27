@@ -460,15 +460,18 @@ a:hover {
 
 .htmx-indicator {
     opacity: 0;
+    pointer-events: none;
     transition: opacity 200ms ease-in;
 }
 
 .htmx-request .htmx-indicator {
     opacity: 1;
+    pointer-events: auto;
 }
 
 .htmx-request.htmx-indicator {
     opacity: 1;
+    pointer-events: auto;
 }
 
 /* Skeleton loading */

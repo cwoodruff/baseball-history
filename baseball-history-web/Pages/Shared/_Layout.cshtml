@@ -12,6 +12,23 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/team-colors.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/baseball_history_web.styles.css" asp-append-version="true"/>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DK1MZLFLXT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-DK1MZLFLXT');
+    </script>
+
+    <!-- Scripts in head so they survive hx-boost body swaps -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"
+            integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+            crossorigin="anonymous"
+            defer></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
 </head>
 <body hx-boost="true">
 <header>
@@ -39,10 +56,10 @@
                         <a class="nav-link" asp-area="" asp-page="/Teams/Index">Teams</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="statsDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="nav-link dropdown-toggle" id="statsDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
                             Stats
-                        </a>
+                        </button>
                         <ul class="dropdown-menu shadow" aria-labelledby="statsDropdown">
                             <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Batting">Batting Leaders</a></li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/Stats/Pitching">Pitching Leaders</a>
@@ -98,118 +115,90 @@
     </div>
 </footer>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-DK1MZLFLXT"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    // Runs once on initial load — listeners on document persist across hx-boost swaps
+    if (!window.__bbHistoryInit) {
+        window.__bbHistoryInit = true;
 
-  gtag('config', 'G-DK1MZLFLXT');
-</script>
+        // Clean up any existing modals before loading new ones
+        function cleanupModals() {
+            document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+                backdrop.remove();
+            });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.removeProperty('overflow');
+        }
 
-<script src="https://unpkg.com/htmx.org@2.0.4"
-        integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
-        crossorigin="anonymous"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-
-<script>
-    // Clean up any existing modals before loading new ones
-    function cleanupModals() {
-        // Remove any leftover backdrops
-        document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
-            backdrop.remove();
+        document.addEventListener('htmx:beforeSwap', function (evt) {
+            if (evt.detail.target.id === 'modal-container') {
+                var existingModal = evt.detail.target.querySelector('.modal');
+                if (existingModal) {
+                    var existingInstance = bootstrap.Modal.getInstance(existingModal);
+                    if (existingInstance) {
+                        existingInstance.dispose();
+                    }
+                }
+                cleanupModals();
+            }
         });
-        // Remove modal-open class from body
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('padding-right');
-        document.body.style.removeProperty('overflow');
-    }
 
-    // HTMX configuration
-    document.body.addEventListener('htmx:beforeSwap', function (evt) {
-        // Clean up before loading new modal content
-        if (evt.detail.target.id === 'modal-container') {
-            var existingModal = evt.detail.target.querySelector('.modal');
-            if (existingModal) {
-                var existingInstance = bootstrap.Modal.getInstance(existingModal);
-                if (existingInstance) {
-                    existingInstance.dispose();
+        document.addEventListener('htmx:afterSwap', function (evt) {
+            // Initialize any Bootstrap modals loaded via HTMX
+            if (evt.detail.target.id === 'modal-container') {
+                var modal = evt.detail.target.querySelector('.modal');
+                if (modal) {
+                    cleanupModals();
+                    setTimeout(function() {
+                        var bsModal = new bootstrap.Modal(modal, {
+                            backdrop: true,
+                            keyboard: true
+                        });
+                        bsModal.show();
+                        modal.addEventListener('hidden.bs.modal', function () {
+                            try { bsModal.dispose(); } catch (e) {}
+                            document.getElementById('modal-container').innerHTML = '';
+                            cleanupModals();
+                        }, { once: true });
+                    }, 10);
                 }
             }
+
+            // Reinitialize Bootstrap dropdowns after any swap
+            var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+            dropdowns.forEach(function (dropdown) {
+                var instance = bootstrap.Dropdown.getInstance(dropdown);
+                if (instance) {
+                    instance.dispose();
+                }
+                new bootstrap.Dropdown(dropdown);
+            });
+        });
+
+        document.addEventListener('htmx:afterSettle', function (evt) {
+            var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+            dropdowns.forEach(function (dropdown) {
+                var instance = bootstrap.Dropdown.getInstance(dropdown);
+                if (instance) {
+                    instance.dispose();
+                }
+                new bootstrap.Dropdown(dropdown);
+            });
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function (e) {
+            var searchContainer = document.querySelector('.search-container');
+            var searchResults = document.getElementById('search-results');
+            if (searchContainer && !searchContainer.contains(e.target)) {
+                searchResults.innerHTML = '';
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
             cleanupModals();
-        }
-    });
-
-    // Reinitialize Bootstrap components after HTMX swaps
-    document.body.addEventListener('htmx:afterSwap', function (evt) {
-        // Initialize any Bootstrap modals loaded via HTMX
-        if (evt.detail.target.id === 'modal-container') {
-            var modal = evt.detail.target.querySelector('.modal');
-            if (modal) {
-                // Ensure clean state
-                cleanupModals();
-
-                // Small delay to ensure DOM is ready
-                setTimeout(function() {
-                    var bsModal = new bootstrap.Modal(modal, {
-                        backdrop: true,
-                        keyboard: true
-                    });
-                    bsModal.show();
-
-                    // Clean up modal and backdrop when hidden
-                    modal.addEventListener('hidden.bs.modal', function () {
-                        // Dispose the modal instance
-                        try {
-                            bsModal.dispose();
-                        } catch (e) {}
-                        // Clear the container
-                        document.getElementById('modal-container').innerHTML = '';
-                        // Clean up
-                        cleanupModals();
-                    }, { once: true });
-                }, 10);
-            }
-        }
-
-        // Reinitialize Bootstrap dropdowns
-        var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-        dropdowns.forEach(function (dropdown) {
-            var instance = bootstrap.Dropdown.getInstance(dropdown);
-            if (instance) {
-                instance.dispose();
-            }
-            new bootstrap.Dropdown(dropdown);
         });
-    });
-
-    // Also handle htmx:afterSettle for boosted navigation
-    document.body.addEventListener('htmx:afterSettle', function (evt) {
-        var dropdowns = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-        dropdowns.forEach(function (dropdown) {
-            var instance = bootstrap.Dropdown.getInstance(dropdown);
-            if (instance) {
-                instance.dispose();
-            }
-            new bootstrap.Dropdown(dropdown);
-        });
-    });
-
-    // Hide search results when clicking outside
-    document.addEventListener('click', function (e) {
-        var searchContainer = document.querySelector('.search-container');
-        var searchResults = document.getElementById('search-results');
-        if (searchContainer && !searchContainer.contains(e.target)) {
-            searchResults.innerHTML = '';
-        }
-    });
-
-    // Clean up on page unload
-    window.addEventListener('beforeunload', function() {
-        cleanupModals();
-    });
+    }
 </script>
 
 @await RenderSectionAsync("Scripts", required: false)
