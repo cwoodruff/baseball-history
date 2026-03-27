@@ -9,109 +9,113 @@
 </div>
 
 <!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form id="filter-form">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label">Stat</label>
-                    <select class="form-select" name="stat"
-                            hx-get="/Stats/Batting"
-                            hx-include="#filter-form"
-                            hx-target="#leaderboard"
-                            hx-indicator="#loading-indicator"
-                            hx-push-url="true">
-                        @foreach (var s in Model.ViewModel.AvailableStats)
-                        {
-                            <option value="@s.Key" selected="@(s.Key == Model.ViewModel.StatColumn)">@s.Value</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">From Year</label>
-                    <select class="form-select" name="fromYear"
-                            hx-get="/Stats/Batting"
-                            hx-include="#filter-form"
-                            hx-target="#leaderboard"
-                            hx-indicator="#loading-indicator"
-                            hx-push-url="true">
-                        <option value="">All Time</option>
-                        @foreach (var year in Model.ViewModel.AvailableYears.Take(50))
-                        {
-                            <option value="@year" selected="@(year == Model.ViewModel.FromYear)">@year</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">To Year</label>
-                    <select class="form-select" name="toYear"
-                            hx-get="/Stats/Batting"
-                            hx-include="#filter-form"
-                            hx-target="#leaderboard"
-                            hx-indicator="#loading-indicator"
-                            hx-push-url="true">
-                        <option value="">Present</option>
-                        @foreach (var year in Model.ViewModel.AvailableYears.Take(50))
-                        {
-                            <option value="@year" selected="@(year == Model.ViewModel.ToYear)">@year</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">League</label>
-                    <select class="form-select" name="league"
-                            hx-get="/Stats/Batting"
-                            hx-include="#filter-form"
-                            hx-target="#leaderboard"
-                            hx-indicator="#loading-indicator"
-                            hx-push-url="true">
-                        <option value="">All Leagues</option>
-                        @foreach (var lg in Model.ViewModel.AvailableLeagues)
-                        {
-                            <option value="@lg" selected="@(lg == Model.ViewModel.League)">@lg</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Min AB</label>
-                    <select class="form-select" name="minAb"
-                            hx-get="/Stats/Batting"
-                            hx-include="#filter-form"
-                            hx-target="#leaderboard"
-                            hx-indicator="#loading-indicator"
-                            hx-push-url="true">
-                        <option value="0" selected="@(Model.ViewModel.MinimumAtBats == 0)">No minimum</option>
-                        <option value="100" selected="@(Model.ViewModel.MinimumAtBats == 100)">100 AB</option>
-                        <option value="500" selected="@(Model.ViewModel.MinimumAtBats == 500)">500 AB</option>
-                        <option value="1000" selected="@(Model.ViewModel.MinimumAtBats == 1000)">1000 AB</option>
-                        <option value="3000" selected="@(Model.ViewModel.MinimumAtBats == 3000)">3000 AB</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="singleSeason" value="true"
-                               id="singleSeason" checked="@Model.ViewModel.SingleSeason"
-                               hx-get="/Stats/Batting"
-                               hx-include="#filter-form"
-                               hx-target="#leaderboard"
-                               hx-indicator="#loading-indicator"
-                               hx-push-url="true">
-                        <label class="form-check-label" for="singleSeason">
-                            Single Season
-                        </label>
+<div class="position-relative" hx-indicator="#loading-indicator">
+    <div class="card mb-0">
+        <div class="card-body">
+            <form id="filter-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">Stat</label>
+                        <select class="form-select" name="stat"
+                                hx-get="/Stats/Batting"
+                                hx-include="#filter-form"
+                                hx-target="#leaderboard"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            @foreach (var s in Model.ViewModel.AvailableStats)
+                            {
+                                <option value="@s.Key" selected="@(s.Key == Model.ViewModel.StatColumn)">@s.Value</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">From Year</label>
+                        <select class="form-select" name="fromYear"
+                                hx-get="/Stats/Batting"
+                                hx-include="#filter-form"
+                                hx-target="#leaderboard"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Time</option>
+                            @foreach (var year in Model.ViewModel.AvailableYears.Take(50))
+                            {
+                                <option value="@year" selected="@(year == Model.ViewModel.FromYear)">@year</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">To Year</label>
+                        <select class="form-select" name="toYear"
+                                hx-get="/Stats/Batting"
+                                hx-include="#filter-form"
+                                hx-target="#leaderboard"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">Present</option>
+                            @foreach (var year in Model.ViewModel.AvailableYears.Take(50))
+                            {
+                                <option value="@year" selected="@(year == Model.ViewModel.ToYear)">@year</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">League</label>
+                        <select class="form-select" name="league"
+                                hx-get="/Stats/Batting"
+                                hx-include="#filter-form"
+                                hx-target="#leaderboard"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Leagues</option>
+                            @foreach (var lg in Model.ViewModel.AvailableLeagues)
+                            {
+                                <option value="@lg" selected="@(lg == Model.ViewModel.League)">@lg</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Min AB</label>
+                        <select class="form-select" name="minAb"
+                                hx-get="/Stats/Batting"
+                                hx-include="#filter-form"
+                                hx-target="#leaderboard"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="0" selected="@(Model.ViewModel.MinimumAtBats == 0)">No minimum</option>
+                            <option value="100" selected="@(Model.ViewModel.MinimumAtBats == 100)">100 AB</option>
+                            <option value="500" selected="@(Model.ViewModel.MinimumAtBats == 500)">500 AB</option>
+                            <option value="1000" selected="@(Model.ViewModel.MinimumAtBats == 1000)">1000 AB</option>
+                            <option value="3000" selected="@(Model.ViewModel.MinimumAtBats == 3000)">3000 AB</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="singleSeason" value="true"
+                                   id="singleSeason" checked="@Model.ViewModel.SingleSeason"
+                                   hx-get="/Stats/Batting"
+                                   hx-include="#filter-form"
+                                   hx-target="#leaderboard"
+                                   hx-indicator="#loading-indicator"
+                                   hx-push-url="true">
+                            <label class="form-check-label" for="singleSeason">
+                                Single Season
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading overlay on filter -->
+    <div id="loading-indicator" class="htmx-indicator loading-overlay">
+        <div class="loading-baseball">
+            <div class="loading-baseball-icon">&#9918;</div>
+            <div class="loading-baseball-text">Loading stats...</div>
+        </div>
     </div>
 </div>
 
-<!-- Loading indicator -->
-<div id="loading-indicator" class="htmx-indicator loading-baseball">
-    <div class="loading-baseball-icon">&#9918;</div>
-    <div class="loading-baseball-text">Loading stats...</div>
-</div>
-
-<div id="leaderboard" hx-indicator="#loading-indicator">
+<div id="leaderboard">
     @await Html.PartialAsync("_BattingLeaders", Model.ViewModel)
 </div>
