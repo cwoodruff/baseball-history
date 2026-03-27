@@ -61,13 +61,18 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
         ViewModel.PageSize = PageSize;
 
-        // Get players for current page with batting stats
+        // Get players for current page — project only needed columns
         var players = await query
             .Skip((ViewModel.CurrentPage - 1) * PageSize)
             .Take(PageSize)
             .Select(p => new
             {
-                Person = p,
+                p.PlayerId,
+                p.NameFirst,
+                p.NameLast,
+                p.BirthYear,
+                DebutYear = p.Debut,
+                FinalYear = p.FinalGame,
                 TotalGames = (p.Battings.Sum(b => (int?)b.G) ?? 0) + (p.Pitchings.Sum(pi => (int?)pi.G) ?? 0),
                 TotalHits = p.Battings.Sum(b => (int?)b.H) ?? 0,
                 TotalHR = p.Battings.Sum(b => (int?)b.Hr) ?? 0,
@@ -78,14 +83,14 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
         ViewModel.Players = players.Select(p => new PlayerSummary
         {
-            PlayerId = p.Person.PlayerId,
-            FirstName = p.Person.NameFirst,
-            LastName = p.Person.NameLast,
-            FullName = $"{p.Person.NameFirst} {p.Person.NameLast}".Trim(),
-            BirthYear = p.Person.BirthYear,
-            DebutYear = p.Person.Debut?.Year.ToString(),
-            FinalYear = p.Person.FinalGame?.Year.ToString(),
-            IsInHallOfFame = hofPlayerIds.Contains(p.Person.PlayerId),
+            PlayerId = p.PlayerId,
+            FirstName = p.NameFirst,
+            LastName = p.NameLast,
+            FullName = $"{p.NameFirst} {p.NameLast}".Trim(),
+            BirthYear = p.BirthYear,
+            DebutYear = p.DebutYear?.Year.ToString(),
+            FinalYear = p.FinalYear?.Year.ToString(),
+            IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId),
             TotalGames = p.TotalGames > 0 ? p.TotalGames : null,
             TotalHits = p.TotalHits > 0 ? p.TotalHits : null,
             TotalHomeRuns = p.TotalHR > 0 ? p.TotalHR : null,
