@@ -1,0 +1,76 @@
+@page
+@model baseball_history_web.Pages.Postseason.IndexModel
+@{
+    ViewData["Title"] = "Postseason";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-mlb-navy mb-0">Postseason Results</h1>
+</div>
+
+<!-- Filters -->
+<div class="position-relative" hx-indicator="#loading-indicator">
+    <div class="card mb-0">
+        <div class="card-body">
+            <form id="filter-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Year</label>
+                        <select class="form-select" name="year"
+                                hx-get="/Postseason"
+                                hx-include="#filter-form"
+                                hx-target="#postseason-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Years</option>
+                            @foreach (var y in Model.ViewModel.AvailableYears.Take(60))
+                            {
+                                <option value="@y" selected="@(y == Model.ViewModel.SelectedYear)">@y</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Round</label>
+                        <select class="form-select" name="round"
+                                hx-get="/Postseason"
+                                hx-include="#filter-form"
+                                hx-target="#postseason-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Rounds</option>
+                            <option value="WS" selected="@(Model.ViewModel.SelectedRound == "WS")">World Series</option>
+                            <option value="ALCS" selected="@(Model.ViewModel.SelectedRound == "ALCS")">AL Championship Series</option>
+                            <option value="NLCS" selected="@(Model.ViewModel.SelectedRound == "NLCS")">NL Championship Series</option>
+                            <option value="ALDS" selected="@(Model.ViewModel.SelectedRound == "ALDS")">AL Division Series</option>
+                            <option value="NLDS" selected="@(Model.ViewModel.SelectedRound == "NLDS")">NL Division Series</option>
+                            <option value="ALWC" selected="@(Model.ViewModel.SelectedRound == "ALWC")">AL Wild Card</option>
+                            <option value="NLWC" selected="@(Model.ViewModel.SelectedRound == "NLWC")">NL Wild Card</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        @if (Model.ViewModel.SelectedYear.HasValue || !string.IsNullOrEmpty(Model.ViewModel.SelectedRound))
+                        {
+                            <a href="/Postseason" class="btn btn-outline-secondary"
+                               hx-get="/Postseason"
+                               hx-target="#postseason-list"
+                               hx-push-url="true">
+                                Clear Filters
+                            </a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading-indicator" class="htmx-indicator loading-overlay">
+        <div class="loading-baseball">
+            <div class="loading-baseball-icon">&#9918;</div>
+            <div class="loading-baseball-text">Loading postseason data...</div>
+        </div>
+    </div>
+</div>
+
+<div id="postseason-list">
+    @await Html.PartialAsync("_PostseasonList", Model.ViewModel)
+</div>

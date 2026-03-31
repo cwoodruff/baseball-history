@@ -1,8 +1,10 @@
 using System.IO.Compression;
+using baseball_history_web.Api;
 using baseball_history_web.Models;
 using baseball_history_web.Services;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 // Add services to the container.
 builder.Services.AddSingleton<TeamColorService>();
 builder.Services.AddRazorPages();
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
@@ -70,5 +73,13 @@ app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorPages()
     .WithStaticAssets();
+
+// REST API
+app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.MapScalarApiReference();
+}
+app.MapApiEndpoints();
 
 app.Run();

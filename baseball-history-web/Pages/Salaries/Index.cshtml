@@ -1,0 +1,74 @@
+@page
+@model baseball_history_web.Pages.Salaries.IndexModel
+@{
+    ViewData["Title"] = "Salary Explorer";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-mlb-navy mb-0">Salary Explorer</h1>
+    <span class="text-muted small">Data available from 1985</span>
+</div>
+
+<!-- Filters -->
+<div class="position-relative" hx-indicator="#loading-indicator">
+    <div class="card mb-0">
+        <div class="card-body">
+            <form id="filter-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Year</label>
+                        <select class="form-select" name="year"
+                                hx-get="/Salaries"
+                                hx-include="#filter-form"
+                                hx-target="#salary-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Years</option>
+                            @foreach (var y in Model.ViewModel.AvailableYears)
+                            {
+                                <option value="@y" selected="@(y == Model.ViewModel.SelectedYear)">@y</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Team</label>
+                        <select class="form-select" name="team"
+                                hx-get="/Salaries"
+                                hx-include="#filter-form"
+                                hx-target="#salary-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Teams</option>
+                            @foreach (var t in Model.ViewModel.AvailableTeams)
+                            {
+                                <option value="@t.TeamId" selected="@(t.TeamId == Model.ViewModel.SelectedTeam)">@(t.TeamName ?? t.TeamId)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        @if (Model.ViewModel.SelectedYear.HasValue || !string.IsNullOrEmpty(Model.ViewModel.SelectedTeam))
+                        {
+                            <a href="/Salaries" class="btn btn-outline-secondary"
+                               hx-get="/Salaries"
+                               hx-target="#salary-list"
+                               hx-push-url="true">
+                                Clear Filters
+                            </a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading-indicator" class="htmx-indicator loading-overlay">
+        <div class="loading-baseball">
+            <div class="loading-baseball-icon">&#9918;</div>
+            <div class="loading-baseball-text">Loading salary data...</div>
+        </div>
+    </div>
+</div>
+
+<div id="salary-list">
+    @await Html.PartialAsync("_SalaryList", Model.ViewModel)
+</div>

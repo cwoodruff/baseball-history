@@ -1,0 +1,88 @@
+@page
+@model baseball_history_web.Pages.Awards.IndexModel
+@{
+    ViewData["Title"] = "Awards";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-mlb-navy mb-0">Awards &amp; Voting</h1>
+</div>
+
+<!-- Filters -->
+<div class="position-relative" hx-indicator="#loading-indicator">
+    <div class="card mb-0">
+        <div class="card-body">
+            <form id="filter-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">Award</label>
+                        <select class="form-select" name="award"
+                                hx-get="/Awards"
+                                hx-include="#filter-form"
+                                hx-target="#awards-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Awards</option>
+                            @foreach (var a in Model.ViewModel.AvailableAwards)
+                            {
+                                <option value="@a" selected="@(a == Model.ViewModel.SelectedAward)">@a</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Year</label>
+                        <select class="form-select" name="year"
+                                hx-get="/Awards"
+                                hx-include="#filter-form"
+                                hx-target="#awards-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Years</option>
+                            @foreach (var y in Model.ViewModel.AvailableYears.Take(60))
+                            {
+                                <option value="@y" selected="@(y == Model.ViewModel.SelectedYear)">@y</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">League</label>
+                        <select class="form-select" name="league"
+                                hx-get="/Awards"
+                                hx-include="#filter-form"
+                                hx-target="#awards-list"
+                                hx-indicator="#loading-indicator"
+                                hx-push-url="true">
+                            <option value="">All Leagues</option>
+                            @foreach (var lg in Model.ViewModel.AvailableLeagues)
+                            {
+                                <option value="@lg" selected="@(lg == Model.ViewModel.SelectedLeague)">@lg</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        @if (!string.IsNullOrEmpty(Model.ViewModel.SelectedAward) || Model.ViewModel.SelectedYear.HasValue || !string.IsNullOrEmpty(Model.ViewModel.SelectedLeague))
+                        {
+                            <a href="/Awards" class="btn btn-outline-secondary"
+                               hx-get="/Awards"
+                               hx-target="#awards-list"
+                               hx-push-url="true">
+                                Clear Filters
+                            </a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading-indicator" class="htmx-indicator loading-overlay">
+        <div class="loading-baseball">
+            <div class="loading-baseball-icon">&#9918;</div>
+            <div class="loading-baseball-text">Loading award data...</div>
+        </div>
+    </div>
+</div>
+
+<div id="awards-list">
+    @await Html.PartialAsync("_AwardsList", Model.ViewModel)
+</div>

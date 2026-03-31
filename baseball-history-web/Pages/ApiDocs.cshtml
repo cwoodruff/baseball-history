@@ -1,0 +1,377 @@
+@page
+@model ApiDocsModel
+@{
+    ViewData["Title"] = "API Documentation";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <h1 class="mb-3">REST API</h1>
+            <p class="lead">
+                Access over 150 years of Major League Baseball statistics programmatically.
+                All endpoints return JSON and require no authentication.
+            </p>
+
+            <div class="alert alert-info d-flex align-items-center mb-4">
+                <span class="me-2" style="font-size: 1.2rem;">&#128214;</span>
+                <div>
+                    <strong>Interactive API Explorer:</strong>
+                    Try endpoints directly in the
+                    <a href="/scalar/v1" target="_blank" rel="noopener">Scalar API Reference</a>
+                    (available in development mode), or view the raw
+                    <a href="/openapi/v1.json" target="_blank" rel="noopener">OpenAPI specification</a>.
+                </div>
+            </div>
+
+            <!-- Base URL -->
+            <section class="mb-5">
+                <h2>Base URL</h2>
+                <pre class="bg-dark text-light p-3 rounded"><code>https://your-host/api</code></pre>
+                <p>All endpoints below are relative to this base. Responses use <code>application/json</code>.</p>
+            </section>
+
+            <!-- Pagination -->
+            <section class="mb-5">
+                <h2>Pagination</h2>
+                <p>List endpoints return a standard pagination envelope:</p>
+                <pre class="bg-dark text-light p-3 rounded"><code>{
+  "data": [ ... ],
+  "page": 1,
+  "pageSize": 25,
+  "totalCount": 1234,
+  "totalPages": 50
+}</code></pre>
+                <p>
+                    Use <code>page</code> and <code>pageSize</code> query parameters to navigate.
+                    Maximum <code>pageSize</code> is 100.
+                </p>
+            </section>
+
+            <!-- Players -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Players</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players</code></h5>
+                    <p>List players filtered by last name initial.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>letter</code></td><td>string</td><td>A</td><td>Last name initial (A-Z)</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>25</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/players?letter=R&amp;page=1&amp;pageSize=10"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}</code></h5>
+                    <p>Full player detail including career batting/pitching stats, teams played for, and Hall of Fame status.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/players/ruthba01"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/batting</code></h5>
+                    <p>Season-by-season batting statistics with team names and computed batting average.</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/pitching</code></h5>
+                    <p>Season-by-season pitching statistics with ERA.</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/fielding</code></h5>
+                    <p>Season-by-season fielding stats by position (putouts, assists, errors, double plays).</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/awards</code></h5>
+                    <p>All awards won (MVP, Cy Young, Gold Glove, etc.).</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/postseason/batting</code></h5>
+                    <p>Postseason batting stats by year and round (ALCS, NLCS, WS, etc.).</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/postseason/pitching</code></h5>
+                    <p>Postseason pitching stats by year and round.</p>
+                </div>
+            </section>
+
+            <!-- Teams -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Teams</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/teams/franchises</code></h5>
+                    <p>List all franchises with all-time records, championships, and pennants.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>league</code></td><td>string</td><td>&mdash;</td><td>Filter by league (AL, NL)</td></tr>
+                            <tr><td><code>activeOnly</code></td><td>bool</td><td>false</td><td>Only active franchises</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/franchises?league=AL&amp;activeOnly=true"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/teams/franchises/{franchiseId}</code></h5>
+                    <p>Franchise detail with every season's record, division/pennant/World Series wins.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/franchises/NYY"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/teams/seasons/{teamId}/{lgId}/{year}</code></h5>
+                    <p>
+                        Complete team season: record, batting/pitching aggregates, full roster
+                        (batters and pitchers), and managers. Includes Hall of Fame flags.
+                    </p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/seasons/NYA/AL/1927"</code></pre>
+                </div>
+            </section>
+
+            <!-- Leaders -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Leaders</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/leaders/batting</code></h5>
+                    <p>Batting leaderboard ranked by any stat. Supports career and single-season modes.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>stat</code></td><td>string</td><td>hr</td><td>Stat to sort by: <code>hr</code>, <code>h</code>, <code>avg</code>, <code>r</code>, <code>rbi</code>, <code>sb</code>, <code>bb</code>, <code>ops</code>, <code>obp</code>, <code>slg</code>, <code>2b</code>, <code>3b</code>, <code>g</code>, <code>ab</code></td></tr>
+                            <tr><td><code>fromYear</code></td><td>int</td><td>&mdash;</td><td>Start year</td></tr>
+                            <tr><td><code>toYear</code></td><td>int</td><td>&mdash;</td><td>End year</td></tr>
+                            <tr><td><code>league</code></td><td>string</td><td>&mdash;</td><td>League filter (AL, NL)</td></tr>
+                            <tr><td><code>minAb</code></td><td>int</td><td>0</td><td>Minimum at-bats</td></tr>
+                            <tr><td><code>singleSeason</code></td><td>bool</td><td>false</td><td>Single season vs. career totals</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong> Top single-season home run totals since 2000:</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/batting?stat=hr&amp;singleSeason=true&amp;fromYear=2000"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/leaders/pitching</code></h5>
+                    <p>Pitching leaderboard. ERA and WHIP sort ascending (lower is better); all others descending.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>stat</code></td><td>string</td><td>w</td><td>Stat to sort by: <code>w</code>, <code>so</code>, <code>sv</code>, <code>era</code>, <code>whip</code>, <code>g</code>, <code>gs</code>, <code>cg</code>, <code>sho</code>, <code>ip</code>, <code>hr</code>, <code>k9</code>, <code>bb9</code>, <code>wpct</code></td></tr>
+                            <tr><td><code>fromYear</code></td><td>int</td><td>&mdash;</td><td>Start year</td></tr>
+                            <tr><td><code>toYear</code></td><td>int</td><td>&mdash;</td><td>End year</td></tr>
+                            <tr><td><code>league</code></td><td>string</td><td>&mdash;</td><td>League filter (AL, NL)</td></tr>
+                            <tr><td><code>minIp</code></td><td>int</td><td>0</td><td>Minimum innings pitched</td></tr>
+                            <tr><td><code>singleSeason</code></td><td>bool</td><td>false</td><td>Single season vs. career totals</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong> Career strikeout leaders with at least 1000 IP:</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/pitching?stat=so&amp;minIp=1000"</code></pre>
+                </div>
+            </section>
+
+            <!-- Hall of Fame -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Hall of Fame</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/hall-of-fame</code></h5>
+                    <p>List Hall of Fame inductees with vote percentages.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>year</code></td><td>int</td><td>&mdash;</td><td>Induction year</td></tr>
+                            <tr><td><code>category</code></td><td>string</td><td>&mdash;</td><td>Category: <code>Player</code>, <code>Manager</code>, <code>Pioneer/Executive</code>, <code>Umpire</code></td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/hall-of-fame/{playerId}/voting</code></h5>
+                    <p>Complete voting history for a player across all ballot years.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/hall-of-fame/jeterda01/voting"</code></pre>
+                </div>
+            </section>
+
+            <!-- Search -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Search</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/search</code></h5>
+                    <p>Search across players and franchises by name. Returns both result types with total counts.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>q</code></td><td>string</td><td><em>required</em></td><td>Search query (min 2 characters)</td></tr>
+                            <tr><td><code>limit</code></td><td>int</td><td>10</td><td>Max results per type (max 50)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/search?q=griffey"</code></pre>
+                </div>
+            </section>
+
+            <!-- Salaries -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Salaries</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/salaries/players/{playerId}</code></h5>
+                    <p>Player salary history with career total. Data available from 1985 onward.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/salaries/players/troutmi01"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/salaries/teams/{teamId}/{year}</code></h5>
+                    <p>Team payroll breakdown for a given season.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/salaries/teams/NYA/2014"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/salaries/leaders</code></h5>
+                    <p>Highest-paid players. Paginated.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>year</code></td><td>int</td><td>&mdash;</td><td>Filter to a specific year</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Parks -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Ballparks</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/parks</code></h5>
+                    <p>List all ballparks. Paginated.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>state</code></td><td>string</td><td>&mdash;</td><td>Filter by state code</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/parks/{parkKey}</code></h5>
+                    <p>Park detail with season-by-season attendance and game counts.</p>
+                </div>
+            </section>
+
+            <!-- Postseason -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Postseason</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/postseason/series</code></h5>
+                    <p>Postseason series results (World Series, LCS, Division Series, Wild Card). Paginated.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>year</code></td><td>int</td><td>&mdash;</td><td>Filter by year</td></tr>
+                            <tr><td><code>round</code></td><td>string</td><td>&mdash;</td><td>Filter by round (WS, ALCS, NLCS, ALDS, NLDS, ALWC, NLWC)</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong> All World Series results:</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/postseason/series?round=WS&amp;pageSize=100"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/postseason/series/{year}</code></h5>
+                    <p>All postseason series for a given year.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/postseason/series/2024"</code></pre>
+                </div>
+            </section>
+
+            <!-- Awards -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Awards</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/awards/winners</code></h5>
+                    <p>Award winners with optional filters. Paginated.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>awardId</code></td><td>string</td><td>&mdash;</td><td>Filter by award (e.g. <code>MVP</code>, <code>Cy Young</code>, <code>Gold Glove</code>)</td></tr>
+                            <tr><td><code>year</code></td><td>int</td><td>&mdash;</td><td>Filter by year</td></tr>
+                            <tr><td><code>lgId</code></td><td>string</td><td>&mdash;</td><td>Filter by league (AL, NL)</td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong> All AL MVP winners:</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/awards/winners?awardId=MVP&amp;lgId=AL"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><span class="badge bg-success me-2">GET</span><code>/api/awards/voting/{awardId}/{year}/{lgId}</code></h5>
+                    <p>
+                        Full voting breakdown for an award race. Shows every candidate with points won,
+                        max possible, first-place votes, and vote share percentage.
+                    </p>
+                    <p><strong>Example:</strong> 2023 AL MVP voting race:</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/awards/voting/MVP/2023/AL"</code></pre>
+                </div>
+            </section>
+
+            <!-- Response Codes -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Response Codes</h2>
+                <table class="table table-sm">
+                    <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>200</code></td><td>Success</td></tr>
+                        <tr><td><code>400</code></td><td>Bad request (e.g. search query too short)</td></tr>
+                        <tr><td><code>404</code></td><td>Resource not found</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Data Notes -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Data Notes</h2>
+                <ul>
+                    <li>All data is from the <a href="https://sabr.org/lahman-database/" target="_blank" rel="noopener">Lahman Baseball Database</a>, covering 1871 to 2025.</li>
+                    <li>The database is read-only. All endpoints are <code>GET</code> requests.</li>
+                    <li>Player IDs follow the Lahman convention (e.g. <code>ruthba01</code>, <code>jeterda01</code>, <code>troutmi01</code>).</li>
+                    <li>Franchise IDs match Lahman franchise codes (e.g. <code>NYY</code>, <code>BOS</code>, <code>LAD</code>).</li>
+                    <li>Computed stats (AVG, OBP, SLG, OPS, ERA, WHIP) are calculated server-side and returned as rounded doubles.</li>
+                    <li>Salary data is available from 1985 onward.</li>
+                    <li>Innings pitched is stored as outs in the database and converted to innings (outs / 3) in responses.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>

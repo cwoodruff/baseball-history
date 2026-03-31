@@ -1,0 +1,161 @@
+@model baseball_history_web.ViewModels.AwardVotingViewModel
+
+@if (Model.VotingDetail != null)
+{
+    <!-- Voting Race Detail -->
+    <div class="card mt-3 mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>@Model.VotingDetail.Year @Model.VotingDetail.LgId @Model.VotingDetail.AwardId Voting</strong>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th class="text-end" style="width: 40px;">#</th>
+                    <th>Player</th>
+                    <th class="text-end">Points</th>
+                    <th class="text-end">Max</th>
+                    <th class="text-end">1st Place</th>
+                    <th class="text-end">Share</th>
+                    <th style="width: 25%;">Vote Share</th>
+                </tr>
+                </thead>
+                <tbody>
+                @{ var voteRank = 0; }
+                @foreach (var vote in Model.VotingDetail.Votes)
+                {
+                    voteRank++;
+                    <tr class="@(vote.IsWinner ? "table-success" : "")">
+                        <td class="text-end text-muted small">@voteRank</td>
+                        <td>
+                            <a href="#" class="text-decoration-none fw-bold"
+                               hx-get="/Players/Modal/@vote.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @vote.PlayerName
+                            </a>
+                            @if (vote.IsWinner)
+                            {
+                                <span class="badge bg-success ms-1">Winner</span>
+                            }
+                            @if (vote.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </td>
+                        <td class="text-end stat-cell fw-bold">@vote.PointsWon</td>
+                        <td class="text-end stat-cell text-muted">@vote.PointsMax</td>
+                        <td class="text-end stat-cell">@(vote.VotesFirst ?? "—")</td>
+                        <td class="text-end stat-cell">@vote.FormattedVoteShare</td>
+                        <td>
+                            <div class="progress" style="height: 18px;">
+                                <div class="progress-bar @(vote.IsWinner ? "bg-success" : "bg-primary")"
+                                     role="progressbar"
+                                     style="width: @vote.VoteShare%"
+                                     aria-valuenow="@vote.VoteShare"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (!Model.Winners.Any())
+{
+    @await Html.PartialAsync("Components/_EmptyState", new baseball_history_web.ViewModels.EmptyStateModel
+    {
+        Title = "No Awards Found",
+        Message = "No awards match your criteria.",
+        ActionUrl = "/Awards",
+        ActionText = "View All Awards"
+    })
+}
+else
+{
+    <div class="card mt-3">
+        <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+            <strong>Award Winners</strong>
+            <span class="badge bg-light text-dark">@Model.TotalEntries.ToString("N0") awards</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Award</th>
+                    <th class="text-center">Year</th>
+                    <th class="text-center">League</th>
+                    <th>Notes</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var winner in Model.Winners)
+                {
+                    <tr>
+                        <td>
+                            <a href="#" class="text-decoration-none fw-bold"
+                               hx-get="/Players/Modal/@winner.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @winner.PlayerName
+                            </a>
+                            @if (winner.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">@winner.AwardId</span>
+                        </td>
+                        <td class="text-center fw-bold text-mlb-navy">@winner.Year</td>
+                        <td class="text-center">@winner.LgId</td>
+                        <td class="small text-muted">@winner.Notes</td>
+                        <td class="text-end">
+                            @if (winner.HasVotingData)
+                            {
+                                <a href="/Awards?award=@winner.AwardId&year=@winner.Year&league=@winner.LgId"
+                                   class="btn btn-sm btn-outline-primary"
+                                   hx-get="/Awards?award=@winner.AwardId&year=@winner.Year&league=@winner.LgId"
+                                   hx-target="#awards-list"
+                                   hx-push-url="true">
+                                    View Race
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        var queryParams = new Dictionary<string, string>();
+        if (!string.IsNullOrEmpty(Model.SelectedAward)) queryParams["award"] = Model.SelectedAward;
+        if (Model.SelectedYear.HasValue) queryParams["year"] = Model.SelectedYear.Value.ToString();
+        if (!string.IsNullOrEmpty(Model.SelectedLeague)) queryParams["league"] = Model.SelectedLeague;
+
+        <div class="mt-3">
+            @await Html.PartialAsync("Components/_Pagination", new baseball_history_web.ViewModels.PaginationModel
+            {
+                CurrentPage = Model.CurrentPage,
+                TotalPages = Model.TotalPages,
+                TotalItems = Model.TotalEntries,
+                PageSize = Model.PageSize,
+                BaseUrl = "/Awards",
+                Target = "#awards-list",
+                QueryParams = queryParams
+            })
+        </div>
+    }
+}

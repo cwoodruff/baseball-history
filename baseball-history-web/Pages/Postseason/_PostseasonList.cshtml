@@ -1,0 +1,93 @@
+@model baseball_history_web.ViewModels.PostseasonViewModel
+
+@if (!Model.Series.Any())
+{
+    @await Html.PartialAsync("Components/_EmptyState", new baseball_history_web.ViewModels.EmptyStateModel
+    {
+        Title = "No Postseason Data Found",
+        Message = "No postseason series match your criteria.",
+        ActionUrl = "/Postseason",
+        ActionText = "View All Postseason"
+    })
+}
+else
+{
+    <div class="card mt-3">
+        <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+            <strong>Postseason Series</strong>
+            <span class="badge bg-light text-dark">@Model.TotalSeries.ToString("N0") series</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th class="text-center">Year</th>
+                    <th>Round</th>
+                    <th>Winner</th>
+                    <th class="text-center">Result</th>
+                    <th>Loser</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var series in Model.Series)
+                {
+                    var isWorldSeries = series.Round == "WS";
+                    <tr class="@(isWorldSeries ? "table-warning" : "")">
+                        <td class="text-center">
+                            <a href="/Postseason?year=@series.Year"
+                               hx-get="/Postseason?year=@series.Year"
+                               hx-target="#postseason-list"
+                               hx-push-url="true"
+                               class="text-decoration-none fw-bold text-mlb-navy">
+                                @series.Year
+                            </a>
+                        </td>
+                        <td>
+                            @if (isWorldSeries)
+                            {
+                                <span class="badge bg-warning text-dark">@series.RoundName</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">@series.RoundName</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="fw-bold">@(series.WinnerTeamName ?? series.WinnerTeamId)</span>
+                            <span class="text-muted small ms-1">(@series.WinnerLgId)</span>
+                        </td>
+                        <td class="text-center stat-cell fw-bold">@series.SeriesResult</td>
+                        <td>
+                            <span>@(series.LoserTeamName ?? series.LoserTeamId ?? "—")</span>
+                            @if (series.LoserLgId != null)
+                            {
+                                <span class="text-muted small ms-1">(@series.LoserLgId)</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        var queryParams = new Dictionary<string, string>();
+        if (Model.SelectedYear.HasValue) queryParams["year"] = Model.SelectedYear.Value.ToString();
+        if (!string.IsNullOrEmpty(Model.SelectedRound)) queryParams["round"] = Model.SelectedRound;
+
+        <div class="mt-3">
+            @await Html.PartialAsync("Components/_Pagination", new baseball_history_web.ViewModels.PaginationModel
+            {
+                CurrentPage = Model.CurrentPage,
+                TotalPages = Model.TotalPages,
+                TotalItems = Model.TotalSeries,
+                PageSize = Model.PageSize,
+                BaseUrl = "/Postseason",
+                Target = "#postseason-list",
+                QueryParams = queryParams
+            })
+        </div>
+    }
+}

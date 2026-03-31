@@ -1,0 +1,99 @@
+@model baseball_history_web.ViewModels.SalaryViewModel
+
+@if (!Model.Salaries.Any())
+{
+    @await Html.PartialAsync("Components/_EmptyState", new baseball_history_web.ViewModels.EmptyStateModel
+    {
+        Title = "No Salary Data Found",
+        Message = "No salary records match your criteria. Salary data is available from 1985.",
+        ActionUrl = "/Salaries",
+        ActionText = "View All Salaries"
+    })
+}
+else
+{
+    @if (Model.TeamPayroll.HasValue)
+    {
+        <div class="card mt-3 mb-3">
+            <div class="card-body text-center py-3" style="background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 100%);">
+                <div class="text-white-50 small">@(Model.TeamName ?? Model.SelectedTeam) &mdash; @Model.SelectedYear Total Payroll</div>
+                <div class="h2 mb-0 text-white">@Model.TeamPayroll.Value.ToString("C0")</div>
+            </div>
+        </div>
+    }
+
+    <div class="card mt-3">
+        <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+            <strong>Player Salaries</strong>
+            <span class="badge bg-light text-dark">@Model.TotalEntries.ToString("N0") records</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th class="text-end" style="width: 40px;">#</th>
+                    <th>Player</th>
+                    @if (!Model.SelectedYear.HasValue)
+                    {
+                        <th class="text-center">Year</th>
+                    }
+                    <th>Team</th>
+                    <th class="text-end">Salary</th>
+                </tr>
+                </thead>
+                <tbody>
+                @{ var rank = (Model.CurrentPage - 1) * Model.PageSize; }
+                @foreach (var entry in Model.Salaries)
+                {
+                    rank++;
+                    <tr>
+                        <td class="text-end text-muted small">@rank</td>
+                        <td>
+                            <a href="#" class="text-decoration-none fw-bold"
+                               hx-get="/Players/Modal/@entry.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @entry.PlayerName
+                            </a>
+                            @if (entry.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </td>
+                        @if (!Model.SelectedYear.HasValue)
+                        {
+                            <td class="text-center">@entry.Year</td>
+                        }
+                        <td class="small">
+                            @(entry.TeamName ?? entry.TeamId)
+                            <span class="text-muted">(@entry.LgId)</span>
+                        </td>
+                        <td class="text-end stat-cell fw-bold">@entry.FormattedSalary</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        var queryParams = new Dictionary<string, string>();
+        if (Model.SelectedYear.HasValue) queryParams["year"] = Model.SelectedYear.Value.ToString();
+        if (!string.IsNullOrEmpty(Model.SelectedTeam)) queryParams["team"] = Model.SelectedTeam;
+
+        <div class="mt-3">
+            @await Html.PartialAsync("Components/_Pagination", new baseball_history_web.ViewModels.PaginationModel
+            {
+                CurrentPage = Model.CurrentPage,
+                TotalPages = Model.TotalPages,
+                TotalItems = Model.TotalEntries,
+                PageSize = Model.PageSize,
+                BaseUrl = "/Salaries",
+                Target = "#salary-list",
+                QueryParams = queryParams
+            })
+        </div>
+    }
+}
