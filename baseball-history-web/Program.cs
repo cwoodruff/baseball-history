@@ -41,6 +41,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 
 // Add services to the container.
 builder.Services.AddSingleton<TeamColorService>();
+builder.Services.AddHostedService<PlayerCacheService>();
 builder.Services.AddRazorPages();
 builder.Services.AddOpenApi();
 

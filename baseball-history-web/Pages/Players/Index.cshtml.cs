@@ -1,5 +1,6 @@
 using baseball_history_web.Extensions;
 using baseball_history_web.Models;
+using baseball_history_web.Services;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -18,6 +19,18 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     public async Task<IActionResult> OnGetAsync(string? letter, [FromQuery] int page = 1)
     {
+        // Serve from pre-warmed cache for the default view (letter A, page 1, full page load)
+        var isDefaultRequest = (letter == null || letter.Equals("A", StringComparison.OrdinalIgnoreCase)) && page <= 1;
+        if (isDefaultRequest && !Request.IsHtmxNonBoostedRequest())
+        {
+            var cached = PlayerCacheService.GetCachedFirstPage(cache);
+            if (cached != null)
+            {
+                ViewModel = cached;
+                return Page();
+            }
+        }
+
         // Get all available first letters (cached)
         ViewModel.AvailableLetters = (await cache.GetOrCreateAsync("player_letters", async entry =>
         {
