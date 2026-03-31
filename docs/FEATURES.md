@@ -5,18 +5,24 @@ History application.
 
 ## Feature Overview
 
-| Feature           | Description                           | URL                             |
-|-------------------|---------------------------------------|---------------------------------|
-| Home Dashboard    | Overview with quick stats and leaders | `/`                             |
-| Player Browser    | Alphabetical player listing           | `/Players`                      |
-| Player Modal      | Detailed player view                  | `/Players/Modal/{id}`           |
-| Team Browser      | Franchise listing                     | `/Teams`                        |
-| Franchise History | Team history by franchise             | `/Teams/Franchise/{id}`         |
-| Team Season       | Single season team view               | `/Teams/{teamId}/{lgId}/{year}` |
-| Batting Leaders   | Batting statistical leaders           | `/Stats/Batting`                |
-| Pitching Leaders  | Pitching statistical leaders          | `/Stats/Pitching`               |
-| Hall of Fame      | HOF inductee browser                  | `/HallOfFame`                   |
-| Search            | Global search                         | `/Search`                       |
+| Feature            | Description                           | URL                             |
+|--------------------|---------------------------------------|---------------------------------|
+| Home Dashboard     | Overview with quick stats and leaders | `/`                             |
+| Player Browser     | Alphabetical player listing           | `/Players`                      |
+| Player Modal       | Detailed player view                  | `/Players/Modal/{id}`           |
+| Player Comparison  | Head-to-head 2-player comparison      | `/Compare`                      |
+| Team Browser       | Franchise listing                     | `/Teams`                        |
+| Franchise History  | Team history by franchise             | `/Teams/Franchise/{id}`         |
+| Team Season        | Single season team view               | `/Teams/{teamId}/{lgId}/{year}` |
+| Batting Leaders    | Batting statistical leaders           | `/Stats/Batting`                |
+| Pitching Leaders   | Pitching statistical leaders          | `/Stats/Pitching`               |
+| Hall of Fame       | HOF inductee browser                  | `/HallOfFame`                   |
+| Awards & Voting    | Award winners and voting breakdowns   | `/Awards`                       |
+| Postseason         | Playoff series results                | `/Postseason`                   |
+| Salary Explorer    | Player salary data and team payrolls  | `/Salaries`                     |
+| Search             | Global search                         | `/Search`                       |
+| API Documentation  | REST API reference                    | `/ApiDocs`                      |
+| REST API           | JSON API (30+ endpoints)              | `/api/*`                        |
 
 ---
 
@@ -373,3 +379,184 @@ Shown during:
 | > 992px    | Full layout, 4-column grids  |
 
 All tables are horizontally scrollable on mobile.
+
+---
+
+## Player Comparison
+
+**URL**: `/Compare`
+
+Head-to-head comparison of two players with side-by-side layout.
+
+### Layout
+
+Two equal columns, each an independent player selection region:
+
+- **Left side (Player 1)**: Navy gradient card when selected
+- **Right side (Player 2)**: Red gradient card when selected
+- Each side has its own search box with htmx typeahead (300ms debounce)
+
+### Flow
+
+1. Two empty cards with search boxes and placeholder icons
+2. Search in either side — results appear in that side's dropdown
+3. Select a player — that side fills with the player card, other side preserved
+4. Select second player — comparison tables appear below both cards
+5. "Change Player" button clears one side; "Start Over" resets both
+
+### URL Scheme
+
+`/Compare?player1={id}&player2={id}` — shareable, each side tracked independently.
+
+### Comparison Tables (shown when both selected)
+
+Mirror layout: Player 1 values right-aligned | Stat label centered | Player 2 values left-aligned.
+
+- **Awards & Honors**: All-Star, MVP, Gold Glove, Silver Slugger, Total Awards, HOF status
+- **Career Batting**: G, AB, R, H, 2B, 3B, HR, RBI, SB, BB, SO, AVG, OBP, SLG, OPS
+- **Career Pitching** (if either player has pitching stats): W-L, G, GS, SV, CG, SHO, IP, SO, BB, ERA, WHIP
+
+Better values highlighted in green (with correct lower-is-better logic for ERA, WHIP, walks, strikeouts).
+
+### Implementation
+
+Pure htmx — no custom JavaScript. Search uses `hx-get`/`hx-target` for typeahead; player selection uses `hx-boost="false"` for full page navigation.
+
+---
+
+## Awards & Voting
+
+**URL**: `/Awards`
+
+Browse award winners and full voting race breakdowns.
+
+### Filters
+
+| Filter | Options              | Description          |
+|--------|----------------------|----------------------|
+| Award  | MVP, Cy Young, etc.  | Filter by award type |
+| Year   | Year dropdown        | Filter by year       |
+| League | AL, NL, All          | Filter by league     |
+
+### Display
+
+- **Winners Table**: Player name (click for modal), award badge, year, league, notes
+- **"View Race" Button**: Appears when voting data is available for that award/year/league
+- **Voting Detail** (when specific award+year+league selected):
+    - Full vote breakdown table: rank, player, points won, max points, 1st-place votes, vote share %
+    - Visual progress bars for vote share
+    - Winner row highlighted in green with "Winner" badge
+    - HOF badges throughout
+
+### Pagination
+
+50 per page with standard pagination component.
+
+---
+
+## Postseason
+
+**URL**: `/Postseason`
+
+Browse playoff series results from all eras.
+
+### Filters
+
+| Filter | Options                              | Description      |
+|--------|--------------------------------------|------------------|
+| Year   | Year dropdown (all postseason years) | Filter by year   |
+| Round  | WS, ALCS, NLCS, ALDS, NLDS, ALWC, NLWC | Filter by round |
+
+### Display
+
+- **Series Table**: Year, round name, winner (with league), series result (e.g. 4-2), loser (with league)
+- World Series rows highlighted with gold background
+- Click a year to filter to all series that postseason
+- Round names mapped from codes (e.g. "WS" → "World Series")
+
+### Pagination
+
+50 per page with standard pagination component.
+
+---
+
+## Salary Explorer
+
+**URL**: `/Salaries`
+
+Explore player salary data from 1985 onward.
+
+### Filters
+
+| Filter | Options       | Description                            |
+|--------|---------------|----------------------------------------|
+| Year   | Year dropdown | Filter by year (1985+)                 |
+| Team   | Team dropdown | Filter by team (updates based on year) |
+
+### Display
+
+- **Team Payroll Banner** (when filtering by team+year): Shows total payroll in styled header
+- **Salary Table**: Rank, player (click for modal), year, team, salary (formatted as currency)
+- HOF badges on Hall of Famers
+
+### Pagination
+
+50 per page with standard pagination component.
+
+---
+
+## API Documentation
+
+**URL**: `/ApiDocs`
+
+Interactive reference page for the REST API.
+
+### Content
+
+- Base URL and pagination envelope documentation
+- All 9 endpoint groups with parameter tables and curl examples
+- Response codes reference
+- Data notes (ID conventions, computed stats, date ranges)
+- Links to Scalar API explorer (`/scalar/v1`) and OpenAPI spec (`/openapi/v1.json`)
+
+---
+
+## REST API
+
+**Base URL**: `/api`
+
+JSON API with 30+ endpoints for programmatic access to all baseball data. No authentication required. All endpoints are GET requests (read-only database).
+
+### Endpoint Groups
+
+| Group           | Base Path          | Endpoints | Description                              |
+|-----------------|--------------------|-----------|------------------------------------------|
+| Players         | `/api/players`     | 8         | List, detail, batting/pitching/fielding, awards, postseason |
+| Teams           | `/api/teams`       | 3         | Franchises, franchise detail, team season |
+| Leaders         | `/api/leaders`     | 2         | Batting and pitching leaderboards        |
+| Hall of Fame    | `/api/hall-of-fame`| 2         | Inductees list, voting history           |
+| Search          | `/api/search`      | 1         | Cross-entity search                      |
+| Salaries        | `/api/salaries`    | 3         | Player history, team payrolls, leaders   |
+| Parks           | `/api/parks`       | 2         | Park list, detail with attendance        |
+| Postseason      | `/api/postseason`  | 2         | Series results by year/round             |
+| Awards          | `/api/awards`      | 2         | Winners, full voting breakdowns          |
+
+### Pagination
+
+List endpoints return a standard envelope:
+
+```json
+{
+  "data": [ ... ],
+  "page": 1,
+  "pageSize": 25,
+  "totalCount": 1234,
+  "totalPages": 50
+}
+```
+
+### Documentation
+
+- Interactive explorer: `/scalar/v1` (development mode)
+- OpenAPI spec: `/openapi/v1.json`
+- In-app reference: `/ApiDocs`

@@ -22,11 +22,19 @@ application.
 │  │                     Razor Pages                              ││
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐   ││
 │  │  │ Players  │ │  Teams   │ │  Stats   │ │  HallOfFame  │   ││
+│  │  ├──────────┤ ├──────────┤ ├──────────┤ ├──────────────┤   ││
+│  │  │ Compare  │ │ Awards   │ │Postseason│ │  Salaries    │   ││
 │  │  └──────────┘ └──────────┘ └──────────┘ └──────────────┘   ││
 │  └─────────────────────────────────────────────────────────────┘│
 │  ┌─────────────────────────────────────────────────────────────┐│
-│  │                    View Models                               ││
-│  │  PlayerDetailVM, TeamSeasonVM, LeaderboardVM, etc.          ││
+│  │               REST API (Minimal APIs)                        ││
+│  │  /api/players, /api/teams, /api/leaders, /api/hall-of-fame  ││
+│  │  /api/search, /api/salaries, /api/parks, /api/postseason    ││
+│  │  /api/awards  ─── OpenAPI + Scalar docs                     ││
+│  └─────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    View Models / DTOs                         ││
+│  │  ViewModels (Razor Pages) │ Api/Dtos (JSON API records)     ││
 │  └─────────────────────────────────────────────────────────────┘│
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                Entity Framework Core 10.0                    ││

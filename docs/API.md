@@ -1,7 +1,7 @@
 # API Reference
 
-This document describes the page models, view models, and data flow patterns
-used in the application.
+This document describes the page models, view models, data flow patterns,
+and the REST API used in the application.
 
 ## Page Models
 
@@ -450,3 +450,188 @@ could be added for advanced scenarios:
 | HX-Refresh  | Full page refresh               |
 | HX-Retarget | Change the target element       |
 | HX-Trigger  | Trigger client-side events      |
+
+---
+
+## Additional Page Models
+
+### Awards/Index
+
+**File**: `Pages/Awards/Index.cshtml.cs`
+
+**Query Parameters**:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| award | string | null | Filter by award type (MVP, Cy Young, etc.) |
+| year | int? | null | Filter by year |
+| league | string | null | Filter by league (AL, NL) |
+| page | int | 1 | Page number |
+
+**Response**: `AwardVotingViewModel` with winners list and optional voting detail
+
+When a specific award+year+league is selected that has voting data, the response
+includes an `AwardRaceDetail` with full vote breakdowns.
+
+---
+
+### Postseason/Index
+
+**File**: `Pages/Postseason/Index.cshtml.cs`
+
+**Query Parameters**:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| year | int? | null | Filter by year |
+| round | string | null | Filter by round (WS, ALCS, NLCS, etc.) |
+| page | int | 1 | Page number |
+
+**Response**: `PostseasonViewModel`
+
+---
+
+### Salaries/Index
+
+**File**: `Pages/Salaries/Index.cshtml.cs`
+
+**Query Parameters**:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| year | int? | null | Filter by year |
+| team | string | null | Filter by team ID |
+| page | int | 1 | Page number |
+
+**Response**: `SalaryViewModel` — includes team payroll total when team+year selected
+
+---
+
+### Compare/Index
+
+**File**: `Pages/Compare/Index.cshtml.cs`
+
+**Query Parameters**:
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| player1 | string | null | Player 1 ID |
+| player2 | string | null | Player 2 ID |
+
+**Handlers**:
+- `OnGetAsync` — loads comparison page with player data
+- `OnGetSearchAsync` — player search typeahead (params: `q`, `side`)
+
+**Response**: `CompareViewModel` with `Player1` and `Player2`
+
+---
+
+## REST API (Minimal APIs)
+
+The application exposes a JSON REST API under `/api` for programmatic access.
+All endpoints are GET requests (read-only database). No authentication required.
+
+### Configuration
+
+- OpenAPI spec: `/openapi/v1.json`
+- Interactive docs: `/scalar/v1` (development mode only)
+- In-app reference: `/ApiDocs`
+
+Endpoints are registered via `ApiEndpointExtensions.MapApiEndpoints()` in
+`Program.cs`. Each domain has a static endpoint class in `Api/Endpoints/`.
+
+### Pagination Envelope
+
+List endpoints return:
+```json
+{
+  "data": [ ... ],
+  "page": 1,
+  "pageSize": 25,
+  "totalCount": 1234,
+  "totalPages": 50
+}
+```
+
+### Players — `/api/players`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/players` | List players by last name letter (`letter`, `page`, `pageSize`) |
+| GET | `/api/players/{playerId}` | Full player detail with career stats and teams |
+| GET | `/api/players/{playerId}/batting` | Season-by-season batting |
+| GET | `/api/players/{playerId}/pitching` | Season-by-season pitching |
+| GET | `/api/players/{playerId}/fielding` | Season-by-season fielding by position |
+| GET | `/api/players/{playerId}/awards` | Player awards |
+| GET | `/api/players/{playerId}/postseason/batting` | Postseason batting stats |
+| GET | `/api/players/{playerId}/postseason/pitching` | Postseason pitching stats |
+
+### Teams — `/api/teams`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/teams/franchises` | List franchises (`league`, `activeOnly`) |
+| GET | `/api/teams/franchises/{franchiseId}` | Franchise detail with all seasons |
+| GET | `/api/teams/seasons/{teamId}/{lgId}/{year}` | Team season with full roster |
+
+### Leaders — `/api/leaders`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/leaders/batting` | Batting leaderboard (`stat`, `fromYear`, `toYear`, `league`, `minAb`, `singleSeason`, `page`, `pageSize`) |
+| GET | `/api/leaders/pitching` | Pitching leaderboard (`stat`, `fromYear`, `toYear`, `league`, `minIp`, `singleSeason`, `page`, `pageSize`) |
+
+### Hall of Fame — `/api/hall-of-fame`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/hall-of-fame` | List inductees (`year`, `category`, `page`, `pageSize`) |
+| GET | `/api/hall-of-fame/{playerId}/voting` | Full voting history for a player |
+
+### Search — `/api/search`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/search` | Search players and franchises (`q`, `limit`) |
+
+### Salaries — `/api/salaries`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/salaries/players/{playerId}` | Player salary history with career total |
+| GET | `/api/salaries/teams/{teamId}/{year}` | Team payroll for a season |
+| GET | `/api/salaries/leaders` | Highest-paid players (`year`, `page`, `pageSize`) |
+
+### Parks — `/api/parks`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/parks` | List ballparks (`state`, `page`, `pageSize`) |
+| GET | `/api/parks/{parkKey}` | Park detail with season attendance history |
+
+### Postseason — `/api/postseason`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/postseason/series` | Postseason series results (`year`, `round`, `page`, `pageSize`) |
+| GET | `/api/postseason/series/{year}` | All series in a given year |
+
+### Awards — `/api/awards`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/awards/winners` | Award winners (`awardId`, `year`, `lgId`, `page`, `pageSize`) |
+| GET | `/api/awards/voting/{awardId}/{year}/{lgId}` | Full voting breakdown for an award race |
+
+### DTOs
+
+API DTOs are record types in `Api/Dtos/`, separate from Razor Page ViewModels:
+
+| File | Types |
+|------|-------|
+| `PagedResponse.cs` | `PagedResponse<T>` — generic pagination wrapper |
+| `PlayerDtos.cs` | `PlayerListItem`, `PlayerDetail`, `CareerBattingDto`, `CareerPitchingDto`, `SeasonBattingDto`, `SeasonPitchingDto`, `SeasonFieldingDto`, `PlayerAwardDto`, `PlayerTeamDto`, `PostseasonBattingDto`, `PostseasonPitchingDto` |
+| `TeamDtos.cs` | `FranchiseListItem`, `FranchiseDetail`, `FranchiseSeasonItem`, `TeamSeasonDetail`, `ApiTeamBattingDto`, `ApiTeamPitchingDto`, `RosterBatterDto`, `RosterPitcherDto`, `ApiManagerDto` |
+| `LeaderDtos.cs` | `BattingLeaderDto`, `PitchingLeaderDto` |
+| `HallOfFameDtos.cs` | `HallOfFameInducteeDto`, `HallOfFameVotingHistoryDto`, `VotingYearDto` |
+| `SearchDtos.cs` | `SearchResponse`, `PlayerSearchResult`, `FranchiseSearchResult` |
+| `SalaryDtos.cs` | `SalaryDto`, `PlayerSalaryHistoryDto`, `SalarySeasonDto`, `TeamSalaryDto` |
+| `ParkDtos.cs` | `ParkDto`, `ParkDetailDto`, `ParkSeasonDto` |
+| `PostseasonDtos.cs` | `PostseasonSeriesDto` |
+| `AwardDtos.cs` | `AwardWinnerDto`, `AwardVotingDto`, `AwardVoteDto` |
