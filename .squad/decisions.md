@@ -153,3 +153,305 @@
 - Migration approval: **Page-by-page rollout** (not component-by-shared-component)
 - Highest-priority quick wins: **Extract _FilterForm.cshtml and _LoadingOverlay.cshtml** (2-3 hours, high reuse value)
 - Before major migrations: **Prioritize page handler integration tests** (low regression risk baseline)
+
+---
+
+## Sprint 1 Execution Brief: htmxRazor Migration Foundation (2026-04-16)
+
+### Executive Summary
+
+htmxRazor package and pipeline are **already integrated**. Sprint 1 establishes the regression safety net and shared component infrastructure needed before page-level migrations. Parallel work is possible after #4. Estimated effort: **3 weeks with Parker, Lambert, and Dallas working in parallel.**
+
+### Dependency Order (Critical Path)
+
+```
+#4  (Parker)  → Prove htmxRazor integration works with minimal component
+               → Unblocks #5, #6, #7
+                                ↓
+#5  (Lambert) → Add regression safety net (parallel with #6/#7 after #4 lands)
+                                ↓
+#6  (Dallas)  → Migrate shared shell (_Layout, nav, footer)
+               → Coordinate with #7 to avoid drift
+                                ↓
+#7  (Dallas)  → Migrate shared primitives (Pagination, AlphabetNav, etc.)
+               → Consume from #6 redesigned layout
+```
+
+**Parallel Opportunities:**
+- #5 + #6 in parallel: Once #4 merges, Lambert starts test infrastructure while Dallas redesigns shell. Tests exercise Dallas's changes.
+- #6 + #7 together: Dallas owns both; sequential coordination to avoid rewrites.
+- After #4: Feature teams can spike page conversion investigations.
+
+### Issue #4: Prove htmxRazor Integration (Parker, 3–5 days)
+
+**Scope:** Prove htmxRazor setup + render one minimal component
+
+**Acceptance Criteria:**
+- Application builds and runs without errors
+- htmxRazor Tag Helper recognized in Razor (no warnings)
+- One htmxRazor component (e.g., `rhx-button`) renders on About.cshtml
+- Component CSS loads from `/_rhx/css/components/` without 404s
+- Non-migrated Bootstrap pages still render (Players, Teams)
+- Comment in `_Layout.cshtml` documents component asset import pattern
+
+**Files Likely to Change:**
+```
+baseball-history-web/
+├── Pages/Shared/_Layout.cshtml         [Add documentation comment]
+├── Pages/About.cshtml                  [Minimal rhx-* component proof]
+```
+
+**Why This First:** Proves infrastructure without page migrations. Allows Lambert to write integration tests. Gives Dallas confidence CSS/JS injection won't break Bootstrap.
+
+### Issue #5: Regression Safety Net (Lambert, ~1 week after #4)
+
+**Risk Category:** Coverage gaps create silent failures during migration.
+
+**Coverage Targets:**
+- 19 PageModel smoke tests (one per handler)
+- 8+ integration tests verifying htmx request routing
+- 5+ pagination/edge-case parametrized tests
+- 5+ API NotFound tests
+
+**Critical Gaps Identified:**
+- Page handler untested (0/19 coverage) — HIGH
+- htmx request/response untested — HIGH
+- Pagination boundaries uncovered — MEDIUM
+- API NotFound paths untested — MEDIUM
+- Filter state untested (career vs single-season aggregation) — MEDIUM
+
+**Merge Gate:** #6 and #7 cannot merge without #5 passing. Tests run continuously during #6/#7 PRs.
+
+### Issue #6: Shared Shell Migration (Dallas, ~1 week after #5)
+
+**Risk Category:** Global changes affect every page; mistakes ripple.
+
+**Scope:** _Layout.cshtml redesign, navigation, footer, modal host, search shell
+
+**Risks:**
+- Navigation broke after migration — HIGH
+- Modal host lifecycle breaks — MEDIUM
+- Bootstrap interop broken — MEDIUM
+- CSS asset loading changed — MEDIUM
+
+**Mitigation:** Lambert's #5 tests validate shell changes in real time. Confirm existing hx-boost behavior identical. Bootstrap pages still render during transition.
+
+**Success Criteria:**
+- Layout renders without errors
+- Navigation, footer, search, modal work
+- All Lambert tests pass
+- Bootstrap-only pages still render
+
+### Issue #7: Shared Primitives Migration (Dallas, ~1 week after #6 stable)
+
+**Risk Category:** Reused components must not break consumers mid-migration.
+
+**Scope:** _Pagination.cshtml, _AlphabetNav.cshtml, _FilterForm.cshtml (NEW extraction), _PlayerCard.cshtml, _TeamCard.cshtml, _LoadingSpinner.cshtml
+
+**Risks:**
+- _Pagination.cshtml signature changed — HIGH
+- _AlphabetNav.cshtml lost functionality — HIGH
+- Filter form extraction incomplete — MEDIUM
+- Card components visual drift — MEDIUM
+- Loading spinner removed — LOW
+
+**Constraints:**
+- Pagination must accept same @Model shape or provide backward-compatible overload
+- Alphabet nav must preserve letter filtering and pagination reset
+- _FilterForm.cshtml extraction (NEW) must consolidate ≥3 pages (Batting, Pitching, Awards, HallOfFame, Postseason)
+- Cards must preserve team colors, image handling, click behavior
+- All shared components have stable, documented interfaces
+
+**Success Criteria:**
+- Shared pagination works with existing callers
+- Alphabet nav filters work on Players page
+- _FilterForm.cshtml extracted and used by ≥3 pages
+- _PlayerCard and _TeamCard render identically
+- All Lambert tests pass
+
+### Safe Parallelism After #4 Lands
+
+**Immediate (Day 1 of #5/#6/#7 start):**
+- Lambert begins #5 (regression tests)
+- Dallas begins #6 (shell) — Lambert's tests run continuously
+
+**After #5 Passes (~Day 4):**
+- Dallas begins #7 (shared primitives) — leverage #5 tests
+
+**Feature Team Investigation (Optional):**
+- Spike on Players, Teams, Compare, Stats pages for migration order and component candidates
+
+### Definition of Done for Sprint 1
+
+**#4 (Parker):**
+- [ ] Build passes, htmxRazor compiles, one component renders
+- [ ] _Layout.cshtml has asset import documentation
+- [ ] PR reviewed by Ripley and Lambert
+
+**#5 (Lambert):**
+- [ ] 19 PageModel smoke tests + 8+ integration tests + 5+ edge case tests
+- [ ] Test suite passes on main branch, documented in README
+- [ ] PR reviewed by Ripley and Parker
+
+**#6 (Dallas):**
+- [ ] Shell renders, nav/footer/search/modal work
+- [ ] All Lambert tests still pass
+- [ ] Bootstrap-only pages still render during transition
+- [ ] PR reviewed by Ripley and Lambert
+
+**#7 (Dallas):**
+- [ ] Shared components (Pagination, AlphabetNav, FilterForm, Cards, LoadingSpinner) work
+- [ ] All Lambert tests still pass
+- [ ] Feature pages using new primitives function identically
+- [ ] PR reviewed by Ripley and Lambert
+
+**Overall:**
+- [ ] All 4 PRs merged to htmxRazor branch
+- [ ] Build passes, all tests green
+- [ ] No regressions vs. main
+- [ ] Ready to begin feature migrations (#8–#15)
+
+### Key Decision: What NOT to Do in Sprint 1
+
+- ❌ Migrate any feature page markup beyond About.cshtml proof
+- ❌ Change handler logic or API contracts
+- ❌ Redesign UI visuals (use htmxRazor as-is, theme after stability)
+- ❌ Extract shared utilities (leaderboard expressions, cache service)
+
+### Fallback Plan
+
+**If #4 fails:** Investigate htmxRazor package docs/issues, revert to main, defer Sprint 1.
+
+**If #5 insufficient:** Lambert adds targeted tests post-hoc, tag PR with "regression-coverage-spike".
+
+**If #6 breaks nav/modal:** Revert, isolate breaking change via git history, Dallas re-attempts narrower scope.
+
+**If #7 breaks Pagination:** Backward-compatibility layer — keep old _Pagination.cshtml, wrap in new htmxRazor component. Feature pages opt-in gradually.
+
+### Communication & Gating
+
+**Pre-Approval:** Ripley signs off. Each issue has owner and acceptance criteria.
+
+**Mid-Sprint:** Ripley reviews PRs. Lambert gates feature work with test results.
+
+**Post-Sprint:** #16 umbrella updated. Retrospective captures learnings for #8.
+
+---
+
+## Dallas — Sprint 1 Baseline Map & UI Architecture (2026-04-16)
+
+### #4 Baseline Files (Proof-of-Concept)
+
+**Scope:** Keep #4 narrow and prove htmxRazor on support page before touching shared shell.
+
+**Exact baseline files:**
+```
+baseball-history-web/
+├── baseball-history-web.csproj         [DONE — htmxRazor v2.0.1 added]
+├── Program.cs                          [DONE — middleware wired]
+├── Pages/_ViewImports.cshtml           [DONE — Tag Helpers registered]
+├── Pages/Shared/_Layout.cshtml         [PARTIALLY DONE — needs doc comment]
+├── Pages/About.cshtml                  [NEW — minimal rhx-* component proof]
+```
+
+**Why This First:**
+- First four files are true integration seam (package, middleware, Tag Helpers, assets)
+- About.cshtml is low-risk, non-critical to htmx flows
+- Proves `rhx-*` rendering without dragging nav, search, modal into issue #4
+
+### Follow-On Guidance
+
+- **#6 shell-only:** _Layout.cshtml redesign + global search/modal partials (_SearchResults.cshtml, _SearchAllResultsModal.cshtml)
+- **#7 primitives:** _EmptyState, loading overlay, card extraction; defer full component redesign until shell stable
+- **Filter extraction:** Standardize repeated htmx wiring + container markup first, not every field variant
+
+### UI Architecture Strengths
+
+- 8 reusable shared components in `Pages/Shared/Components/` with clean composition
+- Consistent htmx request handling: `Request.IsHtmxNonBoostedRequest()` throughout
+- Professional CSS architecture: single `site.css` with variables, team-color system
+
+### High-Priority Component Extraction
+
+**Filter Form Duplication** (HIGH impact, 2-3 hours effort):
+- **Pages:** Batting, Pitching, Awards (3) + HallOfFame, Postseason (2 variants) = 5 locations
+- **Issue:** Each rebuilds identical filter-select patterns and repeated htmx attributes
+- **Recommendation:** Extract to reusable `_FilterForm.cshtml` component with parametrized field slots
+- **Benefit:** High reuse, single source of truth for filter logic
+
+**Compare Page Player Selection** (MEDIUM):
+- ~120 lines duplicated for player card selection
+- Extract `_ComparePlayerCard.cshtml` with side parameter (left/right)
+
+### #6 Shell Risks & Mitigations
+
+| Risk | Severity | Mitigation |
+|------|----------|-----------|
+| Navigation broke after migration | HIGH | Write integration test verifying navbar renders and hx-boost works. Run after each #6 commit. |
+| Modal host lifecycle breaks | MEDIUM | Document modal host (#modal-container) expectations in _Layout.cshtml comment. Test on Players Modal. |
+| Bootstrap interop broken | MEDIUM | After shell migration, confirm Bootstrap-heavy page (Players) still renders. Use visual smoke. |
+| Search shell API changed silently | LOW | Write one API integration test verifying `/api/search?q=` response unchanged. |
+| CSS asset loading changed | MEDIUM | htmxRazor serves `/_rhx/*` — ensure Bootstrap paths work. Test on pre-migrated page. |
+
+### #7 Primitives Risks & Mitigations
+
+| Risk | Severity | Mitigation |
+|------|----------|-----------|
+| _Pagination.cshtml signature changed | HIGH | New version must accept same @Model or provide backward-compatible overload. Test existing callers (Players, Teams, Batting). |
+| _AlphabetNav.cshtml lost functionality | HIGH | Alphabet nav used only on Players. Verify letter filtering + pagination reset works. Write integration test. |
+| Filter form extraction incomplete | MEDIUM | Extract to `_FilterForm.cshtml` parametrized. High reuse across 5+ locations. |
+| Card components duplicated | MEDIUM | _PlayerCard, _TeamCard htmxRazor versions must preserve team colors, image handling, click behavior. |
+| Loading spinner removed mid-migration | LOW | _LoadingSpinner must support hx-indicator attribute. Used 5 places. |
+
+---
+
+## Lambert — Sprint 1 Regression Gates (2026-04-16)
+
+### Decision: #5 as Merge Gate
+
+Treat issue #5 as the merge gate for Sprint 1 migration work: **baseline handler/API regression coverage should land before any broad shell or shared-primitive conversion merges.**
+
+### Why Regression Tests Critical
+
+**Current suite:** 247 tests green but does not exercise Razor Page handlers or minimal API endpoints.
+
+**Migration risk:** Shared shell work in `Pages/Shared/_Layout.cshtml` can break boosted navigation, modal hosting, global search, Bootstrap re-initialization across many pages at once. Shared primitive work in `Pages/Shared/Components/` can silently break pagination/alphabet/filter/loading contracts across several feature areas.
+
+### Required Baseline Before Broad Migration Merges
+
+1. **Representative handler tests** for full-page vs non-boosted HTMX partial responses
+2. **Pagination boundary checks** (`0`, negative, over-max) on representative paged pages
+3. **Representative API `NotFound` coverage** for Players, Teams, Hall of Fame, Salaries, Awards/Postseason
+4. **Shell smoke matrix** covering boosted nav, modal open/close lifecycle, global search host behavior
+
+### Safe Parallelism After #5 Lands
+
+- **Lane A:** #6 shared shell (_Layout, search host, modal host, bootstrap lifecycle)
+- **Lane B:** #7 shared primitives (_Pagination, _AlphabetNav, cards, filter/loading extraction)
+- **Lane C:** Continue expanding tests on untouched handler/API surfaces
+
+**Do NOT mix A and B in same PR.** Overlapping failure modes too broad for clean review.
+
+### Coverage Targets Summary
+
+| Target | Estimated Count | Risk Level | Effort |
+|--------|-----------------|-----------|--------|
+| PageModel smoke tests | 19 (one per handler) | HIGH | ~2 days |
+| htmx integration tests | 8+ (request routing) | HIGH | ~1 day |
+| Pagination/edge-case tests | 5+ (parametrized) | MEDIUM | ~0.5 day |
+| API NotFound tests | 5+ (spot-check endpoints) | MEDIUM | ~0.5 day |
+| Filter state tests | 2-3 (career/single-season edge cases) | MEDIUM | ~0.5 day |
+
+**Total effort:** ~1 week dedicated test sprint.
+
+### Under-Coverage Fallback
+
+If Lambert discovers critical untested paths during #6 rebase:
+- Tag PR with "regression-coverage-spike"
+- Add targeted tests post-hoc
+- Document for post-Sprint 1 review
+
+---
+
+**Status:** ✅ All decisions integrated, orchestration logs created, session log documented.
+

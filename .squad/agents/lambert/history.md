@@ -7,6 +7,13 @@
 
 ## Learnings
 
+### Sprint 1 htmxRazor Regression Strategy (2026-04-16)
+- **Baseline status:** `dotnet test baseball-history-tests --nologo` passes with 247/247 green, but the suite still has no PageModel or API endpoint harness.
+- **Exact #5 risk:** current coverage stops at DB, selected view models, and `Extensions/HtmxExtensions.cs`; the migration safety net still needs handler-level checks for partial-vs-page routing, pagination clamping, and representative API `NotFound` paths.
+- **Shared shell blast radius (#6):** `Pages/Shared/_Layout.cshtml`, `Pages/_SearchResults.cshtml`, and `Pages/_SearchAllResultsModal.cshtml` carry `hx-boost`, global search, modal host, and Bootstrap re-init logic; regressions there fan out to Home, Players modal links, Awards, Stats, Salaries, Hall of Fame, Teams/Season, Compare, and search flows.
+- **Shared primitives blast radius (#7):** `Pages/Shared/Components/_Pagination.cshtml`, `_AlphabetNav.cshtml`, `_PlayerCard.cshtml`, `_TeamCard.cshtml`, and repeated filter/loading markup in `Pages/Stats/*.cshtml`, `Pages/Awards/Index.cshtml`, `Pages/HallOfFame/Index.cshtml`, and `Pages/Postseason/Index.cshtml` need contract-style tests before conversion.
+- **Safe parallel lanes after baseline tests land:** shell migration (#6), primitive/filter extraction (#7), and continued API/page smoke-test expansion can run in parallel only if ownership boundaries stay separate (`_Layout`/search/modal host vs shared components vs tests-only files).
+
 ### Codebase Structure & Architecture
 - **Solution:** 2 projects — baseball-history-web (19 page models, 20 API endpoints) and baseball-history-tests (18 test files, 247 tests)
 - **Tech Stack:** .NET 10 Razor Pages, EF Core, SQLite Lahman DB (read-only), htmx 2.0.4, Bootstrap 5
@@ -65,3 +72,17 @@
 - Pagination boundaries, sort stability, cache behavior all untested
 - Recommended safest path: smoke tests for all handlers before migration
 - Ripley approved proceeding with coverage work in parallel to component extraction
+
+## 2026-04-16 Sprint 1 Regression Gates
+
+Lambert identified critical test gaps and proposed baseline coverage targets for #5 regression test suite that gates #6/#7 merges.
+
+### Output
+- Coverage targets: 19 PageModel smoke tests, 8+ integration (htmx routing), 5+ edge-case, 5+ API NotFound
+- Merge gate requirement: #5 passes before #6/#7 can merge
+- Safe parallelism: Lane A (#6 shell) + Lane B (#7 primitives) both after #5 lands
+- Under-coverage fallback: Post-hoc tests with "regression-coverage-spike" tag
+
+### Status
+✅ Integrated. Blocked on Parker #4. Ready to begin #5 in parallel with Dallas #6 after #4 lands. Tests gate all merges.
+

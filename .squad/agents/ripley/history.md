@@ -60,3 +60,17 @@
 - #5 parallel with #6: Tests provide immediate feedback as shell changes
 - #6 before #7: Shell defines layout context, primitives build on it
 - After Sprint 1: Feature migrations (#8–#15) unblocked, feature teams can reference completed shared primitives and regression suite
+
+## 2026-04-16 Sprint 1 Brief Delivered
+
+Ripley orchestrated Sprint 1 execution brief with exact dependency order, parallelization guidance, and risk mitigations. Brief now integrated into decisions.md.
+
+### Output
+- Dependency order: #4 → #5/#6 parallel → #7
+- Parallelization: #5+#6 after #4, then #7 after #5
+- Coverage targets: 19 handlers + 8+ integration + 5+ edge cases
+- Risk assessment: LOW (infrastructure wired), MEDIUM (test gaps, signature drift)
+
+### Status
+✅ Integrated. Parker ready for #4 immediately.
+
