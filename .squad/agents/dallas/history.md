@@ -18,8 +18,8 @@
 - **Shell first-slice rule:** Safe shell migration starts by extracting full header/footer chrome into shared partials while leaving `<body hx-boost="true">`, `#modal-container`, and inline modal/search lifecycle JS in `_Layout.cshtml`.
 - **Header contract surface:** `Pages/Shared/_ShellHeader.cshtml` must preserve the navbar search contracts exactly: `/Search`, `name="q"`, `#search-results`, and `hx-target="#search-results"`.
 - **Footer extraction seam:** `Pages/Shared/_ShellFooter.cshtml` is a safe shared seam because it is static chrome with no htmx or Bootstrap lifecycle coupling.
-- **Safe primitive seam:** `Pages/Shared/Components/_LoadingSpinner.cshtml` can safely absorb the repeated filter-overlay markup only when page-owned ids, `hx-indicator` targets, and surrounding `position-relative` containers stay intact.
-- **Loading spinner model path:** `ViewModels/LoadingSpinnerModel.cs` is the shared config point for overlay ids/messages, with `LoadingSpinnerModel.Overlay(...)` as the conservative entry path.
+- **Safe primitive seam:** `Pages/Shared/Components/_LoadingSpinner.cshtml` can safely absorb the repeated filter-overlay inner markup when page-owned ids, `hx-indicator` targets, and surrounding `position-relative` containers stay intact.
+- **Conservative loading rule:** In the first safe slice, keep each page's loading overlay wrapper in place and only centralize the spinner body/message.
 - **Issue #7 stop line:** Hall of Fame filters should stay behaviorally unchanged in the first safe primitives slice; adding a new loading overlay there would expand the page contract.
 
 ## Codebase Review Output (2026-04-16)
