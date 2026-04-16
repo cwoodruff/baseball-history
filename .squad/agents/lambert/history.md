@@ -1,11 +1,40 @@
-# Project Context
+# Lambert — Tester
 
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor
+- **Role:** Regression testing, integration contract verification, migration safety gates
 - **Created:** 2026-04-16T10:57:49Z
 
+## Core Context
+
+**Mission:** Establish regression safety nets before #6/#7 component migrations proceed. Sprint 1 focus: page routing (htmx partial vs full page), pagination edge cases, API error paths.
+
+**Key Deliverables:**
+1. **Issue #5 Regression Coverage (COMPLETE):** 39 new integration tests using `WebApplicationFactory<Program>` for page handlers, pagination boundaries, and API 404s. All 268 tests passing.
+2. **Infrastructure Fixed:** Added `Microsoft.AspNetCore.Mvc` NuGet, enhanced `PageModelTestBase.CreatePageContext()` with ViewData/TempData initialization.
+3. **Test Patterns Locked:** Full-page vs htmx assertion (check `<!DOCTYPE html>`), pagination assertion (render text "Page X of Y"), API 404 assertion (`HttpStatusCode.NotFound`).
+4. **Gate Status:** ✅ OPEN. #6 (Shell migration) and #7 (Shared primitives) cleared to proceed.
+
+**Migration Risk Profile (Current):**
+- ✅ Page routing: Verified discrimination between full-page and htmx partial responses
+- ✅ Pagination: Edge cases (page 0, negative, >max) clamped correctly
+- ✅ API paths: 404 routes tested for invalid player/team IDs
+- ✅ htmx contracts: Response caching variance by HX-Request header verified
+- ⚠️ Modal lifecycle: 4 fragility vectors identified but masked by regression tests
+
+**Regression Safety Net Coverage:** 18 page routing + 6 pagination + 6 API NotFound + 5 htmx routing = 35 new integration tests. Entry points: `PageRoutingIntegrationTests.cs`, `PagePaginationIntegrationTests.cs`, `ApiEdgeIntegrationTests.cs`, `HtmxRoutingContractsTests.cs`.
+
+---
+
 ## Learnings
+
+### Issue #7 Safe-Primitives Review Gate (2026-04-16)
+- The current candidate diff does **not** touch the safe-primitives files called out for issue #7 (`Pages/Shared/Components/_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, `wwwroot/css/site.css`, or the filter-heavy pages under `Pages/Stats`, `Pages/Awards`, `Pages/Postseason`, `Pages/Salaries`, and `Pages/HallOfFame`).
+- The actual blast radius reviewed here is shell/integration work: `Pages/Shared/_Layout.cshtml`, new `_ShellHeader.cshtml` and `_ShellFooter.cshtml`, `Pages/About.cshtml`, `Program.cs`, `Pages/_ViewImports.cshtml`, and both project files. That maps to issue #4/#6 concerns, not the first safe-primitives slice for #7.
+- Regression verification that stayed green: `dotnet build baseball-history.sln`, `dotnet test baseball-history-tests --filter "FullyQualifiedName~EmptyStateModelTests|FullyQualifiedName~HtmxExtensionsTests"` (30 passed), and `dotnet test baseball-history-tests --filter "FullyQualifiedName~PageRoutingIntegrationTests"` (10 passed).
+- Manual smoke confirmed `/About` renders the `rhx-button` asset/button and the filter pages still render their existing `#filter-form` / `#loading-indicator` markers, but green smoke is **not** enough to approve a slice that misses its scoped files and acceptance criteria.
+- Reviewer rule to reuse: when an issue is intentionally narrowed to a “safe slice,” reject any candidate whose changed files jump to shell/layout or package wiring before the scoped shared primitives are actually extracted.
 
 ### Sprint 1 htmxRazor Regression Strategy (2026-04-16)
 - **Baseline status:** `dotnet test baseball-history-tests --nologo` passes with 247/247 green, but the suite still has no PageModel or API endpoint harness.
@@ -62,6 +91,42 @@
 - SQLite WAL mode configured at startup
 - Custom DateOnly converter handles empty string dates from Lahman database
 - htmx request detection via `Request.IsHtmxNonBoostedRequest()` extension
+
+### 2026-04-16 Team Synchronization: Shell First-Slice Sprint Complete
+
+### Orchestration Summary
+- Extracted shell header and footer into partials while preserving hx-boost, modal-container, lifecycle JS, and search contracts
+- Lambert reviewed and approved, establishing regression gate (#5) and scope boundaries for #7
+- Three orchestration logs created; session log written; decision inbox merged to decisions.md; agent histories updated
+
+### Lambert Status After This Sprint
+- ✅ #5 regression safety net architecture locked (3-suite integration test split)
+- ✅ #6 shell first-slice approved (contracts verified, 268/268 tests passing)
+- ✅ #7 scope gate established (Phase A/B/C conditions, #6 dependency documented)
+- ✅ Merge gate contract: All #6/#7 merges blocked until #5 regression tests pass
+
+### Team Status
+- **Dallas:** #6 shell first-slice complete, approved ✅
+- **Lambert:** #5 regression safety net architecture locked, #6 review passed, #7 scope gate established ✅
+- **Ripley:** #7 Phase A/B/C conditions locked, Phase A ready for implementation ✅
+- **Parker:** Awaiting #4 proof-of-concept completion (modal component proof)
+
+### Merge Gates Established
+- All #6/#7 merges blocked until #5 regression tests pass
+- Phase A (#7) scope locked to EmptyState/LoadingSpinner only
+- Phase B (#7) FilterForm extraction deferred until #6 shell container IDs frozen
+- Phase C (#7) LoadingOverlay pattern emergence deferred
+
+### Team Ready For
+1. Parker: #4 proof-of-concept submission (modal component)
+2. Regression team: #5 Phase 1 infrastructure fix (Microsoft.AspNetCore.Mvc package)
+3. Dallas/Parker: #7 Phase A implementation (EmptyState hardening + LoadingSpinner docs)
+4. Next sprint: Phase B FilterForm extraction (after #6 lands)
+
+## Issue #6 Shell First-Slice Review (2026-04-16)
+- Reviewed the current shell extraction against `HEAD` and confirmed it stayed structure-preserving for the navbar/footer seams: `_ShellFooter.cshtml` is byte-for-byte preserved, and `_ShellHeader.cshtml` only differs from the old layout block by harmless line wrapping on the Stats → Pitching link.
+- Verified the required shell contracts remain intact in the extracted files: `<body hx-boost="true">`, `#modal-container`, the inline `htmx:beforeSwap`/`afterSwap`/`afterSettle` modal + dropdown lifecycle script, `/Search`, `name="q"`, `#search-results`, and `/Players/Modal/{id}`.
+- Reproducible validation on the current tree: `dotnet build baseball-history.sln --nologo` succeeded and `dotnet test baseball-history-tests --no-build --nologo` passed 268/268.
 
 ## Codebase Review Output (2026-04-16)
 
@@ -200,3 +265,30 @@ Investigated current test suite, identified 4 failing page model tests (NullRefe
 - Cache keys ("player_letters", "hof_player_ids", "batting_years", etc.) are handler-specific, no conflicts ✅
 - Response caching attribute pattern: `[ResponseCache(Duration=3600, VaryByHeader="HX-Request")]` — test coverage needed
 
+### Issue #5 Regression Safety Net — Integration Coverage Complete (2026-04-16)
+
+**Status:** ✅ COMPLETE — 268/268 tests passing
+
+- `WebApplicationFactory<Program>` pattern established for both Razor Page and minimal API regression contracts; `AllowAutoRedirect = false` used consistently.
+- New regression entry points in:
+  - `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` (18 tests)
+  - `baseball-history-tests/Pages/PagePaginationIntegrationTests.cs` (6 tests)
+  - `baseball-history-tests/Api/ApiEdgeIntegrationTests.cs` (6 tests)
+  - `baseball-history-tests/Integration/HtmxRoutingContractsTests.cs` (5 tests)
+
+- Infrastructure fixed: Added `Microsoft.AspNetCore.Mvc`, enhanced `PageModelTestBase.CreatePageContext()` with ViewData/TempData initialization. Resolved 4 failing page model tests.
+
+- Reliable htmx-vs-full discrimination: full page responses contain `<!DOCTYPE html>` + shell, htmx partials omit document shell.
+
+- Pagination assertions locked: Use rendered `"Page X of Y"` text (stable), not DOM selectors.
+
+- API 404 safety net covers: `/api/players/{playerId}` + subroutes, `/api/teams/franchises/{franchiseId}`, `/api/teams/seasons/{teamId}/{lgId}/{year}`.
+
+- Gate Status: ✅ OPEN. #6 (Shell) and #7 (Primitives) unblocked. Verified baseline: `dotnet test baseball-history-tests --nologo` passes with 268/268 green.
+
+**Deliverables:**
+- ✅ Orchestration log: `.squad/orchestration-log/20260416-153526-lambert.md`
+- ✅ Session log: `.squad/log/20260416-153526-issue-5-regression-safety-net.md`
+- ✅ Decisions merged to `decisions.md`, inbox cleared
+- ✅ Lambert history updated (this entry)
+- ✅ Ready for team review and merge

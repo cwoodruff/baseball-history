@@ -162,4 +162,57 @@ Execution-ready brief delivered to `.squad/decisions/inbox/ripley-shell-brief.md
 4. Dallas: Prepare Tier 1 component migrations
 5. Ripley: Track blocker status, adjust Sprint 2 scope as #4/#5 progress
 
+---
+
+## 2026-04-16 Issue #7 Review: Safe Primitives Scope Gate
+
+### Review Completed
+
+Reviewed issue #7 scope: _EmptyState, _LoadingSpinner hardening + shared filter/overlay extraction. Scoped into 3 tiers with defer conditions.
+
+### Key Findings
+
+**Phase A — Safe Now (Immediate):**
+- _EmptyState: 9 consumers with stable factory methods (NoPlayers, NoTeams, NoStats). Model contract inviolate.
+- _LoadingSpinner: Dormant (0 consumers), ultra-low risk. String-only model must stay immutable.
+- Htmx usage: 24 instances across codebase, all consistent with Request.IsHtmxNonBoostedRequest() pattern
+- No pagination/alphabet nav/modal changes. Scope locked to two components + docs.
+
+**Phase B — Defer to After #6 (FilterForm Extraction):**
+- Duplication found: Batting, Pitching, Awards, HallOfFame, Postseason all have identical filter-select patterns (~50 lines each)
+- Blocker: FilterForm lives inside shell container with htmx indicators. Must freeze shell IDs from #6 before extraction.
+- Guard: Extract _FilterForm only after #6 shell review complete.
+
+**Phase C — Defer Until Pattern Emerges (LoadingOverlay):**
+- 5 pages have custom overlay markup; too divergent to extract yet
+- Decision: Revisit after FilterForm extraction when pattern stabilizes
+- Condition: Only extract if 3+ pages have identical markup
+
+### Rejection Gates
+
+❌ WILL REJECT if:
+- EmptyStateModel signature changes without atomic 9-page consumer updates
+- LoadingSpinner model changes
+- Pagination/AlphabetNav/Modal changes slip into scope
+- FilterForm lands before #6 shell review
+
+### Approval Status
+
+✅ **APPROVED** (Phase A only)
+- Dallas may proceed with Phase A scope immediately
+- Must confirm scope locked before starting implementation
+- Lambert to add EmptyState factory tests to #5 regression suite
+- Ripley gates Phase B/C with shell stabilization verification
+
+### Output
+
+Scope gate decision written to `.squad/decisions/inbox/ripley-safe-primitives.md` with exact approval conditions, rejection gates, and phase sequencing.
+
+### Learnings
+
+- **Component contract stability is the lever.** EmptyState is safe because factory methods don't change; FilterForm is risky because shell container IDs aren't yet stable.
+- **Three-tier extraction strategy avoids double-refactor.** Phase A defines baseline, #6 stabilizes container, Phase B extracts forms confidently, Phase C emerges from pattern.
+- **Duplication patterns are visible early.** All 5 leaderboard pages have identical filter markup; this is the high-signal extraction target, not generic loading overlay.
+- **Regression gap remains.** EmptyState factory methods must get test coverage added in #5; otherwise pagination changes won't be verified under Phase C.
+
 

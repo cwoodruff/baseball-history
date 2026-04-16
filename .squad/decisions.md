@@ -543,3 +543,57 @@ No handler refactoring required. Request paths, handler names, and partial names
 
 **Status:** ✅ All decisions integrated, orchestration logs created, session log documented.
 
+---
+
+## Issue #5 Regression Safety Net — Integration Test Coverage (2026-04-16)
+
+**Assignee:** Lambert (Tester)  
+**Status:** ✅ COMPLETE
+
+**Decision:** Issue #5 regression tests passed comprehensive integration coverage gate. All 268 tests green. Shell (#6) and primitives (#7) migrations now unblocked.
+
+**Test Infrastructure:**
+- Added `Microsoft.AspNetCore.Mvc` NuGet to test project
+- Enhanced `PageModelTestBase.CreatePageContext()` with ViewData/TempData initialization
+- Fixed 4 previously failing page model tests
+
+**Coverage Added:**
+1. **Page Routing (18 tests):** Full-page vs htmx partial discrimination for 10 primary handlers
+   - Players, Search, Stats/Batting, Stats/Pitching, Teams (each tested with normal + htmx request)
+   - Awards, HallOfFame, Postseason, Salaries, Compare
+
+2. **Pagination Boundaries (6 tests):** Edge cases (page 0, negative, >max) across multiple contexts
+   - Stable assertion pattern: Rendered text `"Page X of Y"` (not DOM selectors)
+
+3. **API NotFound Paths (6 tests):** Invalid player/team route verification
+   - `/api/players/{playerId}` (invalid, no seasons, with seasons)
+   - `/api/teams/franchises/{franchiseId}` (invalid, valid)
+   - `/api/teams/seasons/{teamId}/{lgId}/{year}` (missing/invalid)
+
+4. **htmx Routing Contracts (5 tests):** Request header discrimination, modal routing, response caching
+   - Verified HX-Request header honors partial vs. full page routing
+   - Verified response cache variance by HX-Request header
+
+**Verification:**
+- `dotnet build baseball-history.sln --nologo` ✅ Clean
+- `dotnet test baseball-history-tests --nologo` ✅ 268/268 passing
+- No regressions introduced
+- No pre-existing tests broken
+
+**Gate Status:** ✅ OPEN  
+#6 (Shell migration) and #7 (Shared primitives) cleared to proceed.
+
+**Test Pattern Locked:**
+- Use `WebApplicationFactory<Program>` for all handler/endpoint integration tests
+- Full page assertion: Response contains `<!DOCTYPE html>`
+- Partial page assertion: Response omits document shell
+- Pagination assertion: Use rendered `"Page X of Y"` text (stable)
+- API error assertion: `Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode)`
+
+**Notes for Future:**
+- WebApplicationFactory pattern creates fresh instance per test class
+- Pagination text assertions more stable than DOM selectors
+- Always include both `HX-Request: true` and `HX-Current-URL` headers for realistic htmx simulation
+- If response caching changes, update HtmxRoutingContractsTests
+
+

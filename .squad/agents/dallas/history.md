@@ -15,6 +15,12 @@
 - **Filter duplication:** Batting/Pitching/Awards/HallOfFame pages all have similar filter form patterns (reuse candidate)
 - **Modal system:** Solid cleanup logic in `_Layout.cshtml` with backdrop disposal
 - **Best practices present:** ViewModels per page, projection-based queries, responsive components
+- **Shell first-slice rule:** Safe shell migration starts by extracting full header/footer chrome into shared partials while leaving `<body hx-boost="true">`, `#modal-container`, and inline modal/search lifecycle JS in `_Layout.cshtml`.
+- **Header contract surface:** `Pages/Shared/_ShellHeader.cshtml` must preserve the navbar search contracts exactly: `/Search`, `name="q"`, `#search-results`, and `hx-target="#search-results"`.
+- **Footer extraction seam:** `Pages/Shared/_ShellFooter.cshtml` is a safe shared seam because it is static chrome with no htmx or Bootstrap lifecycle coupling.
+- **Safe primitive seam:** `Pages/Shared/Components/_LoadingSpinner.cshtml` can safely absorb the repeated filter-overlay markup only when page-owned ids, `hx-indicator` targets, and surrounding `position-relative` containers stay intact.
+- **Loading spinner model path:** `ViewModels/LoadingSpinnerModel.cs` is the shared config point for overlay ids/messages, with `LoadingSpinnerModel.Overlay(...)` as the conservative entry path.
+- **Issue #7 stop line:** Hall of Fame filters should stay behaviorally unchanged in the first safe primitives slice; adding a new loading overlay there would expand the page contract.
 
 ## Codebase Review Output (2026-04-16)
 
@@ -267,3 +273,27 @@ The shell (_Layout.cshtml) owns:
 3. Prepare Tier 1 migration after #5 passes (Phase A: EmptyState, LoadingSpinner, Pagination)
 4. Coordinate with Parker on filter form extraction (Tier 2, Phase C)
 
+## 2026-04-16 Team Synchronization: Shell First-Slice Sprint Complete
+
+### Orchestration Summary
+- Extracted shell header and footer into partials while preserving hx-boost, modal-container, lifecycle JS, and search contracts
+- Lambert reviewed and approved, establishing regression gate (#5) and scope boundaries for #7
+- Three orchestration logs created; session log written; decision inbox merged to decisions.md; agent histories updated
+
+### Team Status
+- **Dallas:** #6 shell first-slice complete, approved ✅
+- **Lambert:** #5 regression safety net architecture locked, #6 review passed, #7 scope gate established ✅
+- **Ripley:** #7 Phase A/B/C conditions locked, Phase A ready for implementation ✅
+- **Parker:** Awaiting #4 proof-of-concept completion (modal component proof)
+
+### Merge Gates Established
+- All #6/#7 merges blocked until #5 regression tests pass
+- Phase A (#7) scope locked to EmptyState/LoadingSpinner only
+- Phase B (#7) FilterForm extraction deferred until #6 shell container IDs frozen
+- Phase C (#7) LoadingOverlay pattern emergence deferred
+
+### Team Ready For
+1. Parker: #4 proof-of-concept submission (modal component)
+2. Regression team: #5 Phase 1 infrastructure fix (Microsoft.AspNetCore.Mvc package)
+3. Dallas/Parker: #7 Phase A implementation (EmptyState hardening + LoadingSpinner docs)
+4. Next sprint: Phase B FilterForm extraction (after #6 lands)
