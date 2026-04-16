@@ -663,4 +663,46 @@ No handler refactoring required. Request paths, handler names, and partial names
 - Always include both `HX-Request: true` and `HX-Current-URL` headers for realistic htmx simulation
 - If response caching changes, update HtmxRoutingContractsTests
 
+---
+
+## Sprint 1 Acceptance Review — Ripley (2026-04-16)
+
+**Status:** ✅ CONDITIONAL ACCEPT
+
+### Verdict
+
+Sprint 1 is **conditionally accepted** with one blocker that must resolve before Sprint 2 begins.
+
+### BLOCKER: Issue #5 (Regression Tests) Not Delivered
+
+Zero test files were added or modified in `baseball-history-tests/`. The entire Sprint 1 rationale was to establish a regression safety net before Sprint 2 feature migrations. Without handler smoke tests, shell contract tests, and htmx integration tests, Sprint 2 work has no guardrails.
+
+**Required before Sprint 2:**
+- Lambert must deliver #5 regression suite (handler smoke tests, integration tests, edge cases)
+- The `public partial class Program;` enabler for WebApplicationFactory is in place — tests just need to be written
+
+### Accepted (No Issues)
+
+| Issue | Scope | Status |
+|-------|-------|--------|
+| #4 — htmxRazor baseline | Package, wiring, proof component, Layout comments | ✅ Complete |
+| #6 — Shell extraction | _ShellHeader + _ShellFooter, verbatim content, all JS preserved | ✅ Complete |
+| #7 Phase A — Safe primitives | _EmptyState a11y, _LoadingSpinner restructure, CSS-only | ✅ Complete |
+
+### Follow-ups (Non-blocking)
+
+1. **Stage shell partials:** `_ShellHeader.cshtml` and `_ShellFooter.cshtml` are untracked — need `git add`
+2. **Runtime verification:** Start app, confirm htmx loads from `/_rhx/`, verify search/modals/dropdowns function
+3. **rhx-button.css global load:** Acceptable for POC; revisit when more components adopt htmxRazor
+
+### Shell Behavior Preservation Checklist
+
+- [x] Search: `hx-get="/Search"`, `hx-trigger`, `hx-target="#search-results"` — verbatim in _ShellHeader
+- [x] Modal host: `#modal-container` div in _Layout
+- [x] Modal lifecycle JS: beforeSwap cleanup, afterSwap init with setTimeout(10), hidden.bs.modal dispose
+- [x] Dropdown re-init: afterSwap + afterSettle double-tap pattern preserved
+- [x] Search dismiss: click-outside handler preserved
+- [x] `hx-boost="true"` on body preserved
+- [x] Bootstrap bundle script preserved (no longer CDN htmx — htmxRazor serves it)
+
 

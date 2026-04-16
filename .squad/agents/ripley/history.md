@@ -49,6 +49,35 @@
 - **Bootstrap interop preserved:** Non-migrated pages stay functional during transition (pre-requisite for feature team work)
 - **Fallback for #4 failure:** Revert to main, narrow scope, defer Sprint 1
 
+## Sprint 1 Review (2026-04-16)
+
+**Status:** ✅ CONDITIONAL ACCEPT
+
+### Findings Summary
+
+| Issue | Deliverable | Result |
+|-------|-------------|--------|
+| #4 | htmxRazor baseline (package + wiring + Layout comments + proof component) | ✅ Verified |
+| #6 | Shell extraction (_ShellHeader, _ShellFooter, JS lifecycle intact) | ✅ Verified |
+| #7 Phase A | Safe primitives (_EmptyState, _LoadingSpinner, CSS-only) | ✅ Verified |
+| #5 | Regression test suite | 🚫 BLOCKER — 0 tests added |
+
+**Build Status:** ✅ Passed | **Test Suite:** ✅ 247/247 passed
+
+### Critical Blocker
+
+Issue #5 regression deliverable missing entirely. Zero test files added to `baseball-history-tests/`. This defeats the core Sprint 1 objective: establish safety net before Sprint 2 migrations.
+
+**Impact:** Sprint 2 feature work cannot proceed without regression guardrails.
+
+**Required Action:** Lambert must deliver Issue #5 regression suite (handler smoke tests, integration tests, shell contract tests) before Sprint 2 kickoff.
+
+### Next Steps
+
+1. Scribe: Merge inbox decisions, update team histories, commit
+2. Lambert: Begin Issue #5 (unblocks Sprint 2)
+3. Team: Stand by for Sprint 2 component migration sequence
+
 ### Files Likely to Change by Issue
 - **#4:** Program.cs (done), _ViewImports.cshtml (done), _Layout.cshtml (needs doc), About.cshtml (new component), csproj (done)
 - **#5:** New test file(s) in baseball-history-tests/ for PageModel and integration coverage
@@ -216,3 +245,26 @@ Scope gate decision written to `.squad/decisions/inbox/ripley-safe-primitives.md
 - **Regression gap remains.** EmptyState factory methods must get test coverage added in #5; otherwise pagination changes won't be verified under Phase C.
 
 
+
+## Sprint 1 Acceptance Review (2026-04-16)
+
+### Verdict: CONDITIONAL ACCEPT — Issue #5 is a blocker
+
+**Delivered:**
+- Issue #4 (htmxRazor baseline): ✅ Package 2.0.1, AddhtmxRazor/UsehtmxRazor wired, rhx-button proof on About.cshtml, public partial class Program for WebApplicationFactory
+- Issue #6 (shell extraction): ✅ Header/footer extracted verbatim to _ShellHeader/_ShellFooter partials. Search (hx-get, hx-trigger, hx-target), modal host (#modal-container), dropdown re-init JS, modal lifecycle JS — all preserved byte-for-byte
+- Issue #7 Phase A (safe primitives): ✅ _EmptyState accessibility (role/aria), _LoadingSpinner restructured with baseball theme. EmptyStateModel and string? model contracts preserved. CSS-only additions in site.css. Phase A guardrails respected — no handler/route/hx-target changes.
+- Build: 0 warnings, 0 errors. 247/247 tests pass (baseline preserved).
+
+**Not delivered:**
+- Issue #5 (regression tests): ❌ MISSING. Zero test files added or modified. Sprint 2 has no regression safety net.
+
+**Key risk verified:**
+- htmx CDN removal is correct — htmxRazor serves htmx from /_rhx/ per package docs
+- Shell partials are untracked (need git add)
+- rhx-button.css loads globally for single About page consumer (acceptable for POC)
+
+### Learnings
+- htmxRazor 2.0.1 `UsehtmxRazor()` serves htmx + component assets from `/_rhx/` — no separate CDN script needed
+- Shell extraction is pure refactor when done verbatim — the JS block staying in _Layout is correct (it references document-level events, not shell-specific markup)
+- `public partial class Program;` pattern enables WebApplicationFactory in integration tests — this enabler is delivered but unconsumed until #5 lands

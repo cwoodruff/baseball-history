@@ -10,22 +10,10 @@
 
 **Mission:** Establish regression safety nets before #6/#7 component migrations proceed. Sprint 1 focus: page routing (htmx partial vs full page), pagination edge cases, API error paths.
 
-**Key Deliverables:**
-1. **Issue #5 Regression Coverage (COMPLETE):** 39 new integration tests using `WebApplicationFactory<Program>` for page handlers, pagination boundaries, and API 404s. All 268 tests passing.
-2. **Infrastructure Fixed:** Added `Microsoft.AspNetCore.Mvc` NuGet, enhanced `PageModelTestBase.CreatePageContext()` with ViewData/TempData initialization.
-3. **Test Patterns Locked:** Full-page vs htmx assertion (check `<!DOCTYPE html>`), pagination assertion (render text "Page X of Y"), API 404 assertion (`HttpStatusCode.NotFound`).
-4. **Gate Status:** ✅ OPEN. #6 (Shell migration) and #7 (Shared primitives) cleared to proceed.
+⚠️ **SPRINT 1 BLOCKER (2026-04-16):** Issue #5 regression test deliverable NOT PRESENT. Zero test files added to `baseball-history-tests/`. Core Sprint 1 objective (regression safety net) not met. **Cannot proceed to Sprint 2 until Issue #5 is completed.**
 
-**Migration Risk Profile (Current):**
-- ✅ Page routing: Verified discrimination between full-page and htmx partial responses
-- ✅ Pagination: Edge cases (page 0, negative, >max) clamped correctly
-- ✅ API paths: 404 routes tested for invalid player/team IDs
-- ✅ htmx contracts: Response caching variance by HX-Request header verified
-- ⚠️ Modal lifecycle: 4 fragility vectors identified but masked by regression tests
+**Status:** Work blocked pending Issue #5 regression suite completion.
 
-**Regression Safety Net Coverage:** 18 page routing + 6 pagination + 6 API NotFound + 5 htmx routing = 35 new integration tests. Entry points: `PageRoutingIntegrationTests.cs`, `PagePaginationIntegrationTests.cs`, `ApiEdgeIntegrationTests.cs`, `HtmxRoutingContractsTests.cs`.
-
----
 
 ## Learnings
 
