@@ -1,5 +1,72 @@
 # Squad Decisions
 
+## Issue #7 Safe Primitives Final Decisions (2026-04-16)
+
+### Parker — Safe Primitives Phase A Revision Decision
+
+**Status:** ✅ APPROVED
+
+For Issue #7 rereview, Phase A is component-only. The live slice is locked to `_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, and minimum shared CSS.
+
+**Rationale:** Reviewer guidance explicitly rejected page-level filter-shell extraction and loading-overlay rewiring. No reason to change handler contracts or routes for primitive markup refinements.
+
+**Scope (In):**
+- `baseball-history-web/Pages/Shared/Components/_EmptyState.cshtml`
+- `baseball-history-web/Pages/Shared/Components/_LoadingSpinner.cshtml`
+- `baseball-history-web/wwwroot/css/site.css`
+
+**Scope (Out):**
+- Page-level filter wrappers
+- Loading-overlay rewiring
+- PageModel handler changes
+- Route modifications
+- htmx contract changes
+
+**Guardrails:**
+- No PageModel, route, query-string, `hx-target`, `hx-include`, or `hx-push-url` contract changes
+- Future filter-form extraction must return as separate follow-up slice
+
+---
+
+### Dallas — Safe Primitives Slice Implementation Decision
+
+**Status:** ✅ IMPLEMENTED
+
+Standardized active filter loading body through `_LoadingSpinner.cshtml`, keeping each page's existing `hx-indicator` id and filter container contract intact.
+
+**Applied:**
+- Reused `_LoadingSpinner` in filter-heavy pages (Batting, Pitching, Awards, Postseason, Salaries, HallOfFame)
+- Added additive filter-foundation classes (`filter-shell`, `filter-card`, `filter-row`, `filter-actions`) to `site.css`
+- Preserved all existing `hx-get`, `hx-target`, `hx-include`, `hx-push-url`
+- Added `hx-indicator` only to existing filter controls without handler changes
+
+**Validation:**
+- ✅ `dotnet build baseball-history.sln --no-restore` passed
+- ✅ `dotnet test baseball-history-tests --no-restore` passed (247/247)
+
+---
+
+### Lambert — Issue #7 Phase A Re-Review Decision
+
+**Status:** ✅ APPROVED
+
+Current Issue #7 Phase A revision approved for landing.
+
+**Review Findings:**
+- Green validation: `dotnet build` succeeded, `dotnet test` passed 276/276
+- Live working-tree slice stays within Phase A boundary: `_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, `site.css` only
+- Phase A guards all hold:
+  - `EmptyStateModel` signature unchanged
+  - `_LoadingSpinner` still uses immutable `string?` model
+  - No filter-heavy pages, `_ViewImports.cshtml`, or page-level contracts modified
+- Unrelated branch state (shell files, proof-of-integration work) does not block narrowly-scoped approval
+
+**Guidance:** Ignore unrelated preexisting shell work when evaluating Phase A. Blast radius is narrow and stable.
+
+**Next Steps:** Phase A may proceed. Future filter/loading-overlay extraction must return as separate follow-up review.
+
+---
+
 ## Codebase Review Findings (2026-04-16)
 
 ### Architecture Review — Ripley

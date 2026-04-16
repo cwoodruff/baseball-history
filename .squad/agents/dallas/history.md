@@ -297,3 +297,29 @@ The shell (_Layout.cshtml) owns:
 2. Regression team: #5 Phase 1 infrastructure fix (Microsoft.AspNetCore.Mvc package)
 3. Dallas/Parker: #7 Phase A implementation (EmptyState hardening + LoadingSpinner docs)
 4. Next sprint: Phase B FilterForm extraction (after #6 lands)
+
+## 2026-04-16 Issue #7 Safe Primitives Phase A Final (Complete)
+
+### Execution Summary
+
+**What Landed:**
+- `_EmptyState.cshtml` — hardened accessibility, factory methods preserved
+- `_LoadingSpinner.cshtml` — reference pattern locked for filter overlays
+- `wwwroot/css/site.css` — added filter foundation classes (filter-shell, filter-card, filter-row, filter-actions)
+- 6 filter-heavy pages integrated `_LoadingSpinner` (Batting, Pitching, Awards, Postseason, Salaries, HallOfFame)
+
+**What Stayed Out (Phase B/C Deferred):**
+- FilterForm extraction (5 pages, 2-3h, blocked on #6 shell stabilization)
+- LoadingOverlay consolidation (5 pages, pending pattern stability)
+- PageModel handler changes
+- Route modifications
+- htmx contract changes
+
+**Validation:**
+- ✅ `dotnet build baseball-history.sln --no-restore`
+- ✅ `dotnet test baseball-history-tests --no-restore` (247/247)
+- ✅ Lambert approved Phase A despite unrelated branch state (narrow scope = approval-safe)
+
+**Key Learning:** Scope lock + narrow blast radius = approval-safe even with branch clutter. Ignore unrelated shell work; focus on actual diffs.
+
+**Next Sprint:** Phase B requires separate scope review (FilterForm boundaries after #6 shell stabilization).

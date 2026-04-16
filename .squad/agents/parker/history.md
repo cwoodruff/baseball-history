@@ -162,3 +162,34 @@
 3. Collaborate on filter form extraction (URL parameter alignment across 5 pages)
 4. Post-migration: Add constant extraction for handler names
 
+
+### Safe Primitive Slice Review (2026-04-17)
+- Shared filter/loading foundation stayed view-only: reused `_LoadingSpinner`, added shared filter shell classes in `wwwroot/css/site.css`, and kept all existing `hx-get`, `hx-target`, `hx-include`, `hx-push-url`, and handler routes unchanged.
+- Hall of Fame adopted the same loading overlay safely by adding `hx-indicator` only to the existing filter controls; no PageModel or query contract changes were required.
+- Added page-routing coverage for Awards, Postseason, Salaries, and Hall of Fame full-page vs HTMX partial behavior in `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs`.
+- Validation: `dotnet build baseball-history.sln` and `dotnet test baseball-history-tests` passed after the slice.
+
+### Safe Slice Revision (2026-04-16)
+- Ripley/Lambert rereview tightened Issue #7 Phase A to shared primitives only: `_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, and directly supporting `site.css` rules.
+- Page-level filter wrappers, loading-overlay rewiring, `_ViewImports.cshtml` changes, and page integration-test scaffolding were reverted to keep handler contracts and HTMX wiring untouched.
+- Validation after the trim passed with `dotnet build baseball-history.sln --no-restore` and `dotnet test baseball-history-tests --no-restore` (247/247).
+
+### Phase A Final Approval & Orchestration (2026-04-16)
+
+**Decision:** ✅ Phase A approved for landing (Lambert reviewed and signed off)
+
+**Scope Lock:**
+- Component-only slice: `_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, CSS filter foundation only
+- No PageModel handlers modified
+- No route changes
+- No htmx contract changes
+- All handler seams preserved for future extraction
+
+**What Stayed Out:**
+- Filter form extraction (deferred to separate Phase B review)
+- Loading overlay consolidation (deferred to separate Phase C review)
+- Page-level integration test scaffolding
+
+**Key Pattern:** Narrow scope + regression verification = approval-safe even with unrelated branch state
+
+**Next Steps:** Phase B requires explicit scope review after #6 shell stabilization

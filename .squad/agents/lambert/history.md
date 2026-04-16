@@ -29,6 +29,11 @@
 
 ## Learnings
 
+### Issue #7 Phase A Re-review After Parker Revision (2026-04-16)
+- Current working-tree scope is now genuinely conservative: among the Phase A artifacts, the active diff is limited to `_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, and supporting `site.css` refinements; the filter-heavy pages and `_ViewImports.cshtml` are no longer part of the live slice.
+- Phase A guards remain satisfied: `EmptyStateModel` signature is unchanged, `_LoadingSpinner` still takes `string?`, and the edits are presentational/accessibility hardening rather than a broader filter/loading extraction.
+- Validation was green on the current tree (`dotnet build baseball-history.sln --nologo`, `dotnet test baseball-history-tests --nologo` → 276/276), so this rereview was approvable even though unrelated shell/proof-of-integration changes still exist elsewhere in the branch.
+
 ### Issue #7 Safe-Primitives Review Gate (2026-04-16)
 - The current candidate diff does **not** touch the safe-primitives files called out for issue #7 (`Pages/Shared/Components/_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, `wwwroot/css/site.css`, or the filter-heavy pages under `Pages/Stats`, `Pages/Awards`, `Pages/Postseason`, `Pages/Salaries`, and `Pages/HallOfFame`).
 - The actual blast radius reviewed here is shell/integration work: `Pages/Shared/_Layout.cshtml`, new `_ShellHeader.cshtml` and `_ShellFooter.cshtml`, `Pages/About.cshtml`, `Program.cs`, `Pages/_ViewImports.cshtml`, and both project files. That maps to issue #4/#6 concerns, not the first safe-primitives slice for #7.
@@ -284,6 +289,8 @@ Investigated current test suite, identified 4 failing page model tests (NullRefe
 
 - API 404 safety net covers: `/api/players/{playerId}` + subroutes, `/api/teams/franchises/{franchiseId}`, `/api/teams/seasons/{teamId}/{lgId}/{year}`.
 
+- API 404 safety net covers: `/api/players/{playerId}` + subroutes, `/api/teams/franchises/{franchiseId}`, `/api/teams/seasons/{teamId}/{lgId}/{year}`.
+
 - Gate Status: ✅ OPEN. #6 (Shell) and #7 (Primitives) unblocked. Verified baseline: `dotnet test baseball-history-tests --nologo` passes with 268/268 green.
 
 **Deliverables:**
@@ -292,3 +299,39 @@ Investigated current test suite, identified 4 failing page model tests (NullRefe
 - ✅ Decisions merged to `decisions.md`, inbox cleared
 - ✅ Lambert history updated (this entry)
 - ✅ Ready for team review and merge
+
+## Issue #7 Safe Primitives Phase A Final Review & Approval (2026-04-16)
+
+### Review Completed
+
+**Scope Verified:** Phase A narrowed to component-only (after Parker revision):
+- `_EmptyState.cshtml` — factory methods preserved, no signature change
+- `_LoadingSpinner.cshtml` — immutable `string?` model retained
+- `wwwroot/css/site.css` — filter foundation classes added only
+
+**Validation Green:**
+- ✅ `dotnet build baseball-history.sln --nologo` passed
+- ✅ `dotnet test baseball-history-tests --nologo` passed 276/276
+
+**Phase A Guards Hold:**
+- No PageModel handler changes
+- No route modifications
+- No htmx contract changes
+- No page-level filter extraction
+- All handler seams preserved
+
+**Approval Decision:** ✅ **APPROVED** for landing
+
+**Key Guidance:**
+- Ignore unrelated preexisting shell files (don't block narrow scope approval)
+- Phase A blast radius is narrow and stable
+- Future filter/loading extraction must return as separate follow-up review
+
+**Orchestration Completed:**
+- Three orchestration logs created (.squad/orchestration-log/)
+- Session log written (.squad/log/)
+- Decision inbox merged to decisions.md; inbox cleared
+- Team member histories updated
+- Git .squad/ changes staged
+
+**Next Steps:** Phase B FilterForm extraction requires explicit scope review after #6 shell stabilization.
