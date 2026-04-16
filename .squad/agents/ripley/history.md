@@ -74,3 +74,92 @@ Ripley orchestrated Sprint 1 execution brief with exact dependency order, parall
 ### Status
 ✅ Integrated. Parker ready for #4 immediately.
 
+## Issue #6 Shell Investigation (2026-04-16)
+
+### Shell Analysis Complete
+
+Investigated _Layout.cshtml shared shell for #6 migration. Key findings:
+
+**Shell Responsibilities:**
+- Document shell (html/head/body with hx-boost)
+- Asset loading (Bootstrap + htmxRazor CSS/JS)
+- Navigation with Bootstrap dropdown + hx-boost links
+- Global search (input → #search-results via htmx)
+- Modal host (`#modal-container` receives all modals)
+- 85-line inline JS block for Bootstrap re-initialization
+
+**Fragile Areas Identified:**
+- Double-tap dropdown re-init (afterSwap + afterSettle) indicates timing sensitivity
+- `setTimeout(10)` in modal init is a race condition workaround
+- Search clear uses `setTimeout(0)` hack
+- Modal backdrop cleanup is complex, multiple cleanup paths
+
+**Migration Order Recommendation:**
+1. SAFE: Footer, static nav links, LoadingSpinner
+2. CAREFUL: Pagination, Stats dropdown, search wiring
+3. DEFER: Modal lifecycle JS (85 lines), Bootstrap interop
+
+**htmxRazor Component Fit:**
+- HIGH: _Pagination, _AlphabetNav, _LoadingSpinner, _EmptyState, _FilterForm (new)
+- MEDIUM: _PlayerCard, _TeamCard (need slot support for content)
+- LOW: Modal host (complex JS lifecycle, defer assessment)
+
+### Output
+Execution-ready brief delivered to `.squad/decisions/inbox/ripley-shell-brief.md` with:
+- Exact shell responsibilities
+- Safe → risky migration order
+- Fragile behavior documentation
+- htmxRazor fit assessment
+- Explicit deferrals
+- Test coverage requirements for #5
+
+### Status
+✅ Brief delivered. Ready for Dallas to execute #6 scope.
+
+---
+
+## 2026-04-16 Issue #7 Discovery: Prioritized Migration Inventory
+
+### Discovery Completed
+- Synthesized Dallas (UI) + Parker (backend) discoveries into prioritized, effort-estimated roadmap
+- Created 3-tier classification: SAFE-NOW (5 components, 7-10h), WAIT-FOR-SHELL (2 components, 6-9h), DEFER (3 groups + complex pages, 50+h)
+- Documented shell stabilization as blocker for Tier 2+ work
+- Created decision matrix: Tier 1 requires zero new assets, Tier 2+ depends on #6 container patterns
+
+### Prioritization Delivered
+**Phase A (Safe-Now, 7-10h):**
+1. _EmptyState (9 consumers, proof primitive)
+2. _LoadingSpinner (dormant, reference pattern)
+3. _Pagination (7 consumers, highest leverage)
+4. _PlayerCard (1 consumer, modal-coupled)
+5. _TeamCard (2 consumers, navigation-only)
+
+**Phase B (Wait-for-Shell, 6-9h + integration):**
+6. _AlphabetNav (1 consumer, Players page fixture required)
+7. _PlayerModal (complex aggregation, deferred until modal pattern proven)
+
+**Phase C (Duplication, 8-10h):**
+8. _FilterForm extraction (5 pages)
+9. _LoadingOverlay extraction (5 pages)
+10. Compare Cards extraction (1h)
+
+**Phase D (Complex, 50+ hours, deferred):**
+- Stats/Batting, Stats/Pitching, Awards, Compare, Salaries page migrations
+
+### Critical Path Verified
+1. Parker #4: Proof htmxRazor modal integration works
+2. Lambert #5: All 4 shell regression contract tests pass
+3. Dallas #6: Shell migration with stabilized container IDs
+4. Dallas #7: Tier 1–2 primitive migration
+
+### Status
+✅ Consolidated roadmap delivered. All findings synthesized into execution-ready priorities. Ready for Sprint 2 planning and approval.
+
+### Next Steps
+1. Woody: Review Tier 1 scope and approve Phase A for Sprint 2
+2. Parker: Deliver #4 proof-of-concept (modal component)
+3. Lambert: Execute #5 regression suite (Phase 1–5)
+4. Dallas: Prepare Tier 1 component migrations
+5. Ripley: Track blocker status, adjust Sprint 2 scope as #4/#5 progress
+
+

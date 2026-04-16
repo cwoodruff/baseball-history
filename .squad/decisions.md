@@ -453,5 +453,93 @@ If Lambert discovers critical untested paths during #6 rebase:
 
 ---
 
+---
+
+## Issue #7 Discovery: Shell Architecture Findings (2026-04-16)
+
+### Dallas — Shell Architecture Brief
+
+**Key Findings:**
+
+1. **Modal Container is Shell-Sacred** — Single `#modal-container` hosts all 14+ modals across the app. Decision: Keep in _Layout.cshtml, do not componentize. Moving it would require repointing 14+ page-level htmx targets.
+
+2. **Dropdown Re-init Logic is Global Infrastructure** — After hx-boost swaps, Bootstrap dropdowns are re-initialized on both `htmx:afterSwap` and `htmx:afterSettle` (dual-fire for safety). Decision: Keep in shell; moving to component adds no benefit.
+
+3. **Modal Lifecycle is Fragile & Critical** — Opening/closing triggers 5 carefully-ordered steps (destroy old modal, clean backdrops, swap HTML, create new Bootstrap Modal with 10ms delay, wire hidden listener). Risk: Skipping any step causes backdrop leaks or duplicate listeners. Decision: Prove htmxRazor modal integration via #4 proof-of-concept before migrating any modal components.
+
+4. **Migration Priority (Safest First):**
+   - **Tier 1 (Zero risk):** _LoadingSpinner, _Pagination (no modal coupling)
+   - **Tier 2 (Medium risk):** _PlayerModal, _SearchResults (defer until #4 proof)
+   - **Tier 3 (High risk):** _Layout navigation, search shell (defer Sprint 4+)
+
+5. **Search Shell Integration** — Global search box with 300ms debounce, dropdown at `#search-results`, click-outside cleanup, "View all" opens modal. Decision: Keep in shell; click-outside logic is tightly coupled.
+
+### Lambert — Shell Migration Fragility Review
+
+**Four Distinct Regression Vectors:**
+
+1. **hx-boost Document Flow Fragility** — hx-boost replaces entire `<body>` on link clicks. Script in `<head>` persists via guard `if (!window.__bbHistoryInit)`. If shell moves to component: guard survives rehydration, but component CSS/JS imports may not reload if htmxRazor inlines them per render. Verification needed: Confirm hx-boost fires `htmx:beforeSwap`/`htmx:afterSwap` after component wrap, and guard doesn't prevent re-init if shell is re-rendered.
+
+2. **Modal Lifecycle Coupling** — Modal cleanup happens in _Layout but modals come from different routes. htmx `beforeSwap` handler runs before new modal HTML arrives. If shell stub moves to component and modal routes refactored: new `#modal-container` instance per render may not see event listener target. Verification needed: Test overlapping modal requests, modal dismiss + immediate link click, `bootstrap.Modal.getInstance()` disposal.
+
+3. **Outside-Click Search Cleanup (Timing Hazard)** — Two separate mechanisms clear `#search-results`: global `click` listener and inline `onclick` handlers with `setTimeout(..., 0)`. If shell moves to component and search input is re-rendered: global listener may be re-attached by component lifecycle (duplicate listeners), inline `setTimeout` pattern doesn't guarantee order. Verification needed: Click search result while new results loading, outside-click while dropdown open + modal request in flight.
+
+4. **Bootstrap Dropdown Re-Init Timing** — Dropdowns re-initialized in **both** `htmx:afterSwap` AND `htmx:afterSettle`. If markup moves to htmxRazor: component lifecycle may emit additional events, causing multiple re-creations. Hazard: If partial view has local dropdown + inline script, could init twice. Verification needed: Click Stats dropdown after nav, verify no double-init/disposal errors, test page-specific partial with local dropdown.
+
+**Recommendation:** Do not move `_Layout.cshtml` to htmxRazor component until all 4 contract tests pass:
+- Boosted Navigation Smoke Test
+- Modal Lifecycle Test
+- Search Outside-Click Test
+- Dropdown Durability Test
+
+**Estimated effort:** 1–2 days for tests, 0.5 day for guards. Worth it to prevent modal/search regressions.
+
+### Parker — Shell Implementation & Backend Readiness
+
+**Shell Migration from Backend Perspective: LOW RISK**
+
+No handler refactoring required. Request paths, handler names, and partial names must stay aligned.
+
+**Request-Path Couplings (Implicit, Not Validated):**
+| Artifact | Frontend Hardcoding | Backend Location | Breaking Change Cost |
+|----------|-------------------|------------------|----------------------|
+| Handler `AllResults` | `/Search?handler=AllResults` | `OnGetAllResultsAsync()` | High — silent failure |
+| Modal target ID | `#modal-container` | None (just HTML ID) | High — modals won't init |
+| Search param | `name="q"` in input | `OnGetAsync(string? q)` | High — search breaks |
+| Partial names | `_SearchResults`, `_PlayerModal`, etc. | `Partial()` calls | High — 404 errors |
+| Bootstrap class | `.modal` selector | HTML class in partials | High — no initialization |
+
+**What Can Migrate Safely:** Search input styling, modal host container, all PageModel handlers, database queries, response cache strategy
+
+**What Needs Alignment:** Modal target ID stays `#modal-container`, search query param stays `q`, route paths stay `/Search`/`/Players/Modal/{id}`
+
+**Fragility: Edge Cases (Not Blocking):**
+1. Boosted navigation to `/Search` returns partial without layout (breaks page) — Fix: Add `if (!Request.IsHtmxRequest()) return BadRequest()` in SearchModel
+2. Boosted navigation to `/Players/Modal/{id}` returns partial — Fix: Same as above
+3. ModalModel cache missing `VaryByHeader` — Fix: Add `VaryByHeader = "HX-Request"` for consistency
+
+**Recommendations:**
+1. Preserve all route paths, param names, handler names
+2. Preserve modal target ID `#modal-container`
+3. Align partial names with htmxRazor equivalents
+4. Add validation: `if (!Request.IsHtmxRequest())` in SearchModel and ModalModel
+5. Extract handler names to constants (avoid string magic)
+
+### Ripley — Shell Stabilization Gating Tier 2+ Work
+
+**Shell must stabilize before Tier 2 component migration proceeds.**
+
+- #6 (Shell migration) confirmed prerequisite for all Tier 2+ components that reference page-level container IDs
+- _Pagination, _AlphabetNav, _FilterForm all use `hx-target` referencing page containers — require final container pattern from #6
+- Modal lifecycle fragility (Lambert's 4 findings) must be verified via #5 regression tests before any modal components migrate
+
+**Critical Path:**
+1. Parker #4: Proof htmxRazor modal integration works
+2. Lambert #5: All 4 shell regression contract tests pass
+3. Dallas #6: Shell migration with stabilized container IDs/patterns
+4. Dallas #7: Tier 1–2 primitive migration (leveraging #6 patterns)
+
+---
+
 **Status:** ✅ All decisions integrated, orchestration logs created, session log documented.
 

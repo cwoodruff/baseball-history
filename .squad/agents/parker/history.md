@@ -77,3 +77,88 @@
 - Leaderboard expression tree duplication noted for post-migration refactor
 - API DTOs separate from ViewModels — defensible, no blocker
 - Ash flagged cache invalidation SOP as missing — scope for documentation work
+
+## Shared Shell Implementation Review (2026-04-17)
+
+### Global Search Wiring
+- **Backend contract:** `SearchModel.OnGetAsync(string? q)` always returns `Partial()` — **safe across migrations**
+- **Coupling:** Handler name `AllResults` hardcoded in frontend (`/Search?handler=AllResults`) — string-based magic, not validated
+- **Risk:** Query param name `q` and partial view names (`_SearchResults`, `_SearchAllResultsModal`) are implicit dependencies
+- **Migration impact:** Low — no handler changes needed, just partial name alignment
+
+### Modal Host Lifecycle
+- **Architecture:** Bare container `#modal-container` with document-level event listeners (persist across hx-boost)
+- **Handlers:** `ModalModel.OnGetAsync()` always returns `Partial("_PlayerModal")` — **no htmx routing logic**
+- **Response cache:** `[ResponseCache(Duration = 3600)]` on ModalModel, but missing `VaryByHeader = "HX-Request"` (not a blocker since always returns partial)
+- **Bootstrap init:** Manual JavaScript in site.js (lines 154–165) — if htmxRazor has modal helpers, can migrate
+- **Cleanup:** Modal disposal and backdrop cleanup are robust, but dropdown reinit runs twice (redundant optimization)
+- **Migration impact:** Medium — must preserve target ID `#modal-container`, partial names, and request paths
+
+### hx-boost Navigation Behavior
+- **Configuration:** `<body hx-boost="true">` with `Request.IsHtmxNonBoostedRequest()` logic in most handlers
+- **Fragility:** `SearchModel` and `ModalModel` always return partials (hardcoded), not checking for boosted requests
+  - **Risk:** If user lands on `/Search` or `/Players/Modal/{id}` via direct link after boosted nav, would return partial without layout → broken page
+  - **Status:** Edge case (not hit in current nav topology), but architecturally inconsistent
+- **Fix:** Add validation in handlers: `if (!Request.IsHtmxRequest()) return BadRequest()` to enforce partial-only endpoints
+
+### Request-Path Fragility
+- **Implicit contracts:** 6 hardcoded strings (handler names, target IDs, params, routes, partial names) with zero enforcement
+- **No contract tests:** SearchModel, ModalModel have 0 integration tests
+- **String-based coupling:** Making renaming dangerous (handler name, routes, partial names could break silently)
+- **Deferred:** Extract to constants, add integration tests post-migration
+
+### Backend Readiness: ✅ **High Confidence**
+- All handlers are read-only (OnGetAsync only)
+- Projection-first queries, no N+1 risks
+- Caching strategy can stay intact
+- ViewModels are view-agnostic
+- Database logic unchanged across migration
+
+### Migration Checklist
+✅ Search input stays in layout (styling only)  
+✅ Modal host div stays (lifecycle script can move if htmxRazor has modal helpers)  
+✅ All PageModel handlers stay (no refactoring)  
+✅ Database queries stay  
+✅ Route paths stay (`/Search`, `/Players/Modal/{id}`, `/Search?handler=AllResults`)  
+⚠️ Partial names must align (htmxRazor equivalents)  
+⚠️ Modal target ID stays `#modal-container`  
+⚠️ Query param stays `q`  
+
+### Deferred (Post-Migration)
+- Add `VaryByHeader` to ModalModel cache (defensive)
+- Consolidate Bootstrap dropdown reinit (optimize)
+- Extract handler names to constants (safety)
+- Add integration tests for search/modal endpoints (coverage)
+- Add validation to SearchModel/ModalModel: enforce `IsHtmxRequest()` (tighten contract)
+
+---
+
+## 2026-04-16 Issue #7 Discovery: Backend Coupling & Handler Seams Analysis
+
+### Discovery Completed
+- Audited all 19 PageModel handlers; all use OnGetAsync with primary constructor injection
+- Documented 6 implicit frontend-to-backend string dependencies (handler names, modal target ID, search param, partial names, routes, Bootstrap selectors)
+- Verified partial/full-page routing consistent via `Request.IsHtmxNonBoostedRequest()`
+- Identified 2 edge cases where boosted navigation to partial-only routes returns 200 with partial (breaks page)
+- Confirmed zero integration tests for SearchModel and ModalModel handlers
+
+### Key Findings
+1. **Migration Risk: LOW** — No handler logic changes required for Tier 1 components
+2. **Coupling Risk: MEDIUM** — 6 implicit string dependencies validated only by manual testing
+3. **Testing Gap: HIGH** — Zero page model tests; edge cases uncovered
+
+### Recommendations
+1. Preserve all route paths, param names, handler names during migration
+2. Add validation guards: `if (!Request.IsHtmxRequest())` in SearchModel and ModalModel
+3. Extract handler names to constants in C# (avoid string magic)
+4. Add post-migration integration tests for handler contracts
+
+### Status
+✅ Discovery complete. Delivered shell findings brief + primitives inventory. Ready for Tier 1 migration within existing handler infrastructure.
+
+### Next Steps
+1. Deliver #4 proof-of-concept (modal component)
+2. Support Dallas during Tier 1 migration (confirm partial names don't break)
+3. Collaborate on filter form extraction (URL parameter alignment across 5 pages)
+4. Post-migration: Add constant extraction for handler names
+

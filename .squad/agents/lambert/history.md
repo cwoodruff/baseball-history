@@ -86,3 +86,117 @@ Lambert identified critical test gaps and proposed baseline coverage targets for
 ### Status
 ✅ Integrated. Blocked on Parker #4. Ready to begin #5 in parallel with Dallas #6 after #4 lands. Tests gate all merges.
 
+## 2026-04-16 Shell Migration Fragility Analysis
+
+Lambert reviewed `_Layout.cshtml`, `site.js`, modal handlers, search lifecycle, and dropdown re-init for htmxRazor migration risks.
+
+### Four Critical Regression Vectors Found
+
+1. **hx-boost document flow:** Body swap with guard `if (!window.__bbHistoryInit)` may not re-initialize properly if shell becomes component. CSS/JS imports in head may not reload.
+2. **Modal lifecycle coupling:** Event listeners on `#modal-container` target may not fire correctly if component re-renders the container. Stale backdrops can persist.
+3. **Outside-click search cleanup (race condition):** Two mechanisms (global click listener + inline onclick handlers) both clear search results. Order undefined after component lifecycle changes. Can race with htmx requests.
+4. **Bootstrap dropdown re-init:** Dropdowns re-initialized in both `afterSwap` AND `afterSettle`. If markup moves to component with local lifecycle, double-init risk.
+
+### Blast Radius
+12 pages affected: Home, About, Privacy, Health, Players, Teams, Stats, HallOfFame, Awards, Salaries, Postseason, Compare, Search, ApiDocs. Multiple modals, search flow, dropdown navigation.
+
+### Output
+- 4 verification checklists written per vector.
+- 4 contract-level test specs (BDD-style) defined.
+- Migration strategy: Keep `_Layout` as Razor page. If component conversion required, extract event listeners to separate JS file, consolidate search cleanup, guard dropdown re-init.
+- Decision written to `.squad/decisions/inbox/lambert-shell-brief.md` for Scribe merge.
+
+### Status
+⚠️ **Recommendation: Do not move `_Layout` to component until #5 tests pass.** Estimated effort to guard all vectors: 1.5–2 days (tests + guards).
+
+
+## Issue #5 First Regression Slice — Plan Complete (2026-04-16)
+
+### Executive Summary
+Investigated current test suite, identified 4 failing page model tests (NullReferenceException in Partial rendering), and produced **execution-ready plan for regression safety-net foundation**. No code changes made — analysis only.
+
+### Key Findings
+
+**Test Suite Baseline:**
+- 254 total tests: 247 passing + 4 failing (page models) + 3 compilation errors
+- Database layer: 30+ integration tests ✅ Strong
+- htmx Extensions: 21 tests ✅ Comprehensive
+- View Models: 12 of 14 tested ⚠️ Selective
+- **Page Models: 0/19 tested** ❌ Zero coverage
+- **API Endpoints: 0/20 tested** ❌ Zero coverage
+
+**Critical Infrastructure Blocker:**
+- Test project missing `Microsoft.AspNetCore.Mvc` package
+- `PageModelTestBase.CreatePageContext()` doesn't initialize `ViewData`/`TempData`
+- All 4 failing tests fail with NullReferenceException when calling `Partial()`
+
+**Regression Risk Profile (Confirmed):**
+1. Htmx partial-vs-page routing untested at handler level (extensions tested, routing not)
+2. Pagination boundaries (0, -1, >max) never clamped and verified
+3. Complex sort expressions (career vs season, across letters) unstable
+4. API not-found paths (404) never verified
+5. Service aliases (TeamColorService) untested
+6. Cache behavior ([ResponseCache] VaryByHeader) not verified
+
+### Execution Plan: 5 Phases, ~40 hours
+
+**Phase 1 (1.5h) - Fix Infrastructure [BLOCKER]**
+- Add Microsoft.AspNetCore.Mvc to test .csproj
+- Enhance PageModelTestBase with ViewData/TempData initialization
+- Fix 4 failing tests
+- Gate: All 254 tests pass
+
+**Phase 2 (6h) - Page Model Smoke Tests [HIGH ROI]**
+- 19 handlers × smoke coverage (full page + htmx partial + edge case each)
+- Priority 5: Players, Search, Stats/Batting, Teams, Compare
+- Priority 10: HoF, Awards, Salaries, Postseason, etc.
+
+**Phase 3 (2h) - Pagination Boundaries [REGRESSION GATE]**
+- 6+ edge case tests: page 0, -1, >max, empty set, pageSize clamp
+
+**Phase 4 (3h) - API NotFound Paths [ERROR PATH SAFETY]**
+- 6+ endpoint tests with invalid IDs (404 verification)
+
+**Phase 5 (2h) - htmx Routing Contracts [BEHAVIOR GATE]**
+- 8+ tests verifying HX-Request header routes to partial, not full page
+
+**First 5-10 Tests (MVP Regression Gate):**
+1. Fix infrastructure
+2. Players.Index smoke (full page + htmx partial)
+3. Search smoke (htmx + empty query)
+4. Pagination boundary (page 0, >max)
+5. Stats.Batting smoke (full page + htmx + stat validation)
+6. API NotFound (PlayerEndpoints 404)
+7. Teams.Index smoke (league filter, sorting)
+8. htmx routing contracts (5 critical handlers)
+
+**Result:** 50+ regression tests gate #6 (Shell) and #7 (Primitives) merges.
+
+### Test Patterns Available for Reuse
+
+- **Database queries:** `DatabaseIntegrationTests` has 30+ examples
+- **Header injection:** `HtmxExtensionsTests` pattern: `context.Request.Headers["HX-Request"] = "true"`
+- **Edge cases:** `PaginationModelTests` has boundary validation patterns
+- **Result assertions:** `Assert.IsType<PageResult>(result)`, `Assert.IsType<PartialViewResult>(result)`
+- **Context setup:** `CreateContext()`, `CreateMemoryCache()`, base helpers in `PageModelTestBase`
+
+### Deliverables
+
+✅ Comprehensive plan saved to: `/Volumes/extra/Git/baseball-history/sprint1-regression-plan.md`  
+✅ Historical context recorded (this entry)  
+✅ Ready for team approval before Phase 1 execution
+
+### Team Decision Points
+
+- **Approve plan structure?** 5 phases, 40 hours, 50+ regression tests
+- **Prioritize handler coverage?** Players → Search → Stats → Teams → Compare
+- **Gate merges on Phase 1 completion?** (Infrastructure fix required before any page model tests)
+- **Run Phases 2–5 in parallel or serial?** (Recommend serial for focused iteration)
+
+### Architecture Notes for Future
+
+- `Math.Clamp(page, 1, Math.Max(1, totalPages))` pattern used in Players, Stats, Leaderboards — consistency opportunity
+- htmx routing check `Request.IsHtmxNonBoostedRequest()` used consistently — good foundation
+- Cache keys ("player_letters", "hof_player_ids", "batting_years", etc.) are handler-specific, no conflicts ✅
+- Response caching attribute pattern: `[ResponseCache(Duration=3600, VaryByHeader="HX-Request")]` — test coverage needed
+
