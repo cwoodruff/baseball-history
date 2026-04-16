@@ -246,25 +246,82 @@ Scope gate decision written to `.squad/decisions/inbox/ripley-safe-primitives.md
 
 
 
-## Sprint 1 Acceptance Review (2026-04-16)
+## Sprint 1 Acceptance Review — First Pass (2026-04-16)
 
-### Verdict: CONDITIONAL ACCEPT — Issue #5 is a blocker
+### Verdict: CONDITIONAL ACCEPT — Issue #5 was a blocker
 
-**Delivered:**
+**Delivered at first review:**
 - Issue #4 (htmxRazor baseline): ✅ Package 2.0.1, AddhtmxRazor/UsehtmxRazor wired, rhx-button proof on About.cshtml, public partial class Program for WebApplicationFactory
 - Issue #6 (shell extraction): ✅ Header/footer extracted verbatim to _ShellHeader/_ShellFooter partials. Search (hx-get, hx-trigger, hx-target), modal host (#modal-container), dropdown re-init JS, modal lifecycle JS — all preserved byte-for-byte
 - Issue #7 Phase A (safe primitives): ✅ _EmptyState accessibility (role/aria), _LoadingSpinner restructured with baseball theme. EmptyStateModel and string? model contracts preserved. CSS-only additions in site.css. Phase A guardrails respected — no handler/route/hx-target changes.
 - Build: 0 warnings, 0 errors. 247/247 tests pass (baseline preserved).
 
-**Not delivered:**
+**Not delivered at first review:**
 - Issue #5 (regression tests): ❌ MISSING. Zero test files added or modified. Sprint 2 has no regression safety net.
 
-**Key risk verified:**
-- htmx CDN removal is correct — htmxRazor serves htmx from /_rhx/ per package docs
-- Shell partials are untracked (need git add)
-- rhx-button.css loads globally for single About page consumer (acceptable for POC)
-
-### Learnings
+### Learnings (first pass)
 - htmxRazor 2.0.1 `UsehtmxRazor()` serves htmx + component assets from `/_rhx/` — no separate CDN script needed
 - Shell extraction is pure refactor when done verbatim — the JS block staying in _Layout is correct (it references document-level events, not shell-specific markup)
 - `public partial class Program;` pattern enables WebApplicationFactory in integration tests — this enabler is delivered but unconsumed until #5 lands
+
+## Sprint 1 Final Acceptance Review (2026-04-16)
+
+### Verdict: ✅ ACCEPTED — Sprint 1 complete. All four issues delivered.
+
+**Issue #4 (htmxRazor baseline):** ✅ Intact
+- htmxRazor 2.0.1 in csproj, AddhtmxRazor()/UsehtmxRazor() in Program.cs
+- About.cshtml proof component with rhx-* attributes
+- `public partial class Program;` enables WebApplicationFactory (now consumed by #5 tests)
+
+**Issue #5 (regression test suite):** ✅ DELIVERED — blocker resolved
+- IntegrationTestBase.cs: WebApplicationFactory<Program> base with AllowAutoRedirect=false
+- PageRoutingIntegrationTests.cs: 11 tests — full-page vs htmx-partial vs boosted for Players, Search, Stats/Batting, Stats/Pitching, Teams
+- PaginationBoundaryTests.cs: 12 tests — page=0, negative, oversized for Players, Batting, Pitching, and API
+- ApiNotFoundTests.cs: 17 tests — 404 paths for players/teams/HOF/postseason + valid sanity checks
+- Microsoft.AspNetCore.Mvc.Testing added to test csproj
+- **Total: 40 new tests. Suite now 287/287 passing.**
+
+**Issue #6 (shell extraction):** ✅ Intact
+- _ShellHeader.cshtml (3.5KB), _ShellFooter.cshtml (929B) present
+- Search, modal host, dropdown, JS lifecycle all preserved
+
+**Issue #7 Phase A (safe primitives):** ✅ Intact
+- _EmptyState.cshtml and _LoadingSpinner.cshtml have role/aria attributes
+- No handler/route/hx-target scope creep
+
+**Build:** 0 errors, 0 warnings. 287/287 tests pass.
+
+### Issue #5 Acceptance Notes
+
+Lambert chose integration tests (WebApplicationFactory) over unit handler tests. This is the right call for migration safety:
+- Integration tests exercise the full HTTP pipeline including middleware, routing, and response shaping
+- They directly verify the contracts that matter during htmxRazor migration (full-page vs partial response type)
+- Coverage aligns with regression baseline skill: routing contracts ✅, pagination boundaries ✅, API 404 edges ✅
+
+The original plan called for 19 PageModel smoke tests. Those were replaced by 11 integration routing tests covering 5 page areas with 3 contract variants (normal, htmx, boosted). Integration tests are more reliable migration guardrails — accepted trade.
+
+### Non-Blocking Follow-ups for Sprint 2
+
+1. **Shell contract tests missing.** No dedicated test verifies `#modal-container` ID or search `name="q"` contract stability. Should be added before any Sprint 2 shell changes.
+2. **Unmigrated page routing coverage.** HallOfFame, Awards, Postseason, Salaries, Compare pages have no routing tests. Expand coverage before those pages are migrated.
+3. **EmptyState factory method tests.** EmptyStateModel factory tests (NoPlayers, NoTeams, NoStats) should be verified present — they protect the 9-consumer surface during #7 Phase B.
+4. **Postseason API test flexibility.** Two postseason tests accept either 200-empty or 404 — fine for now but should be tightened once the intended behavior is confirmed.
+
+### Sprint 2 Unblocked
+
+All four Sprint 1 deliverables are accepted. The regression safety net is in place. Sprint 2 component migrations (#7 Phase B, feature page work) may proceed.
+
+## 2026-04-16T20:57:47Z — Sprint 1 Acceptance Review FINAL
+
+Completed full review:
+- Issue #4 (baseline): ✅ Verified
+- Issue #5 (regression): ✅ 40 tests, 287/287 passing
+- Issue #6 (shell): ✅ Contracts preserved
+- Issue #7 Phase A (primitives): ✅ EmptyState/LoadingSpinner stable
+
+**Decision:** Sprint 1 ACCEPTED. No blockers. Sprint 2 unblocked.
+
+**Non-blocking follow-ups** documented in decisions.md (5 items for Sprint 2 planning).
+
+**Orchestration log:** 2026-04-16T20:57:47Z-ripley.md
+
