@@ -98,6 +98,51 @@
 - ✅ #7 scope gate established (Phase A/B/C conditions, #6 dependency documented)
 - ✅ Merge gate contract: All #6/#7 merges blocked until #5 regression tests pass
 
+---
+
+## Issue #5 Regression Coverage Implementation (2026-04-16T20:50:10Z)
+
+**Status: ✅ COMPLETE**
+
+### Deliverable
+
+Implemented 40 new WebApplicationFactory-backed integration tests across three focused suites:
+
+1. **Page Routing Integration Tests (11 tests)**
+   - htmx partial vs full-page rendering contracts
+   - Coverage: Players, Search, Stats/Batting, Stats/Pitching, Teams index
+
+2. **Pagination Boundary Tests (12 tests)**
+   - Page 0, negative page, page > max clamping
+   - Both Razor Pages and API endpoints
+
+3. **API 404 Edge-Case Tests (17 tests)**
+   - Invalid player/team/HOF/postseason routes
+   - Valid route sanity checks
+
+### Files Added
+
+- `baseball-history-tests/IntegrationTestBase.cs` — Base class with WebApplicationFactory setup
+- `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` — 11 htmx routing tests
+- `baseball-history-tests/Pages/PaginationBoundaryTests.cs` — 12 boundary condition tests
+- `baseball-history-tests/Api/ApiNotFoundTests.cs` — 17 API edge-case tests
+
+### Files Modified
+
+- `baseball-history-tests/baseball-history-tests.csproj` — Microsoft.AspNetCore.Mvc.Testing v10.0.5
+
+### Validation
+
+- ✅ `dotnet build baseball-history.sln` — passed
+- ✅ `dotnet test baseball-history-tests` — 287/287 passing (247 baseline + 40 new)
+
+### Outcome
+
+- ✅ Issue #5 COMPLETE — Regression baseline established
+- ✅ Sprint 2 UNBLOCKED — #6 Shell and #7 Primitives can proceed
+- ✅ Merge gate SATISFIED — All required regression coverage in place
+- ✅ Pattern established for future integration tests
+
 ### Team Status
 - **Dallas:** #6 shell first-slice complete, approved ✅
 - **Lambert:** #5 regression safety net architecture locked, #6 review passed, #7 scope gate established ✅
@@ -323,3 +368,68 @@ Investigated current test suite, identified 4 failing page model tests (NullRefe
 - Git .squad/ changes staged
 
 **Next Steps:** Phase B FilterForm extraction requires explicit scope review after #6 shell stabilization.
+
+### Issue #5 Regression Test Coverage Implementation Complete (2026-04-16)
+
+**Status:** ✅ DELIVERED — 287/287 tests passing (40 new regression tests added)
+
+**Sprint 1 Blocker Resolved:** Issue #5 regression test deliverable is now PRESENT in the working tree. Core Sprint 1 objective (regression safety net) fully met.
+
+**Files Added:**
+1. `baseball-history-tests/IntegrationTestBase.cs` — WebApplicationFactory test foundation with AllowAutoRedirect = false
+2. `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` — 11 tests for htmx partial vs full-page behavior
+3. `baseball-history-tests/Pages/PaginationBoundaryTests.cs` — 12 tests for page 0, negative, and >max clamping
+4. `baseball-history-tests/Api/ApiNotFoundTests.cs` — 17 tests for invalid player/team/HOF/postseason routes
+
+**Files Modified:**
+- `baseball-history-tests/baseball-history-tests.csproj` — Added Microsoft.AspNetCore.Mvc.Testing v10.0.5
+
+**Test Breakdown:**
+- **Page Routing Tests (11):** Players, Search, Stats Batting, Stats Pitching, Teams index — full vs htmx-partial rendering contracts verified
+- **Pagination Boundary Tests (12):** Players, Stats Batting, Stats Pitching, API players — page 0, negative, and beyond-max clamping verified
+- **API 404 Tests (17):** Player endpoints (detail, batting, pitching, fielding, awards), Team endpoints (franchise detail, season), Hall of Fame voting, Postseason series, plus 3 valid sanity checks
+
+**Integration Pattern:**
+- `WebApplicationFactory<Program>` with `AllowAutoRedirect = false` for all HTTP integration tests
+- htmx request detection via `HX-Request: true` header injection
+- Full page vs partial discrimination via `<!DOCTYPE html>` presence
+- API 404 validation via `HttpStatusCode.NotFound` assertions
+- Pagination clamping verified through successful response status + valid content
+
+**Validation Results:**
+- ✅ `dotnet build baseball-history.sln` — succeeded
+- ✅ `dotnet test baseball-history-tests` — 287/287 passing (247 baseline + 40 new)
+- ✅ Individual suite runs:
+  - PageRoutingIntegrationTests: 11/11 passing
+  - PaginationBoundaryTests: 12/12 passing
+  - ApiNotFoundTests: 17/17 passing
+
+**Coverage Gates Satisfied:**
+- ✅ Page routing behavior (htmx partial vs full-page) verified for 5 critical pages
+- ✅ Pagination boundary conditions verified (0, negative, >max all clamp safely)
+- ✅ API 404 edge cases verified (invalid IDs return proper HTTP 404)
+
+**Key Architectural Decisions:**
+- Integration-first approach using WebApplicationFactory rather than isolated PageModel unit tests
+- Leveraged existing `public partial class Program;` in Program.cs (no web project changes needed)
+- Kept tests surgical and focused on regression safety contracts, not exhaustive feature coverage
+- Tests execute against real database (lahman.db) for authentic integration validation
+
+**Migration Gate Status:**
+- ✅ Issue #5 regression baseline COMPLETE
+- ✅ #6 (Shell) and #7 (Primitives) merges now unblocked
+- ✅ Sprint 2 ready to proceed
+
+**Learnings:**
+- WebApplicationFactory initialization is ~5-10s overhead per test class (xUnit class fixture pattern amortizes cost)
+- htmx request detection in integration tests requires explicit header injection (Request.Headers["HX-Request"] = "true")
+- Page vs partial discrimination is reliable via `<!DOCTYPE html>` string presence check
+- API pagination clamping happens silently (no error, just returns valid page 1 or last page)
+- SQLite WAL mode initialization in Program.cs runs once per factory instance (logs visible in test output)
+
+**Test Maintenance Notes:**
+- `IntegrationTestBase` can be extended for future endpoint integration tests
+- Pattern established for API endpoint suites (not just Razor Pages)
+- Tests are stable against database content changes (use generic assertions, not specific player names except Ruth/Yankees sanity checks)
+- No test database setup needed — uses production lahman.db in read-only mode
+

@@ -15,26 +15,46 @@
 
 ---
 
-## 2026-04-16 — Lambert: Regression Safety Net Split (Issue #5)
+## 2026-04-16 — Lambert: Regression Safety Net Implementation (Issue #5)
 
-**Decision:** Keep Sprint 1 issue #5 regression coverage in three WebApplicationFactory-backed integration slices:
+**Decision:** Implemented 40 new integration tests using WebApplicationFactory<Program> pattern across three focused test suites:
 
-1. `Pages/PageRoutingIntegrationTests.cs` — Full-page vs non-boosted htmx routing contracts
-2. `Pages/PagePaginationIntegrationTests.cs` — Boundary clamping via rendered pagination summaries
-3. `ApiEdgeIntegrationTests.cs` — Representative player/team 404 paths
+1. **Page Routing Integration Tests (11 tests)** — Verify htmx partial vs full-page rendering behavior for Players, Search, Stats/Batting, Stats/Pitching, and Teams index pages
+2. **Pagination Boundary Tests (12 tests)** — Verify page 0, negative page, and page > max clamping for both Razor Pages and API endpoints
+3. **API 404 Edge-Case Tests (17 tests)** — Verify proper HTTP 404 responses for invalid player/team/HOF/postseason routes, plus sanity checks for valid routes
 
-**Why:** This split keeps migration-risk assertions behavior-focused and reviewable without brittle HTML snapshots. Provides clear merge gate: shell or shared-partial changes should not land unless these contract tests stay green.
+**Rationale:**
+- Integration-first approach verifies end-to-end behavior (HTTP → PageModel/Endpoint → Rendering)
+- Surgical scope: limited changes to baseball-history-tests only (added 4 files, modified 1 csproj)
+- No web project changes needed — leveraged existing `public partial class Program;`
+- Real database validation against lahman.db in read-only mode
 
-**Scope Covered:**
-- Stats/Batting full vs htmx
-- Stats/Pitching full vs htmx
-- Teams index full vs htmx
-- Pagination boundaries for Players, Stats/Batting, Stats/Pitching
-- API 404s for invalid player and team routes
+**Files Added:**
+- `baseball-history-tests/IntegrationTestBase.cs` — Base class with WebApplicationFactory setup
+- `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` — 11 htmx routing tests
+- `baseball-history-tests/Pages/PaginationBoundaryTests.cs` — 12 boundary condition tests
+- `baseball-history-tests/Api/ApiNotFoundTests.cs` — 17 API edge-case tests
 
-**Gate:** All #6/#7 merges blocked until #5 regression tests pass
+**Files Modified:**
+- `baseball-history-tests/baseball-history-tests.csproj` — Added Microsoft.AspNetCore.Mvc.Testing v10.0.5
 
-**Status:** ✅ Approved, architecture decision locked
+**Validation:**
+- ✅ `dotnet build baseball-history.sln` — succeeded
+- ✅ `dotnet test baseball-history-tests` — 287/287 passing (247 baseline + 40 new)
+- ✅ All three new test suites passing independently
+
+**Migration Gates Satisfied:**
+- ✅ Page routing behavior verified for 5 critical pages
+- ✅ Pagination boundary conditions verified across pages and API
+- ✅ API 404 edge cases covered for invalid player/team/HOF/postseason routes
+
+**Future Implications:**
+- `IntegrationTestBase` pattern established for all future endpoint integration tests
+- WebApplicationFactory setup demonstrates proper test isolation (AllowAutoRedirect = false)
+- htmx request detection pattern established (Request.Headers["HX-Request"] = "true")
+- Pattern can be extended for additional API endpoint suites and page smoke tests
+
+**Status:** ✅ COMPLETE — Issue #5 regression baseline established, Sprint 2 unblocked
 
 ---
 
