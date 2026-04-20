@@ -378,3 +378,65 @@ User requested: Break 13 open issues into sprint milestones using the **least nu
 
 **Outcome:** Ash produced corrected 5-sprint plan addressing baseline error and Lambert's blocker constraints. Ash's revised plan approved and adopted. See `.squad/orchestration-log/2026-04-20T16-38-57-000Z-ash.md` for final approved structure and all sprint gates.
 
+
+## Sprint 1 Completion and PR Delivery (2026-04-21)
+
+**Status:** ✅ COMPLETE
+
+### Execution Summary
+
+All Sprint 1 work committed and pushed to PR #17 (htmxRazor → main). Commit: `fe0f5af`.
+
+- **#4**: htmxRazor foundation wired (Program.cs, _ViewImports, _Layout comments, About.cshtml proof)
+- **#5**: Regression suite hardened with behavioral contract gates (294/294 tests, up from 247)
+  - Full-page shell verification (hx-boost, search host, modal host present)
+  - Partial-handler verification (shell wrappers absent)
+  - Pagination htmx path + Page X of Y parsing
+  - API smoke tests (happy + 404 paths)
+- **#6**: Shell extraction complete (_ShellHeader, _ShellFooter, JS lifecycle intact, -18 LOC)
+- **#7 Phase A**: Safe primitives extracted (_EmptyState, _LoadingSpinner, CSS-only, no handler changes)
+
+### Quality Gates
+
+✅ Build passed  
+✅ 294/294 tests green  
+✅ Regression suite gates full-page shell boundaries + partial handlers + pagination + API contracts  
+✅ Zero blockers for Sprint 2  
+✅ Behavioral contracts locked before feature team work starts
+
+### Deliberate Defers
+
+**FilterForm extraction → Follow-up PR post-#6 container stability**
+
+Filter-form markup duplication (5 pages) intentionally deferred to avoid container design blocking during Sprint 2 feature migrations. Follow-up PR will extract without handler/route changes once container layout proved stable under feature team parallel work.
+
+### Team Readiness
+
+Sprint 2 feature migrations (Players, Teams, Stats, HallOfFame, Awards, Postseason, Salaries, Compare, Search) can now proceed in parallel. Feature teams reference:
+- Shell contracts from #6 (_ShellHeader, _ShellFooter, JS lifecycle)
+- Reusable primitives from #7 Phase A (_Pagination, _AlphabetNav, _EmptyState, _LoadingSpinner)
+- Regression gates from #5 (all shell changes verified before landing)
+
+### Learnings
+
+1. **Regression suite as migration gate is essential.** The #5 hardening (behavioral contracts vs. shallow smoke tests) caught subtle shell boundary contracts early. This pattern should anchor all future ASP.NET Core → htmxRazor migrations.
+
+2. **Deferred filter-form extraction was right call.** Avoiding container redesign during Sprint 2 parallel feature work reduces cross-team coordination and allows independent feature landing. Deferral cost: minimal (filter markup extraction is 3–4 hour task post-stability).
+
+3. **Component extraction sequencing matters.** Moving #7 Phase A (CSS-only primitives) before container-level shapes (FilterForm, LoadingOverlay) prevents handler/route contract drift and keeps parallel feature work independent.
+
+4. **Page-by-page migration path (not component-by-shared-component) is correct.** Sprint 1's mixed approach (shared shell + primitives + one page) proved both workable and low-risk. Feature teams can adopt same pattern safely for remaining 8 pages.
+
+### Files Modified (Sprint 1 Commit)
+
+- `.squad/skills/htmx-migration-regression-baseline/SKILL.md` — regression baseline documented
+- `baseball-history-tests/Api/ApiSmokeTests.cs` — new (71 LOC)
+- `baseball-history-tests/IntegrationTestBase.cs` — enhanced (test infrastructure +33 LOC)
+- `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` — refactored (behavioral contracts +253 → -218)
+- `baseball-history-tests/Pages/PaginationBoundaryTests.cs` — refactored (htmx path coverage +147 → -147)
+- `baseball-history-web/Pages/_ViewImports.cshtml` — removed spurious line (-1 LOC)
+- `baseball-history-web/lahman.db-shm`, `lahman.db-wal` — cleanup (deleted, not source)
+
+### Next Checkpoint
+
+Sprint 2 kickoff will initiate parallel feature migrations. All feature branches will reference behaviors verified in this Sprint 1 regression suite. Expected completion: 4–5 sprint cycles based on parallelization + team velocity.
