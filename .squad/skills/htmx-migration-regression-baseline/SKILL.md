@@ -39,6 +39,12 @@ The highest regression risk in htmx migrations is behavioral drift at the partia
 4. For pagination, parse the rendered `Page X of Y` summary and assert clamping (`page <= 0` → 1, oversized page → `TotalPages`).
 5. Start API error coverage with the routes most likely to drift during migration work: entity detail endpoints and their immediate subroutes.
 
+## Stronger contract markers
+
+- **Full page shell assertions:** prove `hx-boost="true"`, the global search host (`.search-container`, `#search-results`), and the modal host (`#modal-container`) are present.
+- **Partial handler assertions:** prove those shell markers are absent, then assert feature-specific anchors like `#player-list`, `table-baseball`, `#searchAllResultsModal`, or compare-result links that preserve the opposite player selection.
+- **Pagination boundary assertions:** hit the real non-boosted htmx routes, not just full page URLs, because `_Pagination.cshtml` drives live interactions through `hx-get`.
+
 ## Example targets
 
 - `/Stats/Batting?stat=ops&page=1`
