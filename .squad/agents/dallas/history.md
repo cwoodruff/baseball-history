@@ -327,3 +327,21 @@ The shell (_Layout.cshtml) owns:
 - **Sprint 1 shell landing:** `_Layout.cshtml` can safely delegate to `Pages/Shared/_ShellHeader.cshtml` and `_ShellFooter.cshtml` while retaining shell authority for `<body hx-boost="true">`, `#modal-container`, Bootstrap re-init, and search lifecycle JS.
 - **Safe #7 continuation:** Reused `Components/_LoadingSpinner` inside existing filter overlay wrappers on Batting, Pitching, Awards, Postseason, and Salaries; page-owned `hx-indicator` ids and targets stayed untouched.
 - **Sprint 1 blocker line:** Full `_FilterForm` extraction still waits on post-#6 container stability; Hall of Fame stays out of loading-overlay consolidation because it does not already own that contract.
+
+## 2026-04-20 Sprint 1 UI Completion: Safe Shell + Spinner Reuse
+
+### Session Outcome
+**Dallas (Background) — COMPLETED**
+
+Safe-now shell work (#6) + spinner/loading reuse (#7) completed and integrated.
+
+### Work Summary
+- ✅ #6 Safe shell slice: _Layout authority preserved, header/footer extraction intact
+- ✅ #7 Spinner reuse: _FilterForm explicitly deferred as blocker note
+- ✅ Repeated filter loading bodies now reuse shared `_LoadingSpinner` component
+- ✅ Regression test gate holding at Lambert (#5)
+
+### Deliverables
+- Safe-now #6 shell work (full staging)
+- Safe-now #7 spinner reuse (full staging)
+- Deliberate _FilterForm deferral documented
