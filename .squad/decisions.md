@@ -1,5 +1,44 @@
 # Squad Decisions
 
+## Sprint 1 PR Completion Decision (2026-04-21)
+
+### Ripley — Sprint 1 Complete
+
+**Author:** Ripley  
+**Date:** 2026-04-21  
+**Status:** ✅ IMPLEMENTED
+
+All Sprint 1 work has been committed and merged into PR #17 against main. The PR contains the complete delivery for Issues #4, #5, #6, and #7 Phase A.
+
+### Commit SHA
+- `fe0f5af` — Sprint 1: Issue #5 regression gate hardening + Issue #7 safe primitives finalization
+
+### Deliverables in PR #17
+1. **Issue #4** — htmxRazor foundation (Program.cs, _ViewImports, _Layout comments, About.cshtml proof)
+2. **Issue #5** — Regression suite hardening (behavioral contract gates, 294/294 tests)
+3. **Issue #6** — Shell extraction (_ShellHeader, _ShellFooter, JS lifecycle, -18 LOC)
+4. **Issue #7 Phase A** — Safe primitives (_EmptyState, _LoadingSpinner, CSS-only)
+
+### Quality Gates Met
+- ✅ Test count: 294/294 (up from 247)
+- ✅ Build: Passed
+- ✅ No blockers for Sprint 2
+- ✅ Regression suite enforces behavioral contracts (full-page shell + partial handlers + pagination + API)
+- ✅ Safe primitives baseline ready for feature team reuse
+
+### Deferred Rationale
+**FilterForm extraction → Follow-up PR (post-#6 container stability)**
+
+The team consensus is to avoid introducing filter-form container rewiring during Sprint 2 feature team parallel work. This deferral prevents blocking on container design changes while teams migrate Players, Teams, Stats independently. Follow-up PR will extract `_FilterForm.cshtml` from Batting/Pitching/Awards/HallOfFame/Postseason/Salaries with zero impact on handlers or routes.
+
+### Next Phase
+Sprint 2: Feature migrations (Players, Teams, Stats, HallOfFame, Awards, Postseason, Salaries, Compare, Search) can proceed. Feature teams reference completed shell contracts from Issue #6 and reusable primitives from Issue #7 Phase A. Regression suite in Issue #5 gates all changes.
+
+**Blocker Status:** None. PR ready for review and merge.
+
+---
+
+
 ## Issue #5 Sprint 1 Gate Hardening (2026-04-20)
 
 ### Lambert — Issue #5 Gate Hardening
