@@ -1,5 +1,30 @@
 # Squad Decisions
 
+## Issue #5 Sprint 1 Gate Hardening (2026-04-20)
+
+### Lambert — Issue #5 Gate Hardening
+
+**Status:** ✅ IMPLEMENTED
+
+Sprint 1 regression approval should rely on **behavioral contract assertions**, not shallow smoke markers.
+
+**Rationale:**
+- The migration risk is concentrated at full-page shell boundaries, non-boosted htmx partial handlers, modal hosts, and pagination clamping.
+- Tests that only prove "response contains a div" are too weak to block Sprint 2 regressions.
+
+**Applied Gate:**
+- Full-page tests now prove shared shell markers (`hx-boost`, search host, modal host).
+- Partial-handler tests now prove those shell wrappers are absent.
+- Pagination tests now exercise the real htmx path and parse `Page X of Y` summaries.
+- API smoke now covers representative happy paths in addition to existing 404 edges.
+
+**Validation:**
+- ✅ 294/294 tests green
+- ✅ Sprint 1 gate standard updated
+- ✅ Sprint 2 cleared for parallel Issue #6/#7 work
+
+---
+
 ## Issue #7 Safe Primitives Final Decisions (2026-04-16)
 
 ### Parker — Safe Primitives Phase A Revision Decision

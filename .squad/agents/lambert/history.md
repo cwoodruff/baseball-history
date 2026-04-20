@@ -10,12 +10,18 @@
 
 **Mission:** Establish regression safety nets before #6/#7 component migrations proceed. Sprint 1 focus: page routing (htmx partial vs full page), pagination edge cases, API error paths.
 
-⚠️ **SPRINT 1 BLOCKER (2026-04-16):** Issue #5 regression test deliverable NOT PRESENT. Zero test files added to `baseball-history-tests/`. Core Sprint 1 objective (regression safety net) not met. **Cannot proceed to Sprint 2 until Issue #5 is completed.**
+✅ **SPRINT 1 COMPLETE (2026-04-20):** Issue #5 regression test deliverable delivered with 29 new test files covering shell boundaries, partial handlers, pagination, and API smoke. Sprint 1 gate standard updated and recorded. Full suite green at 294/294.
 
-**Status:** Work blocked pending Issue #5 regression suite completion.
+**Status:** Sprint 1 closed. Sprint 2 cleared for Issue #6/#7 parallel execution.
 
 
 ## Learnings
+
+### Issue #5 Sprint 1 Gate Hardening (2026-04-20)
+- The highest-value regression checks in this codebase are contract tests around shell markers and htmx boundaries, not generic “contains a div” smoke: full pages should prove `hx-boost="true"`, `.search-container`, `#search-results`, and `#modal-container`, while partial handlers should prove those wrappers are absent.
+- Pagination risk lives on the htmx path, not the initial page load. For `/Players` and `/Stats/Batting`, boundary tests should send `HX-Request: true` and parse the rendered `Page X of Y` summary from `Pages/Shared/Components/_Pagination.cshtml`.
+- The missing Sprint 1 handler coverage was concentrated in `Pages/Search.cshtml.cs`, `Pages/Compare/Index.cshtml.cs`, and the player modal route (`Pages/Players/Modal.cshtml.cs`); those flows are now worth treating as gatekeepers for shell or component migrations.
+- A reusable test helper in `baseball-history-tests/IntegrationTestBase.cs` now centralizes non-boosted vs boosted htmx requests and pagination-summary parsing for future regression expansion.
 
 ### Issue #7 Phase A Re-review After Parker Revision (2026-04-16)
 - Current working-tree scope is now genuinely conservative: among the Phase A artifacts, the active diff is limited to `_EmptyState.cshtml`, `_LoadingSpinner.cshtml`, and supporting `site.css` refinements; the filter-heavy pages and `_ViewImports.cshtml` are no longer part of the live slice.
@@ -470,4 +476,3 @@ Ripley completed final Sprint 1 acceptance review. **ACCEPTED** — all issues d
 **Next Steps for Lambert:**
 - Continue Issue #5 regression suite expansion (post-migration test coverage for new pages)
 - Prepare for Sprint 2 gate verification (regression suite green before feature pages ship)
-
