@@ -706,3 +706,104 @@ Zero test files were added or modified in `baseball-history-tests/`. The entire 
 - [x] Bootstrap bundle script preserved (no longer CDN htmx — htmxRazor serves it)
 
 
+
+---
+
+## Sprint Milestone Planning Cycle — 2026-04-20
+
+### Copilot Directive — User (2026-04-20T12:29:21.020-04:00)
+
+**Source:** Copilot (via User Request)
+
+**Directive:** Use sprints for work and use GitHub milestones for the sprints.
+
+**Rationale:** User-directed approach for organizing team work via sprint milestones in GitHub.
+
+**Captured for:** Team memory and execution framework.
+
+---
+
+### Sprint Plan Review: REJECT — Lambert (2026-04-20)
+
+**Status:** ❌ REJECTED
+
+**Plan:** Ripley's sprint milestone plan (4 sprints: #8–#15, meta-tracking #16)
+
+**Finding:** Factual error in baseline assumption. Plan assumes Sprint 1 (#4–#7) complete; GitHub reality shows all 13 issues (#4–#15) open.
+
+**Impact:** Plan sequencing invalid without confirmed Sprint 1 closure and #5 regression test deliverable.
+
+**Recommendation:** Reassign to Ripley for revision.
+
+**Reviewer Assessment:** Plan architecture sound; issue is factual accuracy of baseline only.
+
+---
+
+### Sprint Milestone Plan: APPROVE — Lambert (2026-04-20)
+
+**Status:** ✅ APPROVED
+
+**Plan:** Ash's corrected 5-sprint milestone plan covering issues #4–#15 with meta-tracking #16
+
+**Verification Results:**
+
+- **Completeness:** All 13 issues covered (12 sprint-assigned + 1 meta-tracking)
+- **Blocker Accuracy:** #5 regression suite correctly identified as hard gate to Sprint 2 entry
+- **Dependency Logic:** Realistic and verified against codebase constraints
+- **Data/Platform Risk Mitigation:** Comprehensive (cache coherence, query regression, response cache stability)
+- **Milestone Count:** 5 milestones (within 10-milestone budget)
+- **Issue #16 Treatment:** Reasonable (umbrella tracking outside sprints)
+
+**Confidence:** High — plan respects known constraints, regression gates, and platform concerns.
+
+**Recommendation:** Execute as planned.
+
+**Approved Structure:**
+
+| Sprint | Milestone | Issues | Status | Gate |
+|--------|-----------|--------|--------|------|
+| 1 | Foundation & Regression Gates | #4, #5, #6, #7 | In Progress | — |
+| 2 | Foundation Pages | #8, #9 | Pending | Sprint 1 complete |
+| 3 | Comparison & Features | #10, #11 | Pending | Sprint 2 complete |
+| 4 | Leaderboard Pages | #12, #13 | Pending | Sprint 3 complete |
+| 5 | Polish & Documentation | #14, #15 | Pending | Sprint 2 complete |
+
+**Next Steps for Team:**
+- Scribe: Create 5 GitHub milestones with issue assignments
+- Scribe: Ensure #16 linked to all sprints as umbrella tracking
+- Team: Confirm Sprint 1 patterns stable before Sprint 2 kickoff
+- Lambert: Complete Issue #5 regression suite (unblocks Sprint 2 gate)
+
+---
+
+### Sprint Milestone Plan (Corrected): Approved — Ash (2026-04-20)
+
+**Status:** ✅ ADOPTED (as approved by Lambert)
+
+**Contribution:** Produced corrected 5-sprint milestone plan addressing Ripley's factual baseline error and Lambert's blocker constraints.
+
+**Key Corrections Applied:**
+
+1. **Sprint 1 repositioned** as first milestone (in progress, not complete), capturing #4–#7 with realistic sequencing
+2. **Blocker clarity:** #5 regression suite gates Sprint 2 entry (hard requirement)
+3. **Data/platform risk mitigations:** Documented for each sprint (cache coherence, query regression, response cache key stability)
+4. **Parallelization guidance:** #14 can start after Sprint 2; #15 can start after Sprint 2
+5. **Platform decisions deferred appropriately:** Expression tree refactoring and slow-query instrumentation roadmap documented in Sprint 5 (after leaderboard behavior locked)
+
+**Rationale for Sequencing:**
+
+- **Sprint 1 (in progress):** Foundation and regression gates; unblocks all downstream work
+- **Sprint 2 (gated on Sprint 1 complete):** Foundation pages using proven patterns
+- **Sprint 3 (gated on Sprint 2 complete):** Feature bundle applying pattern learnings
+- **Sprint 4 (gated on Sprint 3 complete):** Highest complexity (leaderboards); parallelize within sprint
+- **Sprint 5 (gated on Sprint 2 complete):** Polish and documentation; captures platform decisions
+
+**Platform Constraints Integrated:**
+
+- Cache coherence (IMemoryCache, response cache keys)
+- Query regression (expression trees, dynamic OrderBy)
+- Response cache key stability (VaryByHeader drift)
+- Horizontal scale assumptions (stateless design)
+
+**Approved for Execution:** All team constraints and platform concerns baked into milestone sequencing.
+

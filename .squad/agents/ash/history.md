@@ -9,6 +9,15 @@
 
 - Initial squad seed for data, caching, and runtime review during migration.
 
+## Sprint Planning (2026-04-20)
+
+### Corrected Sprint Milestone Plan Rationale
+- **Why 5 sprints?** Issues #4–#15 grouped by flow dependency + data coherence gates. Sprint 1 gates Sprints 2+. Sprints 2–4 strictly ordered (pattern stability → learning application). Sprint 5 overlaps but documents Platform decisions.
+- **Why #16 unassigned?** Meta-tracking issue; links to all sprints but doesn't need its own milestone (avoids scope pollution).
+- **Data/Platform constraints embedded:** Cache strategy stability (#7) gates feature work (#8+). Response cache keys verified after each sprint. Leaderboard query regression instrumentation deferred to Sprint 5 docs.
+- **Blocker acknowledged:** Lambert flagged #5 regression suite missing; Sprint 2 gate explicitly requires #5 completion before feature pages start.
+- **Risk mitigations by sprint:** Sprint 1 (#5 blocker), Sprint 2 (cache hit rates + pagination expression trees), Sprint 3 (filter aggregation queries), Sprint 4 (leaderboard query overhead), Sprint 5 (slow-query instrumentation roadmap + cache invalidation SOP).
+
 ### Query Architecture
 - **Global NoTracking default (Program.cs:17)** — read-only app, 15-20% memory savings vs. tracking. Safe for all query paths.
 - **Consistent projection pattern** — all endpoints use early `.Select()` to project only needed columns; no full entity hydration.
@@ -53,3 +62,33 @@
 - Identified: Cache invalidation strategy missing when out-of-band DB updates occur
 - Recommended action: Document SOP for when Lahman data refreshes
 - No architecture changes needed for migration; cache strategy intact
+
+## Team Update: Sprint Milestone Planning (2026-04-20)
+
+**Status:** ✅ APPROVED & ADOPTED
+
+**Ash's Contribution:**
+- Produced corrected 5-sprint milestone plan addressing Ripley's factual baseline error
+- Plan restructured to reflect actual GitHub state (Sprint 1 in progress, not complete)
+- Integrated Lambert's blocker constraints (#5 regression suite gates Sprint 2 entry)
+- Documented data/platform risk mitigations for each sprint
+
+**Approved Milestone Structure (Ash's Plan):**
+1. Sprint 1 — Foundation & Regression Gates (#4–#7)
+2. Sprint 2 — Foundation Pages (#8–#9)
+3. Sprint 3 — Comparison & Features (#10–#11)
+4. Sprint 4 — Leaderboard Pages (#12–#13)
+5. Sprint 5 — Polish & Documentation (#14–#15)
+6. #16 remains outside milestones (umbrella tracking linked to all sprints)
+
+**Platform Decisions Documented in Plan:**
+- Cache coherence strategy reviewed per sprint (#7 filter cache → #8/#9 alpha cache → #11–#13 response cache keys)
+- Query regression gates (#5 regression suite → #12/#13 leaderboard profiling)
+- Expression tree refactoring decision deferred to Sprint 5 (after leaderboard behavior locked in)
+- Slow-query instrumentation roadmap defined post-Sprint 4
+
+**Verified by Lambert:** All constraints satisfied, blocker logic sound, platform concerns comprehensive.
+
+**Next Steps:**
+- Scribe: Create 5 GitHub milestones with issue assignments
+- Team: Confirm Sprint 1 patterns stable before Sprint 2 kickoff

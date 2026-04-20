@@ -325,3 +325,56 @@ Completed full review:
 
 **Orchestration log:** 2026-04-16T20:57:47Z-ripley.md
 
+## 2026-04-20 — Sprint Milestone Planning (Issues #8–#16)
+
+### Task
+User requested: Break 13 open issues into sprint milestones using the **least number of safe-sequencing sprints**. Goal: 10 or fewer milestones; prefer fewer if cleaner. (Context: Already running Sprint 1 successfully; now planning Sprints 2–5.)
+
+### Analysis & Decision
+
+**Issues analyzed:** #4–#16 (13 total; #4–#7 already in Sprint 1)
+
+**Dependency mapping:**
+- #8–#9 (Players/Teams): Foundation, parallel-safe, no dependencies outside Sprint 1
+- #10–#11 (Compare/Features): Mid-weight, reference #8/#9 patterns
+- #12–#13 (Leaderboards): High complexity, can parallel within sprint
+- #14–#15 (Polish/Docs): Final polish layer
+- #16: Meta-tracking issue, should remain outside milestones
+
+**Output:** 4 core sprints + guidance to leave #16 as umbrella tracking.
+
+1. **Sprint 2 - Foundation Pages** (#8, #9): Start after Sprint 1, parallelize within sprint
+2. **Sprint 3 - Comparison & Features** (#10, #11): Start after Sprint 2 stabilizes
+3. **Sprint 4 - Leaderboard Pages** (#12, #13): Highest complexity, can parallel to Sprint 3 or follow
+4. **Sprint 5 - Polish & Documentation** (#14, #15): Final push + post-migration cleanup
+
+**Milestone count:** 4 (vs. 10 suggested limit) — achieves both goals: safe sequencing + minimal scope
+
+**Decision written to:** `.squad/decisions/inbox/ripley-sprint-plan.md` with exact milestone goals, issue assignments, sequencing rationale, and parallelization guidance.
+
+### Key Leverage Points
+
+- **Sprint 1 regression suite (#5)** gates all downstream changes — no breaking changes can land without test verification
+- **Filter extraction (#7)** already done; Sprint 3–4 pages (Awards, Salaries, Leaders) reuse _FilterForm, no duplication
+- **Foundation pages (#8/#9)** establish rhythm and pattern stability before more complex migrations
+- **Parallelization within sprints** (#8+#9, #10+#11, #12+#13) allows team to work efficiently without serializing entire sprints
+
+### Risk Mitigations Included
+
+- Pattern drift prevention (each sprint reviews #6/#7 before landing)
+- Filter form breakage guarded by #5 tests
+- Leaderboard expression duplication documented for post-migration decision (#15)
+- Late-stage search refactoring gated by #8 stability
+
+## Team Update: Sprint Milestone Planning Review (2026-04-20)
+
+**Status:** ❌ REJECTED by Lambert (2026-04-20)
+
+**Finding:** Ripley's plan assumes Sprint 1 (#4–#7) complete; GitHub reality shows all 13 issues open.
+
+**Impact:** Plan sequencing invalid without confirmed Sprint 1 closure. #5 regression test deliverable missing.
+
+**Reviewer Note:** Plan architecture sound; issue is purely factual accuracy of baseline. Reassigned for revision.
+
+**Outcome:** Ash produced corrected 5-sprint plan addressing baseline error and Lambert's blocker constraints. Ash's revised plan approved and adopted. See `.squad/orchestration-log/2026-04-20T16-38-57-000Z-ash.md` for final approved structure and all sprint gates.
+
