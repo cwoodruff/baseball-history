@@ -9,6 +9,43 @@
 
 - Initial squad seed for data, caching, and runtime review during migration.
 
+## Sprint 1 Audit & Guardrails (2026-04-20)
+
+### Platform Audit Findings
+**Status:** ✅ No architectural blockers. One critical blocker fix applied.
+
+**Audit Summary:**
+- Response cache variance pattern verified correct in all filtered pages (`[ResponseCache(..., VaryByHeader = "HX-Request")]`)
+- NoTracking query behavior locked globally, projection pattern consistent across codebase
+- Memory cache TTL uniform (24h), pre-warmed PlayerCacheService reduces cold-start DB load
+- Middleware ordering correct: ResponseCompression → UsehtmxRazor → MapStaticAssets
+- Modal lifecycle JS handles hx-boost body swaps without user-visible breakage
+- htmxRazor integration complete except for one missing piece (see blocker below)
+
+**Critical Blocker Found & Fixed:**
+- **Issue:** `_ViewImports.cshtml` missing htmxRazor tag helper registration
+- **Impact:** rhx-* tag helpers would render as plain HTML, not interactive components
+- **Fix Applied:** Added `@addTagHelper *, htmxRazor` to _ViewImports.cshtml (commit 85f874e)
+- **Verification:** Build succeeded, all 289 tests pass
+
+### Key Decisions Locked for Sprint 1
+1. Response cache `VaryByHeader = "HX-Request"` mandatory on all pages (prevents stale partials)
+2. Middleware ordering locked (htmxRazor must be between compression and static assets)
+3. Modal container lifecycle JS untouched (Bootstrap re-init on afterSwap/afterSettle)
+4. Component CSS imports must go to layout head, not body (survive hx-boost swaps)
+5. All new cache keys must use consistent 24h TTL pattern
+6. htmx.IsHtmxNonBoostedRequest() check required for all new page handlers
+
+### Sprint 1 Guardrails Document
+- Written to `.squad/decisions/inbox/ash-sprint1-guardrails.md`
+- Covers all 9 platform constraints with Severity, Why, and Guardrails
+- Implementation checklist per team (#4 Parker, #5 Lambert, #6 Dallas, #7 Dallas)
+- Success criteria and open questions for team feedback
+
+### New File Paths
+- `baseball-history-web/Pages/_ViewImports.cshtml` — now includes htmxRazor tag helper
+- `.squad/decisions/inbox/ash-sprint1-guardrails.md` — full platform guardrails + decisions
+
 ## Sprint Planning (2026-04-20)
 
 ### Corrected Sprint Milestone Plan Rationale
