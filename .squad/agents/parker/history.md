@@ -193,3 +193,44 @@
 **Key Pattern:** Narrow scope + regression verification = approval-safe even with unrelated branch state
 
 **Next Steps:** Phase B requires explicit scope review after #6 shell stabilization
+
+### Issue #4 htmxRazor Baseline Completion (2026-04-20)
+- Verified the package and middleware wiring were already present in `baseball-history-web/baseball-history-web.csproj` and `baseball-history-web/Program.cs`; the missing seam was `Pages/_ViewImports.cshtml`, which lacked the `htmxRazor` Tag Helper registration.
+- Confirmed the shared asset strategy in `Pages/Shared/_Layout.cshtml` is safe for incremental migration: foundation assets are injected from `/_rhx/`, while component CSS stays explicitly imported in layout to avoid page-by-page drift.
+- Kept the proof surface on `Pages/About.cshtml` so Sprint 1 does not perturb modal, search, or boosted-navigation handlers; once Tag Helpers were registered, the `rhx-button` rendered to standard button markup instead of leaking a raw `<rhx-button>` tag.
+- Added integration coverage in `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` to lock the baseline: `/About` now proves `/_rhx/` assets are present and the proof component is rendered, and `/_rhx/css/rhx-core.css` is served successfully.
+
+## Sprint 1 Completion (2026-04-20)
+
+**Status:** ✅ COMPLETE — Orchestration log recorded
+
+### Work Summary
+- **Issue #4 verification:** About.cshtml proof component rendering correctly
+- **Asset loading:** /_rhx/ static assets confirmed loading without 404s
+- **Tag helper wiring:** Confirmed integration with cleaned-up _ViewImports.cshtml
+- **Guardrails documented:** Skill watchout recorded (assets may load while tag helpers fail)
+
+### Integration Test Coverage Added
+- ✅ `/About` routes to full page (GET without HX-Request header)
+- ✅ `/About` returns partial when htmx requested (HX-Request: true)
+- ✅ /_rhx/ foundation CSS verified present and loadable
+- ✅ rhx-button component renders as interactive element (tag helper processed)
+
+### Key Finding: Skill Watchout
+**Assets may load while tag helpers still fail.** This is a silent failure:
+- Browser network shows /_rhx/css/foundation.css loading (200 OK)
+- Browser console shows no errors
+- But rhx-* tag helpers still render as plain HTML if tag helper registration is missing
+- Mitigation: Always verify `@addTagHelper *, htmxRazor` in _ViewImports.cshtml before testing component wiring
+
+### Decisions Merged to decisions.md
+- parker-issue4.md → decisions.md (proof component strategy locked)
+
+### Test Results
+- ✅ dotnet build succeeded
+- ✅ dotnet test: 289/289 passing (including new integration coverage)
+
+### Sprint 2 Readiness
+✅ Ready to proceed with Issues #8–#9 (foundation pages) under regression safety net.
+✅ All backend seams preserved; no PageModel refactoring needed.
+✅ Asset loading strategy proven on About proof component; can scale to other pages.

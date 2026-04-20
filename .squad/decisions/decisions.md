@@ -153,6 +153,67 @@
 
 **Status:** ✅ **FINAL** — Unblocks Sprint 2
 
+---
+
+## 2026-04-20 — Parker: Issue #4 Decision
+
+**Decision:** Keep the first htmxRazor proof on `Pages/About.cshtml` and leave shared shell behaviors untouched.
+
+**Key Points:**
+- Treat `Pages/_ViewImports.cshtml` Tag Helper registration as mandatory baseline wiring
+- Without `@addTagHelper *, htmxRazor`, `/_rhx/` assets can load while `rhx-*` tags still leak to browser as raw markup
+- Keep component CSS imports centralized in `Pages/Shared/_Layout.cshtml` during Sprint 1
+- Page migrations should not invent per-page asset strategies
+
+**Status:** ✅ Decision locked for Sprint 1
+
+---
+
+## 2026-04-20 — Dallas: Sprint 1 UI — Shell & Primitives Decision
+
+**Decision:** Land Issue #6 as a shell-chrome extraction only: `_Layout.cshtml` keeps ownership of `hx-boost`, `#modal-container`, global search ids/targets, and Bootstrap modal/dropdown lifecycle, while `_ShellHeader.cshtml` and `_ShellFooter.cshtml` carry the reusable navbar/footer markup.
+
+**Safe #7 Included:**
+- Harden shared primitives through `_EmptyState.cshtml` and `_LoadingSpinner.cshtml`
+- Reuse `_LoadingSpinner` inside the existing loading-overlay wrappers on:
+  - `Pages/Stats/Batting.cshtml`
+  - `Pages/Stats/Pitching.cshtml`
+  - `Pages/Awards/Index.cshtml`
+  - `Pages/Postseason/Index.cshtml`
+  - `Pages/Salaries/Index.cshtml`
+
+**Blocker:**
+- Do not start full `_FilterForm.cshtml` extraction until the post-#6 shell/container pattern is treated as stable
+- That work touches page-owned `hx-target`/container contracts and is riskier than the safe loading-body reuse that landed here
+
+**Status:** ✅ Approved for Sprint 1
+
+---
+
+## 2026-04-20 — Ash: Sprint 1 Platform Guardrails & Blockers
+
+**Decision:** Sprint 1 foundation is sound. htmxRazor integration is already in place, caching patterns are correct, and the shared component approach is compatible with existing `[ResponseCache]` + `VaryByHeader = "HX-Request"` strategy.
+
+**Critical Blocker Found & Fixed:**
+- **Issue:** `_ViewImports.cshtml` missing htmxRazor tag helper registration
+- **Fix Applied:** Added `@addTagHelper *, htmxRazor` to _ViewImports.cshtml
+- **Impact:** Without this, all `rhx-*` tag helpers render as plain HTML instead of interactive components
+
+**Platform Constraints Locked (9 total):**
+1. Response Cache Variance Must Stay Locked — `VaryByHeader = "HX-Request"` mandatory
+2. Static Assets & htmxRazor Foundation CSS Must Be Served First — middleware ordering locked
+3. Tag Helper Registration (FIXED) — `@addTagHelper *, htmxRazor` required in _ViewImports.cshtml
+4. Memory Cache TTL Consistency — all entries use 24-hour TTL
+5. NoTracking Query Behavior Must Stay Global — locked in Program.cs
+6. htmx Boost Behavior & Partial/Full Page Routing — use `IsHtmxNonBoostedRequest()` consistently
+7. Modal Container Lifecycle During Shell Migration — modal cleanup JS must remain untouched
+8. Component Asset Import Strategy — CSS in `/_rhx/css/components/`, JS in layout head only
+9. HX-Request Header Caching — Client Side Only — keep `Location = ResponseCacheLocation.Client`
+
+**Status:** ✅ All platform guardrails documented and locked
+
+---
+
 ### Validation Summary
 
 | Issue | Component | Status | Notes |

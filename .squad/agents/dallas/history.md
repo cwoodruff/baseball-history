@@ -323,3 +323,7 @@ The shell (_Layout.cshtml) owns:
 **Key Learning:** Scope lock + narrow blast radius = approval-safe even with branch clutter. Ignore unrelated shell work; focus on actual diffs.
 
 **Next Sprint:** Phase B requires separate scope review (FilterForm boundaries after #6 shell stabilization).
+
+- **Sprint 1 shell landing:** `_Layout.cshtml` can safely delegate to `Pages/Shared/_ShellHeader.cshtml` and `_ShellFooter.cshtml` while retaining shell authority for `<body hx-boost="true">`, `#modal-container`, Bootstrap re-init, and search lifecycle JS.
+- **Safe #7 continuation:** Reused `Components/_LoadingSpinner` inside existing filter overlay wrappers on Batting, Pitching, Awards, Postseason, and Salaries; page-owned `hx-indicator` ids and targets stayed untouched.
+- **Sprint 1 blocker line:** Full `_FilterForm` extraction still waits on post-#6 container stability; Hall of Fame stays out of loading-overlay consolidation because it does not already own that contract.

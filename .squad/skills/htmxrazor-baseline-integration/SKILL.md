@@ -21,3 +21,10 @@ Prove the integration on a low-risk support page first. Do **not** use the share
 - `Pages/Shared/_Layout.cshtml` is a singleton shell: it owns `hx-boost`, nav dropdown behavior, search dropdown hosting, and modal cleanup.
 - Preserve existing `/Search` and `#modal-container` flows while Bootstrap and htmxRazor coexist.
 - Keep component CSS/JS imports centralized in layout until page groups settle on stable primitives.
+- `Pages/_ViewImports.cshtml` must include `@addTagHelper *, htmxRazor`; otherwise `/_rhx/` foundation assets can appear healthy while `rhx-*` elements still render as raw custom tags.
+
+## Validation
+
+- Request the proof page (for this repo, `/About`) and confirm it contains `/_rhx/css/rhx-core.css` plus `/_rhx/js/rhx-core.js`.
+- Confirm the proof component no longer renders as raw `<rhx-*>` markup; for `rhx-button`, expect normal `<button ...>` output with the component text intact.
+- Add an integration test that fetches one `/_rhx/` asset directly so the static asset path is locked before larger migrations begin.

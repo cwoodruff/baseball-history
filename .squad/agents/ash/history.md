@@ -129,3 +129,30 @@
 **Next Steps:**
 - Scribe: Create 5 GitHub milestones with issue assignments
 - Team: Confirm Sprint 1 patterns stable before Sprint 2 kickoff
+
+## Sprint 1 Completion (2026-04-20)
+
+**Status:** ✅ COMPLETE — Orchestration log recorded
+
+### Work Summary
+- **Platform audit:** 9 constraints documented, all verified sound
+- **Blocker fix:** htmxRazor tag helper registration added to _ViewImports.cshtml
+- **Guardrails:** 300-line decision document with implementation checklist per team
+- **Approval gate:** Team confirmed Sprint 1 implementation plans respect all guardrails
+
+### All Sprint 1 Issues Delivered & Verified
+- ✅ #4 (Parker) — htmxRazor baseline proof component
+- ✅ #5 (Lambert) — Regression safety net (40 new tests, 287/287 passing)
+- ✅ #6 (Dallas) — Shell extraction (_ShellHeader, _ShellFooter)
+- ✅ #7 Phase A (Dallas) — Safe primitives (EmptyState, LoadingSpinner)
+
+### Decisions Merged to decisions.md
+- ash-sprint1-guardrails.md → decisions.md (9 platform constraints)
+- parker-issue4.md → decisions.md (proof component strategy)
+- dallas-sprint1-ui.md → decisions.md (shell + primitives scope)
+
+### Sprint 2 Gate
+**Issue #5 Regression Suite:** ✅ Unblocked  
+All teams ready to proceed with component migrations under regression safety net.
+
+**Known Issue (Unrelated):** ApiSmokeTests.PlayerBatting baseline failure (expected NYA, actual BSN); not part of #4.

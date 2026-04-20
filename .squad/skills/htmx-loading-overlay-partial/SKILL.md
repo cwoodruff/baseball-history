@@ -12,6 +12,7 @@ Use this when several Razor Pages repeat the same loading overlay structure arou
 ## Patterns
 - Keep each page's existing `hx-indicator` id and the surrounding `position-relative` filter container.
 - Move the repeated spinner body markup into `Pages/Shared/Components/_LoadingSpinner.cshtml`.
+- Pass page-specific copy through the partial model so each screen keeps its existing loading message without duplicating spinner markup.
 - Keep the page-owned overlay wrapper (`id="loading-indicator"`, `class="htmx-indicator loading-overlay"`) in place for the first safe slice.
 - If you want a shared filter-row foundation, add only extra classes that sit beside existing Bootstrap classes.
 - Skip pages that do not already have loading-overlay behavior; adding a new overlay is a contract change, not a primitive extraction.
@@ -22,6 +23,7 @@ Use this when several Razor Pages repeat the same loading overlay structure arou
 - `Pages/Awards/Index.cshtml`
 - `Pages/Postseason/Index.cshtml`
 - `Pages/Salaries/Index.cshtml`
+- `@await Html.PartialAsync("Components/_LoadingSpinner", "Loading ...")`
 
 ## Anti-Patterns
 - Do not repoint `hx-target`, `hx-indicator`, or `hx-push-url` while extracting the partial.
