@@ -25,11 +25,11 @@
             <p class="card-text small text-muted mb-2">
                 @if (Model.IsActive)
                 {
-                    <span class="badge bg-success">Active</span>
+                    <rhx-badge rhx-variant="success">Active</rhx-badge>
                 }
                 else
                 {
-                    <span class="badge bg-secondary">Defunct</span>
+                    <rhx-badge rhx-variant="neutral">Defunct</rhx-badge>
                 }
                 @if (Model.FirstYear.HasValue && Model.LastYear.HasValue)
                 {
@@ -52,15 +52,15 @@
                 <div class="mt-2 d-flex gap-2">
                     @if (Model.WorldSeriesWins > 0)
                     {
-                        <span class="stat-badge stat-badge-accent">
+                        <rhx-badge rhx-variant="warning">
                             @Model.WorldSeriesWins WS
-                        </span>
+                        </rhx-badge>
                     }
                     @if (Model.PennantWins > 0)
                     {
-                        <span class="stat-badge stat-badge-primary">
+                        <rhx-badge rhx-variant="brand">
                             @Model.PennantWins Pennants
-                        </span>
+                        </rhx-badge>
                     }
                 </div>
             }

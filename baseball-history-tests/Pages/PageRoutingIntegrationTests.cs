@@ -13,6 +13,8 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         Assert.Contains("id=\"players-content\"", html);
         Assert.Contains("id=\"player-list\"", html);
         Assert.Contains(">Players</h1>", html);
+        Assert.Contains("class=\"alphabet-nav\"", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
     }
 
     [Fact]
@@ -25,6 +27,8 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         Assert.DoesNotContain("id=\"modal-container\"", html);
         Assert.Contains("id=\"player-list\"", html);
         Assert.Contains(">Players</h1>", html);
+        Assert.Contains("class=\"alphabet-nav\"", html);
+        Assert.Contains("hx-target=\"#players-content\"", html);
     }
 
     [Fact]
@@ -37,6 +41,32 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
     }
 
     [Fact]
+    public async Task Players_FullPage_WiresAlphabetNavToPlayersContent()
+    {
+        var html = await GetStringAsync("/Players?letter=A");
+
+        AssertFullPageShell(html);
+        Assert.Contains("class=\"letter-link active ", html);
+        Assert.Contains("hx-get=\"/Players?letter=B&amp;page=1\"", html);
+        Assert.Contains("hx-target=\"#players-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
+    }
+
+    [Fact]
+    public async Task Players_Htmx_PageTwo_PreservesPaginationAndModalContracts()
+    {
+        var html = await GetHtmxStringAsync("/Players?letter=A&page=2");
+
+        AssertPartialResponse(html);
+        Assert.Contains("Page 2 of", html);
+        Assert.Contains("hx-get=\"/Players?letter=A&amp;page=1\"", html);
+        Assert.Contains("hx-target=\"#players-content\"", html);
+        Assert.Contains("hx-boost=\"false\"", html);
+        Assert.Contains("hx-get=\"/Players/Modal/", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
+    }
+
+    [Fact]
     public async Task Players_ModalRoute_ReturnsModalPartial()
     {
         var html = await GetStringAsync("/Players/Modal/ruthba01");
@@ -44,6 +74,8 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         AssertPartialResponse(html);
         Assert.Contains("id=\"playerModal\"", html);
         Assert.Contains("Babe Ruth", html);
+        Assert.Contains("Player Info", html);
+        Assert.Contains("Career Batting", html);
         Assert.DoesNotContain("id=\"modal-container\"", html);
     }
 
@@ -130,6 +162,7 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         AssertPartialResponse(html);
         Assert.DoesNotContain("id=\"team-list\"", html);
         Assert.Contains("Active Franchises", html);
+        Assert.DoesNotContain("<rhx-badge", html);
     }
 
     [Fact]
@@ -139,6 +172,77 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
 
         AssertFullPageShell(html);
         Assert.Contains("id=\"team-list\"", html);
+    }
+
+    [Fact]
+    public async Task Teams_Franchise_FullPage_RendersShellAndSeasonRouting()
+    {
+        var html = await GetStringAsync("/Teams/Franchise/NYY");
+
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"franchise-content\"", html);
+        Assert.Contains("Season History", html);
+        Assert.Contains("href=\"/Teams/Season/NYA/AL/2025\"", html);
+        Assert.DoesNotContain("<rhx-badge", html);
+    }
+
+    [Fact]
+    public async Task Teams_Franchise_NonBoostedHtmx_ReturnsSeasonHistoryPartialOnly()
+    {
+        var html = await GetHtmxStringAsync("/Teams/Franchise/NYY");
+
+        AssertPartialResponse(html);
+        Assert.DoesNotContain("id=\"franchise-content\"", html);
+        Assert.DoesNotContain("id=\"modal-container\"", html);
+        Assert.Contains("Season History", html);
+        Assert.Contains("href=\"/Teams/Season/NYA/AL/2025\"", html);
+    }
+
+    [Fact]
+    public async Task Teams_Franchise_BoostedHtmx_ReturnsFullPageShell()
+    {
+        var html = await GetHtmxStringAsync("/Teams/Franchise/NYY", boosted: true);
+
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"franchise-content\"", html);
+    }
+
+    [Fact]
+    public async Task Teams_Season_FullPage_RendersShellAndPlayerModalContracts()
+    {
+        var html = await GetStringAsync("/Teams/Season/NYA/AL/2025");
+
+        AssertFullPageShell(html);
+        Assert.Contains("New York Yankees", html);
+        Assert.Contains("Other Seasons", html);
+        Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
+        Assert.Contains("hx-get=\"/Players/Modal/", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
+        Assert.DoesNotContain("<rhx-badge", html);
+    }
+
+    [Fact]
+    public async Task Teams_Season_NonBoostedHtmx_ReturnsSeasonPartialOnly()
+    {
+        var html = await GetHtmxStringAsync("/Teams/Season/NYA/AL/2025");
+
+        AssertPartialResponse(html);
+        Assert.DoesNotContain("id=\"modal-container\"", html);
+        Assert.DoesNotContain("<!DOCTYPE html>", html);
+        Assert.Contains("New York Yankees", html);
+        Assert.Contains("Other Seasons", html);
+        Assert.Contains("hx-get=\"/Players/Modal/", html);
+        Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
+    }
+
+    [Fact]
+    public async Task Teams_Season_BoostedHtmx_ReturnsFullPageShell()
+    {
+        var html = await GetHtmxStringAsync("/Teams/Season/NYA/AL/2025", boosted: true);
+
+        AssertFullPageShell(html);
+        Assert.Contains("Other Seasons", html);
+        Assert.Contains("id=\"modal-container\"", html);
     }
 
     [Fact]

@@ -10,8 +10,7 @@ namespace baseball_history_web.Pages.Teams;
 [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
 public class FranchiseModel(BaseballDbContext context) : PageModel
 {
-    public FranchiseSummary? Franchise { get; set; }
-    public List<TeamSeasonSummary> Seasons { get; set; } = new();
+    public FranchiseDetailViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string id)
     {
@@ -21,18 +20,41 @@ public class FranchiseModel(BaseballDbContext context) : PageModel
         }
 
         var franchise = await context.TeamsFranchises
-            .Include(f => f.Teams)
-            .FirstOrDefaultAsync(f => f.FranchId == id);
+            .Where(f => f.FranchId == id)
+            .Select(f => new FranchiseSummary
+            {
+                FranchiseId = f.FranchId,
+                FranchiseName = f.FranchName ?? f.FranchId,
+                IsActive = f.Active == "Y",
+                FirstYear = f.Teams.Min(t => (short?)t.YearId),
+                LastYear = f.Teams.Max(t => (short?)t.YearId),
+                TotalSeasons = f.Teams.Count(),
+                TotalWins = f.Teams.Sum(t => (int)(t.W ?? 0)),
+                TotalLosses = f.Teams.Sum(t => (int)(t.L ?? 0)),
+                WorldSeriesWins = f.Teams.Count(t => t.Wswin == "Y"),
+                PennantWins = f.Teams.Count(t => t.LgWin == "Y"),
+                CurrentTeamId = f.Teams
+                    .OrderByDescending(t => t.YearId)
+                    .Select(t => t.TeamId)
+                    .FirstOrDefault(),
+                CurrentLeague = f.Teams
+                    .OrderByDescending(t => t.YearId)
+                    .Select(t => t.LgId)
+                    .FirstOrDefault(),
+                CurrentDivision = f.Teams
+                    .OrderByDescending(t => t.YearId)
+                    .Select(t => t.DivId)
+                    .FirstOrDefault()
+            })
+            .FirstOrDefaultAsync();
 
         if (franchise == null)
         {
             return NotFound();
         }
 
-        Franchise = FranchiseSummary.FromFranchise(franchise, franchise.Teams);
-
-        // Get all seasons for this franchise
-        Seasons = franchise.Teams
+        var seasons = await context.Teams
+            .Where(t => t.FranchId == id)
             .OrderByDescending(t => t.YearId)
             .Select(t => new TeamSeasonSummary
             {
@@ -48,35 +70,19 @@ public class FranchiseModel(BaseballDbContext context) : PageModel
                 WonPennant = t.LgWin == "Y",
                 WonWorldSeries = t.Wswin == "Y"
             })
-            .ToList();
+            .ToListAsync();
+
+        ViewModel = new FranchiseDetailViewModel
+        {
+            Franchise = franchise,
+            Seasons = seasons
+        };
 
         if (Request.IsHtmxNonBoostedRequest())
         {
-            return Partial("_FranchiseSeasons", this);
+            return Partial("_FranchiseSeasons", ViewModel);
         }
 
         return Page();
     }
-}
-
-public class TeamSeasonSummary
-{
-    public short Year { get; set; }
-    public string TeamId { get; set; } = null!;
-    public string TeamName { get; set; } = null!;
-    public string LgId { get; set; } = null!;
-    public string? DivId { get; set; }
-    public short Wins { get; set; }
-    public short Losses { get; set; }
-    public byte? Rank { get; set; }
-    public bool WonDivision { get; set; }
-    public bool WonPennant { get; set; }
-    public bool WonWorldSeries { get; set; }
-
-    public double WinningPercentage => (Wins + Losses) > 0
-        ? (double)Wins / (Wins + Losses)
-        : 0;
-
-    public string FormattedWinPct => WinningPercentage.ToString(".000").TrimStart('0');
-    public string Record => $"{Wins}-{Losses}";
 }

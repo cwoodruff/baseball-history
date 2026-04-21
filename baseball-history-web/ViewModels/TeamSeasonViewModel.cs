@@ -1,5 +1,3 @@
-using baseball_history_web.Models;
-
 namespace baseball_history_web.ViewModels;
 
 /// <summary>
@@ -51,73 +49,123 @@ public class TeamSeasonViewModel
     public string Record => $"{Wins}-{Losses}";
     public string FormattedAttendance => Attendance?.ToString("N0") ?? "N/A";
 
-    public static TeamSeasonViewModel FromTeam(Teams team)
+    public static TeamSeasonViewModel FromRecord(TeamSeasonRecord team)
     {
         var vm = new TeamSeasonViewModel
         {
             TeamId = team.TeamId,
-            TeamName = team.Name,
-            Year = team.YearId,
+            TeamName = team.TeamName,
+            Year = team.Year,
             LgId = team.LgId,
             DivId = team.DivId,
-            FranchiseId = team.FranchId,
-            FranchiseName = team.Franchise?.FranchName,
-            Wins = team.W ?? 0,
-            Losses = team.L ?? 0,
+            FranchiseId = team.FranchiseId,
+            FranchiseName = team.FranchiseName,
+            Wins = team.Wins,
+            Losses = team.Losses,
             Rank = team.Rank,
-            WonDivision = team.DivWin == "Y",
-            WonWildCard = team.Wcwin == "Y",
-            WonPennant = team.LgWin == "Y",
-            WonWorldSeries = team.Wswin == "Y",
-            ParkName = team.Park
+            WonDivision = team.WonDivision,
+            WonWildCard = team.WonWildCard,
+            WonPennant = team.WonPennant,
+            WonWorldSeries = team.WonWorldSeries,
+            ParkName = team.ParkName
         };
 
-        if (int.TryParse(team.Attendance, out var attendance))
+        if (TryParsePositiveInt(team.Attendance, out var attendance))
         {
             vm.Attendance = attendance;
         }
 
-        // Build batting stats
-        if (int.TryParse(team.R, out var runs) &&
-            int.TryParse(team.Ab, out var ab) &&
-            int.TryParse(team.H, out var hits))
+        if (TryParseInt(team.Runs, out var runs) &&
+            TryParseInt(team.AtBats, out var ab) &&
+            TryParseInt(team.Hits, out var hits))
         {
             vm.Batting = new TeamBattingStats
             {
                 Runs = runs,
                 AtBats = ab,
                 Hits = hits,
-                Doubles = int.TryParse(team._2b, out var d) ? d : 0,
-                Triples = int.TryParse(team._3b, out var t) ? t : 0,
-                HomeRuns = int.TryParse(team.Hr, out var hr) ? hr : 0,
-                Walks = int.TryParse(team.Bb, out var bb) ? bb : 0,
-                Strikeouts = int.TryParse(team.So, out var so) ? so : 0,
-                StolenBases = int.TryParse(team.Sb, out var sb) ? sb : 0
+                Doubles = ParseIntOrZero(team.Doubles),
+                Triples = ParseIntOrZero(team.Triples),
+                HomeRuns = ParseIntOrZero(team.HomeRuns),
+                Walks = ParseIntOrZero(team.Walks),
+                Strikeouts = ParseIntOrZero(team.Strikeouts),
+                StolenBases = ParseIntOrZero(team.StolenBases)
             };
         }
 
-        // Build pitching stats
-        if (int.TryParse(team.Ra, out var runsAllowed) &&
-            int.TryParse(team.Er, out var earnedRuns))
+        if (TryParseInt(team.RunsAllowed, out var runsAllowed) &&
+            TryParseInt(team.EarnedRuns, out var earnedRuns))
         {
             vm.Pitching = new TeamPitchingStats
             {
                 RunsAllowed = runsAllowed,
                 EarnedRuns = earnedRuns,
                 Era = double.TryParse(team.Era, out var era) ? era : 0,
-                CompleteGames = int.TryParse(team.Cg, out var cg) ? cg : 0,
-                Shutouts = int.TryParse(team.Sho, out var sho) ? sho : 0,
-                Saves = int.TryParse(team.Sv, out var sv) ? sv : 0,
-                HitsAllowed = int.TryParse(team.Ha, out var ha) ? ha : 0,
-                HomeRunsAllowed = int.TryParse(team.Hra, out var hra) ? hra : 0,
-                WalksAllowed = int.TryParse(team.Bba, out var bba) ? bba : 0,
-                StrikeoutsThrown = int.TryParse(team.Soa, out var soa) ? soa : 0
+                CompleteGames = ParseIntOrZero(team.CompleteGames),
+                Shutouts = ParseIntOrZero(team.Shutouts),
+                Saves = ParseIntOrZero(team.Saves),
+                HitsAllowed = ParseIntOrZero(team.HitsAllowed),
+                HomeRunsAllowed = ParseIntOrZero(team.HomeRunsAllowed),
+                WalksAllowed = ParseIntOrZero(team.WalksAllowed),
+                StrikeoutsThrown = ParseIntOrZero(team.StrikeoutsThrown)
             };
         }
 
         return vm;
     }
+
+    private static bool TryParseInt(string? value, out int parsed) => int.TryParse(value, out parsed);
+
+    private static bool TryParsePositiveInt(string? value, out int parsed)
+    {
+        if (int.TryParse(value, out parsed) && parsed > 0)
+        {
+            return true;
+        }
+
+        parsed = 0;
+        return false;
+    }
+
+    private static int ParseIntOrZero(string? value) => int.TryParse(value, out var parsed) ? parsed : 0;
 }
+
+public sealed record TeamSeasonRecord(
+    string TeamId,
+    string? TeamName,
+    short Year,
+    string LgId,
+    string? DivId,
+    string? FranchiseId,
+    string? FranchiseName,
+    short Wins,
+    short Losses,
+    byte? Rank,
+    bool WonDivision,
+    bool WonWildCard,
+    bool WonPennant,
+    bool WonWorldSeries,
+    string? ParkName,
+    string? Attendance,
+    string? Runs,
+    string? AtBats,
+    string? Hits,
+    string? Doubles,
+    string? Triples,
+    string? HomeRuns,
+    string? Walks,
+    string? Strikeouts,
+    string? StolenBases,
+    string? RunsAllowed,
+    string? EarnedRuns,
+    string? Era,
+    string? CompleteGames,
+    string? Shutouts,
+    string? Saves,
+    string? HitsAllowed,
+    string? HomeRunsAllowed,
+    string? WalksAllowed,
+    string? StrikeoutsThrown);
 
 /// <summary>
 /// Team batting statistics for a season
