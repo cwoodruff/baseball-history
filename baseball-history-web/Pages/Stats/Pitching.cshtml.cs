@@ -263,7 +263,8 @@ public class PitchingModel(BaseballDbContext context, IMemoryCache cache) : Page
     {
         var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
         var prop = System.Linq.Expressions.Expression.Property(param, propName);
-        return System.Linq.Expressions.Expression.Lambda<Func<T, int>>(prop, param);
+        var converted = System.Linq.Expressions.Expression.Convert(prop, typeof(int));
+        return System.Linq.Expressions.Expression.Lambda<Func<T, int>>(converted, param);
     }
 
     private static System.Linq.Expressions.Expression<Func<T, double>> DynEraExpr<T>()

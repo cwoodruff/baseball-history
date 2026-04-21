@@ -1,0 +1,20 @@
+@model baseball_history_web.ViewModels.PageHeaderModel
+
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+    <div>
+        @if (!string.IsNullOrWhiteSpace(Model.Eyebrow))
+        {
+            <div class="text-uppercase small fw-semibold text-muted mb-2">@Model.Eyebrow</div>
+        }
+        <h1 class="mb-2">@Model.Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+        {
+            <p class="lead text-muted mb-0">@Model.Subtitle</p>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+    {
+        <rhx-badge rhx-variant="@Model.BadgeVariant">@Model.BadgeText</rhx-badge>
+    }
+</div>

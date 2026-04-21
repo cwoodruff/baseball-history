@@ -1,0 +1,83 @@
+@model (baseball_history_web.ViewModels.ComparePlayer? Player, int Side, string? OtherPlayerId, string Gradient)
+@{
+    var player = Model.Player;
+    var side = Model.Side;
+    var otherPlayerId = Model.OtherPlayerId;
+    var gradient = Model.Gradient;
+    var resultsDivId = $"search-results-{side}";
+    var searchSide = side;
+}
+
+<div class="card h-100">
+    <div class="card-header card-header-mlb text-center">
+        <strong>Player @side</strong>
+    </div>
+    @if (player != null)
+    {
+        <div class="card-body text-center py-4" style="background: linear-gradient(@gradient);">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2"
+                 style="width: 64px; height: 64px; background: rgba(255,255,255,0.15); color: white; font-size: 1.4rem; font-weight: bold;">
+                @player.Initials
+            </div>
+            <h4 class="text-white mb-1">
+                <a href="#" class="text-white text-decoration-none"
+                   hx-get="/Players/Modal/@player.PlayerId"
+                   hx-target="#modal-container"
+                   hx-swap="innerHTML"
+                   hx-boost="false">
+                    @player.FullName
+                </a>
+            </h4>
+            @if (player.IsInHallOfFame)
+            {
+                <div class="mb-1"><span class="hof-badge">HOF @player.HofInductionYear</span></div>
+            }
+            <div class="text-white-50 small">
+                @player.Debut &ndash; @(player.FinalGame ?? "Present")
+                @if (player.CareerYears.HasValue) { <span>(@player.CareerYears yrs)</span> }
+            </div>
+            <div class="text-white-50 small">B/T: @(player.Bats ?? "—")/@(player.Throws ?? "—")</div>
+            @if (player.TeamNames.Any())
+            {
+                <div class="text-white-50 small mt-1" style="font-size: 0.75rem;">
+                    @string.Join(", ", player.TeamNames.Take(5))
+                    @if (player.TeamNames.Count > 5) { <span>+ @(player.TeamNames.Count - 5) more</span> }
+                </div>
+            }
+        </div>
+        <div class="card-footer text-center bg-light">
+            @{
+                var changeUrl = side == 1
+                    ? (!string.IsNullOrEmpty(otherPlayerId) ? $"/Compare?player2={otherPlayerId}" : "/Compare")
+                    : (!string.IsNullOrEmpty(otherPlayerId) ? $"/Compare?player1={otherPlayerId}" : "/Compare");
+            }
+            <a href="@changeUrl" class="btn btn-sm btn-outline-danger" hx-boost="false">Change Player</a>
+        </div>
+    }
+    else
+    {
+        <div class="card-body">
+            <div class="position-relative">
+                @{
+                    var player1Param = side == 1 ? "" : (otherPlayerId ?? "");
+                    var player2Param = side == 2 ? "" : (otherPlayerId ?? "");
+                    var searchUrl = $"/Compare?handler=Search&side={side}&player1={player1Param}&player2={player2Param}";
+                }
+                <input type="search" class="form-control form-control-lg"
+                       placeholder="Search for Player @side..."
+                       name="q"
+                       hx-get="@searchUrl"
+                       hx-trigger="input changed delay:300ms, search"
+                       hx-target="#@resultsDivId"
+                       hx-swap="innerHTML"
+                       hx-boost="false"
+                       autocomplete="off" />
+                <div id="@resultsDivId" class="position-absolute w-100" style="z-index: 1050;"></div>
+            </div>
+            <div class="text-center text-muted mt-4 mb-2">
+                <div style="font-size: 3rem; opacity: 0.3;">&#9918;</div>
+                <p>Search to select a player</p>
+            </div>
+        </div>
+    }
+</div>

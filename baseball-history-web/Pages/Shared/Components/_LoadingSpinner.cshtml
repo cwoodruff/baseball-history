@@ -5,16 +5,17 @@
 
 @model string?
 
-<div class="text-center py-5">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-        <span class="visually-hidden">Loading...</span>
+<div class="loading-baseball" role="status" aria-live="polite">
+    <div class="loading-baseball-icon" aria-hidden="true">&#9918;</div>
+    <div class="loading-baseball-text">
+        @if (!string.IsNullOrWhiteSpace(Model))
+        {
+            @Model
+        }
+        else
+        {
+            @:Loading...
+        }
     </div>
-    @if (!string.IsNullOrEmpty(Model))
-    {
-        <p class="mt-3 text-muted">@Model</p>
-    }
-    else
-    {
-        <p class="mt-3 text-muted">Loading...</p>
-    }
+    <span class="visually-hidden">Loading</span>
 </div>

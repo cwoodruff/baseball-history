@@ -1,0 +1,75 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@if (Model.BattingStats != null)
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Career Batting</strong>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Games.ToString("N0")</div>
+                    <small class="text-muted">G</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.FormattedAvg</div>
+                    <small class="text-muted">AVG</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Hits.ToString("N0")</div>
+                    <small class="text-muted">H</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.HomeRuns.ToString("N0")</div>
+                    <small class="text-muted">HR</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.Rbi.ToString("N0")</div>
+                    <small class="text-muted">RBI</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.FormattedOps</div>
+                    <small class="text-muted">OPS</small>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.PitchingStats != null && Model.PitchingStats.InningsPitched > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Career Pitching</strong>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.WinLossRecord</div>
+                    <small class="text-muted">W-L</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.FormattedEra</div>
+                    <small class="text-muted">ERA</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Games.ToString("N0")</div>
+                    <small class="text-muted">G</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Strikeouts.ToString("N0")</div>
+                    <small class="text-muted">SO</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.Saves.ToString("N0")</div>
+                    <small class="text-muted">SV</small>
+                </div>
+                <div class="col">
+                    <div class="h4 mb-0 text-mlb-navy">@Model.PitchingStats.FormattedWhip</div>
+                    <small class="text-muted">WHIP</small>
+                </div>
+            </div>
+        </div>
+    </div>
+}

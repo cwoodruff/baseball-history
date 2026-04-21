@@ -4,8 +4,8 @@
 
 @model baseball_history_web.ViewModels.EmptyStateModel
 
-<div class="empty-state">
-    <div class="empty-state-icon">
+<div class="empty-state" role="status">
+    <div class="empty-state-icon" aria-hidden="true">
         @if (!string.IsNullOrEmpty(Model.Icon))
         {
             @Html.Raw(Model.Icon)
@@ -18,11 +18,11 @@
     <h4 class="empty-state-title">@Model.Title</h4>
     @if (!string.IsNullOrEmpty(Model.Message))
     {
-        <p class="text-muted">@Model.Message</p>
+        <p class="empty-state-message text-muted">@Model.Message</p>
     }
     @if (!string.IsNullOrEmpty(Model.ActionUrl))
     {
-        <a href="@Model.ActionUrl" class="btn btn-primary mt-3">
+        <a href="@Model.ActionUrl" class="btn btn-primary mt-3 empty-state-action">
             @(Model.ActionText ?? "Go Back")
         </a>
     }

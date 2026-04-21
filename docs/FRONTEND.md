@@ -5,11 +5,12 @@ Bootstrap theming, and CSS design.
 
 ## Technology Stack
 
-| Technology | Version | Purpose                            |
-|------------|---------|------------------------------------|
-| HTMX       | 2.0.4   | Dynamic content without JavaScript |
-| Bootstrap  | 5.x     | Responsive UI framework            |
-| Custom CSS | -       | MLB theming and components         |
+| Technology | Version | Purpose                                      |
+|------------|---------|----------------------------------------------|
+| htmxRazor  | 2.0.1   | Razor component/tag-helper integration       |
+| HTMX       | 2.0.4   | Dynamic content without custom page scripts  |
+| Bootstrap  | 5.x     | Responsive UI framework                      |
+| Custom CSS | -       | MLB theming and components                   |
 
 ## HTMX Patterns
 
@@ -38,6 +39,15 @@ The entire application uses `hx-boost="true"` on the body element, which:
     <!-- All navigation is boosted -->
 </body>
 ```
+
+### htmxRazor Asset Strategy
+
+- htmxRazor foundation assets are injected automatically by `AddhtmxRazor()` / `UsehtmxRazor()`.
+- Component CSS stays centralized in `Pages/Shared/_Layout.cshtml` so styles survive `hx-boost` body swaps.
+- Current retained component imports are:
+  - `/_rhx/css/components/rhx-button.css` for the About-page proof button
+  - `/_rhx/css/components/rhx-badge.css` for migrated team and leaderboard badges
+- No additional component JavaScript imports are currently required; shell-owned modal/search/dropdown behavior lives in `_Layout.cshtml` with the Bootstrap bundle.
 
 ### Partial Responses
 
@@ -161,6 +171,21 @@ CSS for indicators:
     opacity: 1;
 }
 ```
+
+### Cache Behavior During HTMX Navigation
+
+Pages that support both full-page and non-boosted HTMX responses use:
+
+```csharp
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
+```
+
+This keeps full-page shell responses separate from partial-only responses. Shared lookup data (letters, years, leagues, Hall of Fame IDs, and the warmed default Players page) stays in `IMemoryCache` for 24 hours.
+
+**Operational follow-through when refreshing `lahman.db`:**
+1. Replace the database file.
+2. Restart each app instance so `IMemoryCache` and the hosted `PlayerCacheService` rebuild from the new data.
+3. Verify one full-page request and one non-boosted HTMX request on a migrated page (for example `/Players` and `/Stats/Batting`) so both response-cache variants are repopulated.
 
 ## CSS Architecture
 
@@ -345,11 +370,11 @@ wwwroot/
 ├── css/
 │   ├── site.css           # Main stylesheet
 │   └── team-colors.css    # 30 team color schemes
-├── js/
-│   └── site.js            # Minimal custom JS
 └── lib/
     └── bootstrap/         # Bootstrap 5
 ```
+
+Shell lifecycle JavaScript is intentionally inline in `Pages/Shared/_Layout.cshtml` so modal cleanup, dropdown re-init, and search dismissal survive boosted body swaps without depending on a separate static asset.
 
 ## Bootstrap Components Used
 

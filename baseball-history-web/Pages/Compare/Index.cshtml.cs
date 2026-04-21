@@ -28,6 +28,12 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         if (!string.IsNullOrWhiteSpace(Player2))
             ViewModel.Player2 = await LoadPlayer(Player2.Trim(), hofPlayerIds);
 
+        // Return partial view for htmx requests
+        if (Request.IsHtmxNonBoostedRequest())
+        {
+            return Partial("_CompareMain", ViewModel);
+        }
+
         return Page();
     }
 
@@ -68,7 +74,22 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     private async Task<ComparePlayer?> LoadPlayer(string playerId, HashSet<string> hofPlayerIds)
     {
-        var person = await context.People.FirstOrDefaultAsync(p => p.PlayerId == playerId);
+        // Projection-first: only load needed fields from People
+        var person = await context.People
+            .Where(p => p.PlayerId == playerId)
+            .Select(p => new
+            {
+                p.PlayerId,
+                p.NameFirst,
+                p.NameLast,
+                p.Bats,
+                p.Throws,
+                p.Debut,
+                p.FinalGame,
+                p.BirthYear
+            })
+            .FirstOrDefaultAsync();
+        
         if (person == null) return null;
 
         var player = new ComparePlayer

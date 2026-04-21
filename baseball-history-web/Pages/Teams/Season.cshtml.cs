@@ -20,15 +20,51 @@ public class SeasonModel(BaseballDbContext context) : PageModel
         }
 
         var team = await context.Teams
-            .Include(t => t.Franchise)
-            .FirstOrDefaultAsync(t => t.TeamId == teamId && t.LgId == lgId && t.YearId == year);
+            .Where(t => t.TeamId == teamId && t.LgId == lgId && t.YearId == year)
+            .Select(t => new TeamSeasonRecord(
+                t.TeamId,
+                t.Name,
+                t.YearId,
+                t.LgId,
+                t.DivId,
+                t.FranchId,
+                t.Franchise != null ? t.Franchise.FranchName : null,
+                t.W ?? 0,
+                t.L ?? 0,
+                t.Rank,
+                t.DivWin == "Y",
+                t.Wcwin == "Y",
+                t.LgWin == "Y",
+                t.Wswin == "Y",
+                t.Park,
+                t.Attendance,
+                t.R,
+                t.Ab,
+                t.H,
+                t._2b,
+                t._3b,
+                t.Hr,
+                t.Bb,
+                t.So,
+                t.Sb,
+                t.Ra,
+                t.Er,
+                t.Era,
+                t.Cg,
+                t.Sho,
+                t.Sv,
+                t.Ha,
+                t.Hra,
+                t.Bba,
+                t.Soa))
+            .FirstOrDefaultAsync();
 
         if (team == null)
         {
             return NotFound();
         }
 
-        Team = TeamSeasonViewModel.FromTeam(team);
+        Team = TeamSeasonViewModel.FromRecord(team);
 
         // Get Hall of Fame player IDs
         var hofPlayerIds = await context.HallOfFame
@@ -37,9 +73,7 @@ public class SeasonModel(BaseballDbContext context) : PageModel
             .Distinct()
             .ToHashSetAsync();
 
-        // Get batting roster
         var batters = await context.Batting
-            .Include(b => b.Player)
             .Where(b => b.TeamId == teamId && b.LgId == lgId && b.YearId == year)
             .OrderByDescending(b => b.Ab ?? 0)
             .Select(b => new RosterPlayer
@@ -50,30 +84,19 @@ public class SeasonModel(BaseballDbContext context) : PageModel
                 AtBats = b.Ab ?? 0,
                 Hits = b.H ?? 0,
                 HomeRuns = b.Hr ?? 0,
+                Rbi = b.Rbi ?? 0,
                 BattingAverage = (b.Ab ?? 0) > 0 ? (double)(b.H ?? 0) / (b.Ab ?? 0) : 0
             })
             .ToListAsync();
 
-        // Parse RBI
-        var rbiDict = await context.Batting
-            .Where(b => b.TeamId == teamId && b.LgId == lgId && b.YearId == year && b.Rbi != null)
-            .ToDictionaryAsync(b => b.PlayerId, b => b.Rbi ?? 0);
-
         foreach (var batter in batters)
         {
-            if (rbiDict.TryGetValue(batter.PlayerId, out var rbi))
-            {
-                batter.Rbi = rbi;
-            }
-
             batter.IsInHallOfFame = hofPlayerIds.Contains(batter.PlayerId);
         }
 
         Team.Batters = batters;
 
-        // Get pitching roster
         var pitchers = await context.Pitching
-            .Include(p => p.Player)
             .Where(p => p.TeamId == teamId && p.LgId == lgId && p.YearId == year)
             .OrderByDescending(p => p.Ipouts ?? 0)
             .Select(p => new RosterPlayer
@@ -96,9 +119,7 @@ public class SeasonModel(BaseballDbContext context) : PageModel
 
         Team.Pitchers = pitchers;
 
-        // Get managers
         var managers = await context.Managers
-            .Include(m => m.Player)
             .Where(m => m.TeamId == teamId && m.LgId == lgId && m.YearId == year)
             .OrderBy(m => m.Inseason)
             .Select(m => new ManagerInfo
@@ -119,11 +140,10 @@ public class SeasonModel(BaseballDbContext context) : PageModel
 
         Team.Managers = managers;
 
-        // Get available years for this franchise
-        if (!string.IsNullOrEmpty(team.FranchId))
+        if (!string.IsNullOrEmpty(Team.FranchiseId))
         {
             Team.AvailableYears = await context.Teams
-                .Where(t => t.FranchId == team.FranchId)
+                .Where(t => t.FranchId == Team.FranchiseId)
                 .Select(t => t.YearId)
                 .Distinct()
                 .OrderByDescending(y => y)

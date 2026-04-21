@@ -1,0 +1,48 @@
+@using baseball_history_web.ViewModels
+@model SearchResultLinkModel
+@{
+    var isPlayerModalLink = Model.UsePlayerModal && Model.Result.Type == SearchResultType.Player;
+    var href = isPlayerModalLink ? "#" : Model.Result.Url;
+    var onclickParts = new List<string>();
+
+    if (Model.ClearSearchResultsOnClick)
+    {
+        onclickParts.Add("setTimeout(function() { document.getElementById('search-results').innerHTML = ''; }, 0);");
+    }
+
+    var onclick = onclickParts.Count > 0 ? string.Join(" ", onclickParts) : null;
+}
+
+<a href="@href"
+   class="@Model.ItemClass"
+   @if (isPlayerModalLink)
+   {
+       <text>hx-get="/Players/Modal/@Model.Result.Id" hx-target="#modal-container" hx-swap="innerHTML" hx-boost="false"</text>
+   }
+   @if (!string.IsNullOrEmpty(Model.Result.TeamId))
+   {
+       <text>data-team="@Model.Result.TeamId"</text>
+   }
+   @if (Model.DismissModalOnClick)
+   {
+       <text>data-bs-dismiss="modal"</text>
+   }
+   @if (!string.IsNullOrEmpty(onclick))
+   {
+       <text>onclick="@onclick"</text>
+   }>
+    <div class="@Model.IconClass">@Model.Result.Initials</div>
+    <div>
+        <div class="fw-bold text-dark">
+            @Model.Result.Title
+            @if (Model.Result.IsInHallOfFame)
+            {
+                <span class="hof-badge ms-1">HOF</span>
+            }
+        </div>
+        @if (!string.IsNullOrEmpty(Model.Result.Subtitle))
+        {
+            <small class="text-muted">@Model.Result.Subtitle</small>
+        }
+    </div>
+</a>

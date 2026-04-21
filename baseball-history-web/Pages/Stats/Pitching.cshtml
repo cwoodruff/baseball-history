@@ -109,10 +109,7 @@
 
     <!-- Loading overlay on filter -->
     <div id="loading-indicator" class="htmx-indicator loading-overlay">
-        <div class="loading-baseball">
-            <div class="loading-baseball-icon">&#9918;</div>
-            <div class="loading-baseball-text">Loading stats...</div>
-        </div>
+        @await Html.PartialAsync("Components/_LoadingSpinner", "Loading stats...")
     </div>
 </div>
 

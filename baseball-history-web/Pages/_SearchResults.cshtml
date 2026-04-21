@@ -18,27 +18,13 @@ else
         </div>
         @foreach (var player in Model.Players)
         {
-            <a href="#" class="search-result-item text-decoration-none"
-               hx-get="/Players/Modal/@player.Id"
-               hx-target="#modal-container"
-               hx-swap="innerHTML"
-               hx-boost="false"
-               onclick="setTimeout(function() { document.getElementById('search-results').innerHTML = ''; }, 0);">
-                <div class="result-icon">@player.Initials</div>
-                <div>
-                    <div class="fw-bold text-dark">
-                        @player.Title
-                        @if (player.IsInHallOfFame)
-                        {
-                            <span class="hof-badge ms-1">HOF</span>
-                        }
-                    </div>
-                    @if (!string.IsNullOrEmpty(player.Subtitle))
-                    {
-                        <small class="text-muted">@player.Subtitle</small>
-                    }
-                </div>
-            </a>
+            @await Html.PartialAsync("Components/_SearchResultLink", new baseball_history_web.ViewModels.SearchResultLinkModel
+            {
+                Result = player,
+                ItemClass = "search-result-item text-decoration-none",
+                IconClass = "result-icon",
+                ClearSearchResultsOnClick = true
+            })
         }
     }
 
@@ -49,18 +35,13 @@ else
         </div>
         @foreach (var team in Model.Teams)
         {
-            <a href="/Teams/Franchise/@team.Id" class="search-result-item text-decoration-none"
-               data-team="@team.TeamId"
-               onclick="document.getElementById('search-results').innerHTML = '';">
-                <div class="result-icon bg-team-gradient">@team.Initials</div>
-                <div>
-                    <div class="fw-bold text-dark">@team.Title</div>
-                    @if (!string.IsNullOrEmpty(team.Subtitle))
-                    {
-                        <small class="text-muted">@team.Subtitle</small>
-                    }
-                </div>
-            </a>
+            @await Html.PartialAsync("Components/_SearchResultLink", new baseball_history_web.ViewModels.SearchResultLinkModel
+            {
+                Result = team,
+                ItemClass = "search-result-item text-decoration-none",
+                IconClass = "result-icon bg-team-gradient",
+                ClearSearchResultsOnClick = true
+            })
         }
     }
 

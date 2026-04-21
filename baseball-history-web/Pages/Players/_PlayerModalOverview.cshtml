@@ -1,0 +1,120 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+<div class="col-lg-4 mb-4">
+    <div class="card">
+        <div class="card-header card-header-mlb">
+            <strong>Player Info</strong>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                @if (!string.IsNullOrEmpty(Model.GivenName))
+                {
+                    <dt class="col-sm-4">Full Name</dt>
+                    <dd class="col-sm-8">@Model.GivenName</dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.BirthDate))
+                {
+                    <dt class="col-sm-4">Born</dt>
+                    <dd class="col-sm-8">
+                        @Model.BirthDate
+                        @if (!string.IsNullOrEmpty(Model.BirthPlace))
+                        {
+                            <br/>
+                            <small class="text-muted">@Model.BirthPlace</small>
+                        }
+                    </dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.DeathDate))
+                {
+                    <dt class="col-sm-4">Died</dt>
+                    <dd class="col-sm-8">@Model.DeathDate</dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.Height) || !string.IsNullOrEmpty(Model.Weight))
+                {
+                    <dt class="col-sm-4">Size</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Height))
+                        {
+                            var inches = int.TryParse(Model.Height, out var h) ? h : 0;
+                            var feet = inches / 12;
+                            var remainingInches = inches % 12;
+                            <span>@feet'@remainingInches"</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Weight))
+                        {
+                            <span> / @Model.Weight lbs</span>
+                        }
+                    </dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.Bats) || !string.IsNullOrEmpty(Model.Throws))
+                {
+                    <dt class="col-sm-4">B/T</dt>
+                    <dd class="col-sm-8">@Model.Bats / @Model.Throws</dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.Debut))
+                {
+                    <dt class="col-sm-4">Debut</dt>
+                    <dd class="col-sm-8">@Model.Debut</dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.FinalGame))
+                {
+                    <dt class="col-sm-4">Final Game</dt>
+                    <dd class="col-sm-8">@Model.FinalGame</dd>
+                }
+                @if (Model.CareerYears.HasValue)
+                {
+                    <dt class="col-sm-4">Career</dt>
+                    <dd class="col-sm-8">@Model.CareerYears years</dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    @if (Model.Teams.Any())
+    {
+        <div class="card mt-3">
+            <div class="card-header card-header-mlb">
+                <strong>Teams</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var team in Model.Teams)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        data-team="@team.TeamId">
+                        <span>@(team.TeamName ?? team.TeamId)</span>
+                        <small class="text-muted">@team.FirstYear-@team.LastYear</small>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (Model.Awards.Any() || Model.AllStarAppearances.Any())
+    {
+        <div class="card mt-3">
+            <div class="card-header card-header-mlb">
+                <strong>Honors</strong>
+            </div>
+            <div class="card-body">
+                @if (Model.AllStarAppearances.Any())
+                {
+                    <div class="mb-2">
+                        <span class="stat-badge stat-badge-primary">
+                            @Model.AllStarAppearances.Count x All-Star
+                        </span>
+                    </div>
+                }
+                @foreach (var award in Model.Awards.Take(10))
+                {
+                    <div class="small mb-1">
+                        <strong>@award.Year</strong> - @award.AwardId (@award.LgId)
+                    </div>
+                }
+                @if (Model.Awards.Count > 10)
+                {
+                    <small class="text-muted">... and @(Model.Awards.Count - 10) more</small>
+                }
+            </div>
+        </div>
+    }
+</div>

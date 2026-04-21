@@ -64,10 +64,7 @@
     </div>
 
     <div id="loading-indicator" class="htmx-indicator loading-overlay">
-        <div class="loading-baseball">
-            <div class="loading-baseball-icon">&#9918;</div>
-            <div class="loading-baseball-text">Loading postseason data...</div>
-        </div>
+        @await Html.PartialAsync("Components/_LoadingSpinner", "Loading postseason data...")
     </div>
 </div>
 

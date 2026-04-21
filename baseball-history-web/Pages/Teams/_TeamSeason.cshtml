@@ -1,0 +1,260 @@
+@model baseball_history_web.ViewModels.TeamSeasonViewModel
+
+<div data-team="@Model.TeamId" data-franchise="@Model.FranchiseId">
+    <!-- Header -->
+    <div class="card mb-4">
+        <div class="card-header card-header-team team-stripe-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">@Model.Year @Model.TeamName</h1>
+                    <small>
+                        @Model.LgId
+                        @if (!string.IsNullOrEmpty(Model.DivId))
+                        {
+                            <span>- @Model.DivId Division</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.FranchiseName))
+                        {
+                            <span class="ms-2">|</span>
+                            <a href="/Teams/Franchise/@Model.FranchiseId"
+                               class="text-team-accent ms-2">@Model.FranchiseName</a>
+                        }
+                    </small>
+                </div>
+                    <div class="text-end">
+                        @if (Model.WonWorldSeries)
+                        {
+                            <rhx-badge rhx-variant="warning">World Series Champions</rhx-badge>
+                        }
+                        else if (Model.WonPennant)
+                        {
+                            <rhx-badge rhx-variant="brand">@Model.LgId Pennant</rhx-badge>
+                        }
+                        else if (Model.WonDivision)
+                        {
+                            <rhx-badge rhx-variant="neutral">Division Winners</rhx-badge>
+                        }
+                    </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-team-primary">@Model.Record</div>
+                    <small class="text-muted">Record</small>
+                </div>
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-team-primary">@Model.FormattedWinPct</div>
+                    <small class="text-muted">Win %</small>
+                </div>
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-team-primary">@(Model.Rank?.ToString() ?? "-")</div>
+                    <small class="text-muted">Rank</small>
+                </div>
+                @if (Model.Batting != null)
+                {
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Batting.Runs.ToString("N0")</div>
+                        <small class="text-muted">Runs</small>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Batting.HomeRuns.ToString("N0")</div>
+                        <small class="text-muted">HR</small>
+                    </div>
+                }
+                @if (Model.Pitching != null)
+                {
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-team-primary">@Model.Pitching.FormattedEra</div>
+                        <small class="text-muted">ERA</small>
+                    </div>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(Model.ParkName) || Model.Attendance.HasValue)
+            {
+                <hr/>
+                <div class="row">
+                    @if (!string.IsNullOrEmpty(Model.ParkName))
+                    {
+                        <div class="col-md-6">
+                            <strong>Home Park:</strong> @Model.ParkName
+                        </div>
+                    }
+                    @if (Model.Attendance.HasValue)
+                    {
+                        <div class="col-md-6">
+                            <strong>Attendance:</strong> @Model.FormattedAttendance
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Managers -->
+        @if (Model.Managers.Any())
+        {
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header card-header-mlb">
+                        <strong>Manager@(Model.Managers.Count > 1 ? "s" : "")</strong>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var manager in Model.Managers)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <a href="#" class="text-decoration-none"
+                                       hx-get="/Players/Modal/@manager.PlayerId"
+                                       hx-target="#modal-container"
+                                       hx-swap="innerHTML"
+                                       hx-boost="false">
+                                     @manager.FullName
+                                     </a>
+                                     @if (manager.IsInHallOfFame)
+                                     {
+                                         <rhx-badge rhx-variant="brand" class="ms-1">HOF</rhx-badge>
+                                     }
+                                 </span>
+                                <span class="text-muted">@manager.Record</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- Batting -->
+        @if (Model.Batters.Any())
+        {
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header card-header-mlb">
+                        <strong>Batting</strong>
+                    </div>
+                    <div class="table-responsive" style="max-height: 500px;">
+                        <table class="table table-sm table-baseball table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th class="text-end">G</th>
+                                <th class="text-end">AB</th>
+                                <th class="text-end">H</th>
+                                <th class="text-end">HR</th>
+                                <th class="text-end">RBI</th>
+                                <th class="text-end">AVG</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var batter in Model.Batters.Take(25))
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="#" class="text-decoration-none"
+                                           hx-get="/Players/Modal/@batter.PlayerId"
+                                           hx-target="#modal-container"
+                                           hx-swap="innerHTML"
+                                           hx-boost="false">
+                                             @batter.FullName
+                                         </a>
+                                         @if (batter.IsInHallOfFame)
+                                         {
+                                             <rhx-badge rhx-variant="brand" class="ms-1">HOF</rhx-badge>
+                                         }
+                                     </td>
+                                    <td class="text-end stat-cell">@batter.Games</td>
+                                    <td class="text-end stat-cell">@batter.AtBats</td>
+                                    <td class="text-end stat-cell">@batter.Hits</td>
+                                    <td class="text-end stat-cell">@batter.HomeRuns</td>
+                                    <td class="text-end stat-cell">@(batter.Rbi?.ToString() ?? "-")</td>
+                                    <td class="text-end stat-cell">@batter.FormattedAvg</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Pitching -->
+        @if (Model.Pitchers.Any())
+        {
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header card-header-mlb">
+                        <strong>Pitching</strong>
+                    </div>
+                    <div class="table-responsive" style="max-height: 500px;">
+                        <table class="table table-sm table-baseball table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th class="text-end">G</th>
+                                <th class="text-end">W-L</th>
+                                <th class="text-end">ERA</th>
+                                <th class="text-end">SO</th>
+                                <th class="text-end">SV</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var pitcher in Model.Pitchers.Take(25))
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="#" class="text-decoration-none"
+                                           hx-get="/Players/Modal/@pitcher.PlayerId"
+                                           hx-target="#modal-container"
+                                           hx-swap="innerHTML"
+                                           hx-boost="false">
+                                             @pitcher.FullName
+                                         </a>
+                                         @if (pitcher.IsInHallOfFame)
+                                         {
+                                             <rhx-badge rhx-variant="brand" class="ms-1">HOF</rhx-badge>
+                                         }
+                                     </td>
+                                    <td class="text-end stat-cell">@pitcher.Games</td>
+                                    <td class="text-end stat-cell">@pitcher.WinLossRecord</td>
+                                    <td class="text-end stat-cell">@pitcher.FormattedEra</td>
+                                    <td class="text-end stat-cell">@pitcher.Strikeouts</td>
+                                    <td class="text-end stat-cell">@pitcher.Saves</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Season Navigation -->
+    @if (Model.AvailableYears.Count > 1)
+    {
+        <div class="card">
+            <div class="card-header card-header-mlb">
+                <strong>Other Seasons</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var availableYear in Model.AvailableYears.Take(20))
+                    {
+                        var isCurrentYear = availableYear == Model.Year;
+                        <a href="/Teams/Season/@Model.TeamId/@Model.LgId/@availableYear"
+                           class="btn btn-sm @(isCurrentYear ? "btn-primary" : "btn-outline-primary")">
+                            @availableYear
+                        </a>
+                    }
+                    @if (Model.AvailableYears.Count > 20)
+                    {
+                        <a href="/Teams/Franchise/@Model.FranchiseId" class="btn btn-sm btn-outline-secondary">
+                            View All @Model.AvailableYears.Count Seasons
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

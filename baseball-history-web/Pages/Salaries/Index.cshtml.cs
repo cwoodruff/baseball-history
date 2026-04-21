@@ -23,8 +23,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         ViewModel.SelectedTeam = team;
         ViewModel.CurrentPage = page;
 
-        // Get available years (cached)
-        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("salary_years", async entry =>
+        // Get available years (cached with namespace prefix)
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("salaries_years", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return await context.Salaries

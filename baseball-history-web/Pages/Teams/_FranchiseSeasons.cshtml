@@ -1,4 +1,4 @@
-@model baseball_history_web.Pages.Teams.FranchiseModel
+@model baseball_history_web.ViewModels.FranchiseDetailViewModel
 
 @if (Model.Franchise == null)
 {
@@ -31,7 +31,7 @@ else
                             @Model.Franchise.FirstYear - @(Model.Franchise.IsActive ? "Present" : Model.Franchise.LastYear.ToString())
                             @if (Model.Franchise.IsActive)
                             {
-                                <span class="badge bg-success ms-2">Active</span>
+                                <rhx-badge rhx-variant="success" class="ms-2">Active</rhx-badge>
                             }
                         </small>
                     </div>
@@ -78,7 +78,7 @@ else
         <div class="card">
             <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
                 <strong>Season History</strong>
-                <span class="badge bg-light text-dark">@Model.Seasons.Count seasons</span>
+                <rhx-badge rhx-variant="neutral">@Model.Seasons.Count seasons</rhx-badge>
             </div>
             <div class="table-responsive">
                 <table class="table table-baseball table-hover mb-0">
@@ -115,16 +115,15 @@ else
                             <td>
                                 @if (season.WonWorldSeries)
                                 {
-                                    <span class="stat-badge stat-badge-accent">WS Champs</span>
+                                    <rhx-badge rhx-variant="warning">WS Champs</rhx-badge>
                                 }
                                 else if (season.WonPennant)
                                 {
-                                    <span class="stat-badge stat-badge-primary">Pennant</span>
+                                    <rhx-badge rhx-variant="brand">Pennant</rhx-badge>
                                 }
                                 else if (season.WonDivision)
                                 {
-                                    <span class="stat-badge"
-                                          style="background-color: var(--text-secondary); color: white;">Division</span>
+                                    <rhx-badge rhx-variant="neutral">Division</rhx-badge>
                                 }
                             </td>
                         </tr>
