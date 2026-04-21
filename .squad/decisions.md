@@ -3716,3 +3716,49 @@ All of these methods cast properties to `double`, which should handle `short` �
 ## Start Now? YES
 
 Both issues cleared for immediate parallel start. No blocking dependencies.
+
+---
+
+# Ripley — RHX/HTMX Audit (2026-04-21)
+
+## Decision
+Do not treat every `rhx-*` tag in this repo as a backend-connected htmx surface.
+
+## Why
+The only live htmxRazor components in `.cshtml` are `rhx-badge` and one `rhx-button` on `/About`. Those are being used as presentational primitives, while real backend interaction remains on surrounding page markup (`hx-get`, `hx-target`, `hx-swap`, `hx-push-url`) or on shell-level `hx-boost`.
+
+## Verified Surfaces
+- **Stats/Batting** and **Stats/Pitching**: migrated badges sit inside correctly wired htmx filter/sort/pagination surfaces with non-boosted partial returns.
+- **Teams** list/detail/season views: migrated badges are decorative; player modal links and page handlers still carry the htmx contracts.
+- **Search**: included in the audit because it is a shell-owned htmx surface, but it has no live `rhx-*` component usage today.
+- **Support pages** (`About`, `Health`, `Error`, `Privacy`, `ApiDocs`): page headers use presentational badges only; `/About` has the lone `rhx-button`, which is a client-side GitHub link, not a backend action.
+
+## Implication
+No follow-up implementation work is needed from this audit. Future review should only demand `hx-*` wiring when the `rhx-*` component itself owns an interaction contract, not when it is just replacing a badge/button visual primitive.
+
+---
+
+# Ripley — htmxRazor Migration Closeout (2026-04-21)
+
+## Decision
+Close all migration issues (#4–#15) and umbrella tracking issue (#16). Close all sprint milestones (Sprints 1–5).
+
+## Why
+All work has landed on the `htmxRazor` branch and is complete:
+
+- **Sprint 1** (Foundation): #4–#7 — integration, regression gates, shared shell, primitives ✅
+- **Sprint 2** (Foundation Pages): #8–#9 — Players and Teams migrations ✅
+- **Sprint 3** (Comparison & Features): #10–#11 — Compare, Awards, Hall of Fame, Postseason, Salaries ✅
+- **Sprint 4** (Leaderboards): #12–#13 — Batting and Pitching leaderboards with bug fix ✅
+- **Sprint 5** (Polish & Documentation): #14–#15 — Homepage, search surfaces, and cache/asset docs ✅
+- **RHX/HTMX audit**: Complete — no follow-up implementation work needed ✅
+
+Evidence: `htmxRazor` branch commits 506bd50 ("sprint 5 done"), 299fa71 (Sprint 5 closeout), and historical sprint completion logs.
+
+## Next Phase
+Umbrella issue #16 remains closed. The next phase is **validation and merge** — separate work not tracked in the sprint milestones.
+
+## Key Files
+- `.squad/decisions/inbox/ripley-rhx-htmx-audit.md` — audit decision
+- `.squad/agents/ripley/history.md` — historical context for all 5 sprints
+- `htmxRazor` branch HEAD for merged sprint decisions

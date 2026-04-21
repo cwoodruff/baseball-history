@@ -945,3 +945,40 @@ Test suite at 344/344. Repository ready for release.
 - **Live `rhx-*` usage is narrow.** Current `.cshtml` usage is `rhx-badge` across support/team/stats views plus a single `rhx-button` on `/About`; `_Layout.cshtml` only references `/_rhx/css/components/*` assets and is not itself a component-use site.
 - **In this repo, `rhx-*` does not imply backend htmx wiring.** The shipped htmxRazor primitives in use are presentational; backend interaction still lives on surrounding anchors/forms/selects or shell-level `hx-boost`, so audits must verify the page surface contract rather than expecting `hx-*` on each badge/button.
 - **Interactive surfaces containing migrated badges are already wired.** Stats leaderboards keep explicit `hx-get`/`hx-target`/partial-return paths, team pages keep modal links and htmx partial handlers intact, and shell-owned search remains `hx-get="/Search"` plus modal targeting through `#modal-container`. No missing backend htmx connection was found in live `rhx-*` component usage.
+
+## GitHub Migration Closeout (2026-04-21)
+
+**Status:** ✅ COMPLETE
+
+All GitHub migration tracking issues (#4–#15) and umbrella issue (#16) closed. All 5 sprint milestones archived.
+
+### Closeout Actions
+- Closed all migration issues #4–#7 (Sprint 1: Foundation)
+- Closed all migration issues #8–#9 (Sprint 2: Foundation Pages)
+- Closed all migration issues #10–#11 (Sprint 3: Comparison & Features)
+- Closed all migration issues #12–#13 (Sprint 4: Leaderboards)
+- Closed all migration issues #14–#15 (Sprint 5: Polish & Documentation)
+- Closed umbrella tracking issue #16
+- Archived all 5 sprint milestones (Sprints 1–5)
+
+### Migration Work Summary
+The htmxRazor migration is complete across all pages:
+1. Shared shell and primitives foundation
+2. Player and Team foundation pages
+3. Comparison and feature pages (Awards, HallOfFame, Postseason, Salaries)
+4. Leaderboard pages (Batting, Pitching) with bug fixes
+5. Homepage, search surfaces, and documentation
+
+### Decisions Documented
+- `.squad/decisions.md` — RHX/HTMX audit decision (no follow-up needed)
+- `.squad/decisions.md` — Migration closeout decision
+- `.squad/orchestration-log/2026-04-21T18:33:10Z-ripley.md` — orchestration log
+- `.squad/log/2026-04-21T18:33:10Z-github-closeout.md` — session log
+
+### Next Phase
+**Validation and merge** — out of sprint scope. The repository is ready for:
+1. Code review on `htmxRazor` branch
+2. Testing and QA validation
+3. Merge to main
+
+No migration tracking issues remain open.
