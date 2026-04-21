@@ -1,7 +1,7 @@
 # Project Context
 ## Core Context
 
-**Ripley's Role:** Orchestration lead for htmxRazor migration (5 sprints, 12 issues). Manages sprint boundaries, design reviews, platform audits, and cross-agent sequencing.
+**Ripley's Role:** Orchestration lead for htmxRazor migration (5 sprints, 12 issues) + infrastructure decisions. Manages sprint boundaries, design reviews, platform audits, and cross-agent sequencing.
 
 **Key Completed Work:**
 - Sprint 1 (Foundation): Shell architecture, primitives, regression gates
@@ -10,16 +10,88 @@
 - Sprint 4 (Leaderboards): Batting, Pitching with bug fixes
 - Sprint 5 (Polish): Homepage, search surfaces, docs
 - RHX/HTMX audit: No follow-up implementation needed
+- **Issue #19 (Aspire):** Design review + execution plan (2026-04-21)
 
 **Patterns Established:**
 - Design review → Lambert baseline → Dallas parallel build → Ash validation → Lambert gate
 - htmx contracts frozen; partial returns on non-boosted requests; shell authority immovable
 - Response cache: `VaryByHeader="HX-Request"` for htmx vs full-page distinction
 - Component output size: ±5KB of baseline acceptable
+- **Aspire guardrails:** Zero web project SDK coupling, Program.cs agnostic, dev-only orchestration
 
 **Test Baseline:** 344/344 passing (final state)
 
-**Migration Complete:** All issues closed, all milestones archived. Next: validation and merge on htmxRazor.
+**Migration Complete:** All sprint issues closed, all milestones archived. Next: validation and merge on htmxRazor.
+
+---
+
+## 2026-04-21 Issue #19 Design Review: .NET Aspire Integration — APPROVED
+
+### Outcome: ✅ APPROVED
+Ripley facilitated design review for Issue #19 (Aspire integration). Approved safest integration shape: new AppHost project (dev-only orchestration), zero web project coupling, backward-compatible launch modes.
+
+### Decision: Approved Pattern
+- **New `baseball-history-aspire` project** (AppHost class library)
+  - Registers web service reference
+  - Exposes on localhost (dev only)
+  - Reserved for future services
+  
+- **Zero web project changes**
+  - No Aspire SDK in `baseball-history-web.csproj`
+  - Program.cs untouched
+  - All htmx patterns frozen
+  - `dotnet run` must work without Aspire
+
+### Execution Plan
+| Task | Owner | Effort |
+|------|-------|--------|
+| #19a: Create AppHost scaffold | Parker | 2–3h |
+| #19b: Wire service + endpoint | Parker | 2–3h |
+| #19c: Integration test + health | Lambert | 1–2h |
+| #19d & #19e: Documentation | Parker | 2h |
+
+**Total:** 7–10 hours. Linear dependency; Parker can start immediately on #19a.
+
+### Non-Negotiable Guardrails (Parker)
+1. **Zero Aspire SDK in web.csproj** — Aspire only in AppHost
+2. **Program.cs agnostic** — No Aspire middleware or conditionals
+3. **Dual launch parity** — Both `dotnet run` and `aspire start` work identically
+4. **Database connection string unchanged** — Current file path or env override, no code changes
+5. **htmx patterns frozen** — Zero changes to response cache, VaryByHeader, or htmx detection logic
+
+### Risks Identified
+| Risk | Severity | Mitigation | Owner |
+|------|----------|-----------|-------|
+| AppHost startup failure | MEDIUM | Integration test + health verification | Lambert |
+| Port conflict | LOW | Aspire dynamic assignment; document via `aspire describe` | Parker |
+| SDK leak | HIGH | Code review + diff inspection (Ripley gate) | Ripley |
+| Scope creep (multi-service) | MEDIUM | Scope explicit: web only; defer future services | Ripley gate |
+
+### Quality Gates (Before Merge)
+- ✅ `dotnet build` passes
+- ✅ `dotnet run --project baseball-history-web` works (backward compat)
+- ✅ `aspire start` launches web successfully
+- ✅ Health endpoint responds
+- ✅ No Aspire SDK in web.csproj (diff inspection)
+- ✅ All 344 tests pass
+- ✅ README + DEVELOPMENT.md updated
+
+### Assignment & Readiness
+- **Parker:** Lead dev, #19a + #19b + #19d + #19e. **CAN START IMMEDIATELY.**
+- **Lambert:** QA/test, #19c. Start after #19b.
+- **Ripley:** Gate review pre-merge. Enforce guardrails.
+
+**Decision:** Parker can start today on AppHost scaffold. Deliver #19a skeleton + #19b by EOD tomorrow for Ripley gate review.
+
+### Strategic Note
+Aspire integration is **infrastructure-only, zero-risk** because:
+1. Web project unchanged (no SDK dependency, no code changes)
+2. Orthogonal to htmx patterns (frozen from Sprint 5)
+3. Purely additive (new project, no modifications to existing code)
+4. Backward-compatible launch modes (standalone or orchestrated)
+5. Foundation for future services (reserved, not required)
+
+This pattern **scales:** future services (tests, workers, APIs) add as separate projects registered in AppHost. No cascade of changes required.
 
 ---
 
