@@ -939,3 +939,9 @@ All Sprint 5 deliverables completed and verified:
 - Ripley: Design review approved; orchestration documented
 
 Test suite at 344/344. Repository ready for release.
+
+## 2026-04-21 RHX/HTMX Audit
+
+- **Live `rhx-*` usage is narrow.** Current `.cshtml` usage is `rhx-badge` across support/team/stats views plus a single `rhx-button` on `/About`; `_Layout.cshtml` only references `/_rhx/css/components/*` assets and is not itself a component-use site.
+- **In this repo, `rhx-*` does not imply backend htmx wiring.** The shipped htmxRazor primitives in use are presentational; backend interaction still lives on surrounding anchors/forms/selects or shell-level `hx-boost`, so audits must verify the page surface contract rather than expecting `hx-*` on each badge/button.
+- **Interactive surfaces containing migrated badges are already wired.** Stats leaderboards keep explicit `hx-get`/`hx-target`/partial-return paths, team pages keep modal links and htmx partial handlers intact, and shell-owned search remains `hx-get="/Search"` plus modal targeting through `#modal-container`. No missing backend htmx connection was found in live `rhx-*` component usage.
