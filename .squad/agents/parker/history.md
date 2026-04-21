@@ -44,6 +44,11 @@ Parker can proceed immediately with Teams migration. No blocking dependencies fr
 
 ## Learnings
 
+### Issue #19 Aspire integration (2026-04-21)
+- Ripley guardrail held: safest backend seam was additive only — new `baseball-history-aspire` AppHost with a project reference to `baseball-history-web`, no web SDK/package changes, and no `Program.cs` edits.
+- Using `WithHttpHealthCheck("/")` in the AppHost gives Aspire a working HTTP probe while keeping the existing web app contracts untouched.
+- Docs must present Aspire as the preferred local orchestration path while explicitly preserving `dotnet run --project baseball-history-web` as a supported standalone workflow.
+
 ### Architecture Review (2026-04-16)
 
 #### Backend Structure & Stack

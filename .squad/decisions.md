@@ -1,5 +1,90 @@
 # Squad Decisions
 
+## Issue #19: .NET Aspire Integration — APPROVED & SHIPPED (2026-04-21)
+
+### Overview
+Issue #19 proposes adding .NET Aspire to baseball-history for local development orchestration and infrastructure foundation. **Decision: ✅ APPROVED & IMPLEMENTATION COMPLETE.** This is a low-risk, high-value infrastructure change. Aspire is development-only; it does not touch the web project's logic, database, or htmx patterns. The web project remains entirely unaware of the orchestration layer.
+
+### Approved Architecture
+1. **New `baseball-history-aspire` project** (AppHost)
+   - .NET 10 Aspire AppHost (class library)
+   - Single responsibility: register and orchestrate services
+   - Service reference to `baseball-history-web` project
+   - Exposes web service on localhost (development only)
+   - Reserved for future services (tests, workers, APIs)
+
+2. **Zero web project changes**
+   - No `Aspire.Hosting` package references in `baseball-history-web.csproj`
+   - `Program.cs` unchanged
+   - All htmx, htmxRazor, Entity Framework Core patterns frozen
+   - No conditional Aspire-aware middleware or environment checks
+
+### Non-Negotiable Guardrails (Enforced)
+- ✋ **No** `Aspire.Hosting` references in `baseball-history-web.csproj`
+- ✋ **No** Aspire middleware in web app
+- ✅ Aspire SDK references ONLY in `baseball-history-aspire.csproj`
+- ✅ Web app works identically standalone (`dotnet run`) or orchestrated (`aspire start`)
+
+### Implementation Summary (Parker)
+- Created `baseball-history-aspire` AppHost project
+- Configured minimal Aspire.AppHost.Sdk dependency
+- AppHost.cs is 6 lines: AddProject → WithExternalHttpEndpoints → WithHttpHealthCheck("/")
+- Health check uses existing root page endpoint (no code changes to web project)
+- Zero Aspire SDK in web project dependencies
+- All tests pass; backward compatibility verified
+- README and DEVELOPMENT.md updated with Aspire quick-start
+
+### Verification Results (Lambert — QA/Test)
+- ✅ Build Passed: `dotnet build baseball-history.sln` (2.1s)
+- ✅ Test Suite Passed: 344/344 regression tests (53.4s runtime)
+- ✅ Backward Compatibility: `dotnet run --project baseball-history-web` works standalone
+- ✅ Web Project Isolation: Zero Aspire SDK dependencies
+- ✅ Documentation Updated: README + DEVELOPMENT.md
+- ✅ Solution Structure Clean: No scaffold artifacts
+- ✅ AppHost Implementation Sound: Minimal, clean, production-ready
+
+### Acceptance Criteria (All Met)
+1. ✅ Create `baseball-history-aspire` project — DONE
+2. ✅ Configure service references for web project — DONE
+3. ✅ Add Aspire manifests and orchestration — DONE
+4. ✅ Update solution file structure — DONE
+5. ✅ Document launch process in README — DONE
+6. ✅ All existing tests pass — DONE (344/344 tests)
+7. ✅ Backward compatibility maintained — DONE
+8. ✅ Zero web project coupling — DONE
+
+### Quality Gates Met
+| Gate | Result | Evidence |
+|------|--------|----------|
+| Build | ✅ PASS | All 3 projects build in 2.1s |
+| Tests | ✅ PASS | 344/344 tests passed |
+| Backward Compatibility | ✅ PASS | `dotnet run` works standalone |
+| Web Project Isolation | ✅ PASS | No Aspire SDK in web .csproj or Program.cs |
+| Documentation | ✅ PASS | README and DEVELOPMENT.md updated |
+| No Scaffold Debris | ✅ PASS | Only essential Aspire files present |
+
+### Risk Assessment
+**LOW RISK** — The change is purely additive. The web project has no Aspire runtime dependencies, so existing deployment and standalone workflows are completely unaffected. The AppHost only runs during local development via `aspire start`.
+
+### Approval
+| Role | Name | Decision | Timestamp |
+|------|------|----------|-----------|
+| Lead | Ripley | ✅ APPROVED | 2026-04-21T14:55Z |
+| Developer | Parker | ✅ IMPLEMENTED | 2026-04-21T15:10Z |
+| QA/Test | Lambert | ✅ APPROVED | 2026-04-21T15:10Z |
+| Coordinator | — | ✅ SHIPPED | 2026-04-21T19:11Z |
+
+### Next Steps
+1. ✅ Add `*.db-shm` and `*.db-wal` to .gitignore (separate commit recommended)
+2. ✅ Close GitHub issue #19
+
+### Notes
+- **Development-Only:** AppHost runs only during local development via `aspire start`. No production impact.
+- **Future-Proofing:** Architecture ready for multi-service expansion if needed (background workers, APIs).
+- **Zero Runtime Coupling:** Existing deployments and standalone startup workflows completely unaffected.
+
+---
+
 ## Sprint 2 Completion: Players Migration (Dallas #8) & Guardrails Approval (2026-04-21)
 
 ### Dallas — Issue #8 Players Page Migration Complete
