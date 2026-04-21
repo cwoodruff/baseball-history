@@ -1,0 +1,30 @@
+@model baseball_history_web.ViewModels.CompareViewModel
+@{
+    var p1 = Model.Player1;
+    var p2 = Model.Player2;
+    var p1Id = p1?.PlayerId ?? "";
+    var p2Id = p2?.PlayerId ?? "";
+}
+
+@await Html.PartialAsync("_CompareHeader", Model)
+
+<!-- Two side-by-side player selection regions -->
+<div class="row mb-4">
+    <!-- Player 1 (left side) -->
+    <div class="col-md-6 mb-3">
+        @await Html.PartialAsync("_ComparePlayerCard", (p1, 1, p2Id, "135deg, #1a2744 0%, #2c3e6b 100%"))
+    </div>
+
+    <!-- Player 2 (right side) -->
+    <div class="col-md-6 mb-3">
+        @await Html.PartialAsync("_ComparePlayerCard", (p2, 2, p1Id, "135deg, #8b1a2b 0%, #c62d42 100%"))
+    </div>
+</div>
+
+<!-- Comparison tables (only shown when both selected) -->
+@if (Model.BothSelected)
+{
+    <div id="compare-tables">
+        @await Html.PartialAsync("_CompareContent", Model)
+    </div>
+}

@@ -280,3 +280,42 @@ Parker can proceed immediately with Teams migration. No blocking dependencies fr
 - rhx-badge adoption completed across team-card, franchise-detail, season views
 - Sprint 2 all issues complete: Dallas #8 + Parker #9 + Lambert gate + Ash guardrails ✅
 - Ready for Sprint 3 planning
+
+### Issue #11 Sprint 3 Feature Pages Migration (2026-04-22)
+
+Migrated Awards, Hall of Fame, Postseason, and Salaries pages to projection-first patterns with namespaced cache keys.
+
+**Key Changes:**
+- Hall of Fame: Removed `.Include(h => h.Player)` anti-pattern, replaced with explicit projection of 9 fields in `.Select()`
+- Cache key namespacing: `awards_*`, `halloffame_*`, `postseason_*`, `salaries_*` to avoid collisions
+- Preserved shared `hof_player_ids` cache key (used by Players, Awards, HallOfFame, Salaries, Compare)
+
+**Pattern Application:**
+- Projection-first: All 4 pages now use `.Select()` without `.Include()`
+- Cache namespacing: Page-specific keys for filters, global key for shared HOF player IDs
+- htmx split: `Request.IsHtmxNonBoostedRequest()` routing preserved across all 4 pages
+- Pagination: Filter preservation via `QueryParams` dictionary in all partials
+
+**Test Coverage:**
+- Awards: 11/11 tests passing
+- Hall of Fame: 9/9 tests passing
+- Postseason: 8/8 tests passing
+- Salaries: 9/9 tests passing
+- Total: 37/37 Issue #11 tests, 350/350 suite
+
+**Learnings:**
+1. **Shared vs namespaced caches:** Distinguish between page-specific caches (filter options) and cross-page shared caches (HOF player IDs). Shared caches should not be namespaced.
+2. **Projection-first catches lazy-load risks:** Hall of Fame `.Include()` was loading full Person entity when only 9 fields needed. Projection reduces payload and eliminates N+1 risk.
+3. **Test-driven migration validation:** Sprint 3 contract tests caught edge cases (pagination with filters, voting detail behavior, modal links).
+4. **Cache key naming convention:** Use `{page}_*` prefix for page-specific caches, keep unprefixed keys for shared resources.
+
+**Migration Checklist Applied:**
+✅ No `.Include()` — all queries projection-first  
+✅ Page-namespaced cache keys — no collisions  
+✅ Route signatures unchanged — all handlers preserved  
+✅ Query parameters unchanged — filter behavior intact  
+✅ Response cache metadata unchanged — VaryByHeader preserved  
+✅ htmx/non-boosted split — partial routing logic preserved  
+✅ Test coverage — 37 new feature tests, all passing  
+
+**Ready for:** Sprint 3 Issue #11 PR, Dallas Issue #12 (Compare) is next

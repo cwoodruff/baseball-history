@@ -7,6 +7,56 @@
 
 ## Learnings
 
+## 2026-04-21 Sprint 3 Design Review Complete: Dallas #10 + Parker #11 Parallelization Approved
+
+### Outcome: ✅ APPROVED
+
+Sprint 3 design review facilitated Dallas Compare (#10) and Parker Awards/HoF/Postseason/Salaries (#11) as parallel-safe work. Both issues cleared for immediate start with explicit deferral of filter-form extraction.
+
+### Key Decision: Filter Form Extraction Deferred Post-Sprint-3
+
+**Why:** Sprint 1 explicitly rejected filter-form extraction during feature-team parallel work. Risk: Rewiring filter container while Dallas/Parker migrate independently = hidden coupling.
+
+**Timing:** Post-Sprint-3 follow-up PR will extract `_FilterForm.cshtml` as isolated zero-impact change.
+
+**Implication:** Parker does NOT extract filter forms during #11. Each page (Awards, HoF, Postseason, Salaries) keeps handler-local filter markup.
+
+### Parallelization Rationale (Sprint 3)
+1. **Separate Data Flows:** Player comparison search vs award/series/salary data
+2. **No Shared PageModel Changes:** Each issue modifies only its own handlers
+3. **Locked Response Cache Pattern:** Both use identical `[ResponseCache(..., VaryByHeader="HX-Request")]`
+4. **Projection-First Queries:** Both use `.Select()` materialization (no IQueryable leaks)
+5. **Scope Boundary Protected:** Filter extraction explicitly out-of-scope prevents hidden coupling
+
+### Main Risks Identified (Sprint 3)
+| Risk | Severity | Mitigation | Owner |
+|------|----------|-----------|-------|
+| Compare dual-player state | MEDIUM | Trace ViewModel shape, preserve search partial contract | Dallas |
+| Filter form duplication (4 pages) | MEDIUM | Explicitly NOT extracted (deferral decision enforced) | Parker |
+| Cache key collisions | LOW | Unique keys per page: award_names, hof_years, etc. | Ash |
+| Awards voting N+1 | MEDIUM | Verify .Select() projection unchanged | Parker |
+| Compare modal integration | LOW-MEDIUM | Measure component output size vs baseline | Dallas |
+
+### Compare Complexity Profile
+- PageModel: 202 LOC (vs Players #8 @ 246 LOC — similar scope)
+- Template: 167 LOC (dual-sided layout, repeated card variants)
+- State: Player1/Player2 bound parameters + search results + card rendering
+- Risk tier: MEDIUM-HIGH (highest in Sprint 3) due to state management + multiple card variants
+
+### Awards/HoF/Postseason/Salaries Complexity Profile
+- Pattern repeated across 4 pages (filter → results architecture)
+- Awards highest complexity: voting-detail modal with multiple queries
+- All use identical response cache + projection-first pattern from Sprint 2
+- Risk tier: MODERATE (pattern repetition increases integration surface)
+
+### Sequencing After Sprint 3 Completion
+Once #10 and #11 pass regression + performance gates:
+1. **#12:** Stats pages (Batting, Pitching) — Dallas lead
+2. **#13:** Search, Compare — complex state management
+3. **#14:** Remaining (Parks, remaining APIs) — feature complete
+
+---
+
 ## 2026-04-21 Sprint 2 Design Review Complete: Dallas #8 + Parker #9 Parallelization Approved
 
 ### Outcome: ✅ APPROVED

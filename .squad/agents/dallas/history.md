@@ -421,3 +421,79 @@ Safe-now shell work (#6) + spinner/loading reuse (#7) completed and integrated.
 
 ### Next Phase
 Ready for Sprint 3 planning cycle
+
+## Sprint 3 Compare Page Migration (2026-04-21)
+
+### Summary
+Successfully migrated Compare page to htmx pattern following Sprint 1 (Players) and Sprint 2 (Teams) conventions. All 350 tests pass. Compare page now returns partials for non-boosted htmx requests while preserving full-page behavior, dual-search contracts, modal integration, and response caching.
+
+### Unique Compare Challenges
+- **Dual simultaneous search** — Two independent search interfaces (`#search-results-1`, `#search-results-2`) requiring parameterized player card partial
+- **Asymmetric styling** — Player 1 (blue gradient) vs Player 2 (red gradient) visual distinction preserved via partial parameters
+- **Conditional table rendering** — Comparison tables only show when `Model.BothSelected` is true
+- **Bidirectional query strings** — Each player search preserves the other player's selection in URL (`?player1={id}` or `?player2={id}`)
+- **No pagination/filtering** — Simpler than Players/Teams, focused on dual-card + comparison tables pattern
+
+### Migration Pattern
+1. **Index.cshtml** → Minimal wrapper with `#compare-content` htmx target
+2. **_CompareMain.cshtml** → Full dual-card interface + comparison tables
+3. **_CompareHeader.cshtml** → Page title + "Start Over" button
+4. **_ComparePlayerCard.cshtml** → Parameterized player card (supports empty/loaded state, gradient, search targets)
+5. **_CompareContent.cshtml** → Existing comparison tables (unchanged)
+6. **PageModel** → Added `Request.IsHtmxNonBoostedRequest()` detection returning `Partial("_CompareMain")`
+
+### Preserved Contracts (Critical)
+- **Routes:** `/Compare`, `/Compare?player1={id}`, `/Compare?player2={id}`, `/Compare?handler=Search&q={term}&side={1|2}`
+- **DOM Anchors:** `#compare-content` (new), `#search-results-1`, `#search-results-2`, `#compare-tables`, `#modal-container` (shell)
+- **Modal Integration:** `hx-get="/Players/Modal/{id}"` → `#modal-container` unchanged
+- **Response Cache:** `[ResponseCache(Duration=3600, VaryByHeader="HX-Request")]` preserved
+- **Search Behavior:** `hx-trigger="input changed delay:300ms, search"` with side parameter preserved
+
+### Test Coverage
+Added 5 new htmx behavior tests:
+- `Compare_NonBoostedHtmx_ReturnsCompareMainPartial` — partial response validation
+- `Compare_BoostedHtmx_ReturnsFullPageShell` — boosted full-page validation
+- `Compare_NonBoostedHtmx_WiresPlayerModalContracts` — modal links preserved
+- `Compare_NonBoostedHtmx_WiresDualSearchContracts` — search targets stable
+
+All 3 existing Compare tests preserved and passing:
+- `Compare_FullPage_WithoutPlayers_RendersDualSearchHosts`
+- `Compare_SearchHandler_ReturnsResultsPartialAndPreservesOtherSelection`
+- `Compare_FullPage_WithTwoPlayers_RendersComparisonTables`
+
+### Pattern Reuse
+- Same htmx detection as Players/Teams (`Request.IsHtmxNonBoostedRequest()`)
+- Same partial naming convention (`_CompareFoo.cshtml` for page-local partials)
+- Same test structure (full-page, non-boosted, boosted variants)
+- Same response cache preservation (`VaryByHeader="HX-Request"`)
+- Same shell authority over `#modal-container`
+
+### Key Learnings
+- **Parameterized partials work well** — `_ComparePlayerCard` accepts `(Player?, Side, OtherPlayerId, Gradient)` tuple for flexible reuse
+- **Dual-target pattern scales** — Two independent htmx targets in same view without collision
+- **Query string preservation** — Search URLs dynamically construct `player1`/`player2` params to preserve other selection
+- **Conditional rendering** — `@if (Model.BothSelected)` in partial keeps comparison tables hidden until both players selected
+- **Empty state in partial** — Player card partial handles both empty (search) and loaded (player detail) states cleanly
+
+### Files Created
+- `baseball-history-web/Pages/Compare/_CompareMain.cshtml`
+- `baseball-history-web/Pages/Compare/_CompareHeader.cshtml`
+- `baseball-history-web/Pages/Compare/_ComparePlayerCard.cshtml`
+
+### Files Modified
+- `baseball-history-web/Pages/Compare/Index.cshtml` (wrapper only)
+- `baseball-history-web/Pages/Compare/Index.cshtml.cs` (htmx detection added)
+- `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` (+5 tests)
+
+### Quality Gates
+- ✅ Build: Clean, no warnings
+- ✅ Tests: 350 total, all passing
+- ✅ Full-page behavior: Preserved
+- ✅ htmx partial behavior: Working correctly
+- ✅ Modal integration: Unchanged
+- ✅ Search contracts: Stable
+- ✅ Response cache: Preserved
+
+### Status
+✅ Sprint 3 Compare migration COMPLETE. Ready for team review and merge.
+

@@ -278,6 +278,52 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         Assert.Contains("Ty Cobb", html);
     }
 
+    [Fact]
+    public async Task Compare_NonBoostedHtmx_ReturnsCompareMainPartial()
+    {
+        var html = await GetHtmxStringAsync("/Compare?player1=ruthba01&player2=cobbty01");
+
+        AssertPartialResponse(html);
+        Assert.DoesNotContain("id=\"compare-content\"", html);
+        Assert.DoesNotContain("id=\"modal-container\"", html);
+        Assert.Contains("id=\"compare-tables\"", html);
+        Assert.Contains("Babe Ruth", html);
+        Assert.Contains("Ty Cobb", html);
+    }
+
+    [Fact]
+    public async Task Compare_BoostedHtmx_ReturnsFullPageShell()
+    {
+        var html = await GetHtmxStringAsync("/Compare?player1=ruthba01&player2=cobbty01", boosted: true);
+
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"compare-content\"", html);
+        Assert.Contains("id=\"compare-tables\"", html);
+    }
+
+    [Fact]
+    public async Task Compare_NonBoostedHtmx_WiresPlayerModalContracts()
+    {
+        var html = await GetHtmxStringAsync("/Compare?player1=ruthba01&player2=cobbty01");
+
+        AssertPartialResponse(html);
+        Assert.Contains("hx-get=\"/Players/Modal/ruthba01\"", html);
+        Assert.Contains("hx-get=\"/Players/Modal/cobbty01\"", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
+    }
+
+    [Fact]
+    public async Task Compare_NonBoostedHtmx_WiresDualSearchContracts()
+    {
+        var html = await GetHtmxStringAsync("/Compare");
+
+        AssertPartialResponse(html);
+        Assert.Contains("id=\"search-results-1\"", html);
+        Assert.Contains("id=\"search-results-2\"", html);
+        Assert.Contains("handler=Search&amp;side=1", html);
+        Assert.Contains("handler=Search&amp;side=2", html);
+    }
+
     private static void AssertFullPageShell(string html)
     {
         Assert.Contains("<!DOCTYPE html>", html);

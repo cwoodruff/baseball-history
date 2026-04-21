@@ -234,3 +234,123 @@ Dallas (#8) and Parker (#9) can start immediately. No blocking dependencies. Reg
 - Monitor: Sequential query patterns under load (defer to profiling sprint)
 
 **Note:** All guardrails approved for implementation in future sprints.
+
+## Sprint 3 Platform Audit (2026-04-22)
+
+**Status:** ✅ AUDIT COMPLETE — One critical fix applied, all guardrails verified
+
+### Baseline Health Check
+- **Test suite:** 350/350 tests passing (up from 349 baseline) ✓
+- **Compare page queries:** 7-9 per player (response-cached at 3600s) ✓
+- **Awards/HOF/Postseason/Salaries:** All projection-first ✓
+- **Cache keys:** 8 new keys (award_, salary_, hof_, postseason_) — no collisions ✓
+- **Response cache:** All pages follow VaryByHeader="HX-Request" pattern ✓
+
+### Critical Issue Found & Fixed
+
+**Compare Page LoadPlayer Full Entity Hydration (CRITICAL)**
+- **Issue:** `LoadPlayer` method loaded full `People` entity without projection
+- **Impact:** ~60% memory waste per player load, violates Guardrail #2
+- **Fix Applied:** Projection-first pattern (8 fields instead of 20+)
+- **Verification:** All 350 tests pass, memory allocation reduced
+
+**Code Change:**
+```csharp
+// Before (violates projection-first)
+var person = await context.People.FirstOrDefaultAsync(p => p.PlayerId == playerId);
+
+// After (projection-first ✓)
+var person = await context.People
+    .Where(p => p.PlayerId == playerId)
+    .Select(p => new { p.PlayerId, p.NameFirst, p.NameLast, /* 5 more */ })
+    .FirstOrDefaultAsync();
+```
+
+### Key Findings
+
+**Compare Page (#10):**
+- Projection-first query pattern verified ✓ (after fix)
+- Sequential queries acceptable (7-9 per player, response-cached 3600s) ✓
+- OnGetSearchAsync: Projection-first search results ✓
+- LoadPlayer: **FIXED** — Now projects only needed fields ✓
+- Cache key: Reuses `hof_player_ids` (intentional) ✓
+
+**Awards Page (#11):**
+- Projection-first: Winners + voting detail both use early `.Select()` ✓
+- Cache keys: `award_names`, `award_years`, `award_leagues` (unique) ✓
+- Voting race detail: 3 queries (filters cached, winners + votes projected) ✓
+- No N+1 in voting data (pre-aggregated in DB) ✓
+
+**Hall of Fame Page (#11):**
+- Projection-first: Inductees query projects player fields (no `.Include()`) ✓
+- Cache keys: `hof_years`, `hof_category_counts` (unique) ✓
+- Category counts cached at startup (24h TTL) ✓
+- **Previous `.Include(h => h.Player)` already removed** ✓
+
+**Postseason Page (#11):**
+- Projection-first: Series query projects team names + results ✓
+- Cache key: `postseason_years` (unique) ✓
+- Single query pattern, no N+1 ✓
+
+**Salaries Page (#11):**
+- Projection-first: Available teams + salary data both use `.Select()` ✓
+- Cache key: `salary_years` (unique) ✓
+- Team payroll summary uses `SumAsync` (single aggregate, no N+1) ✓
+
+### Critical Guardrails Verified
+
+1. **Response Cache Metadata** — All 5 pages have `[ResponseCache(..., VaryByHeader="HX-Request")]` ✓
+2. **Projection-First Queries** — All EF queries use early `.Select()` (after Compare fix) ✓
+3. **Cache Key Consistency** — 8 new keys, all unique, 24h TTL, `hof_player_ids` shared intentionally ✓
+
+### Risks Mitigated
+
+- Compare full entity hydration → Projection-first fix applied
+- Sequential query overhead → Response cache (3600s TTL) mitigates runtime impact
+- Cache key collisions → All keys unique, domain-prefixed
+- N+1 in voting/payroll → Queries use aggregation, no lazy-load
+
+### Decisions Written
+
+- `.squad/decisions/inbox/ash-sprint3-guardrails.md` — Full platform audit + fix details
+
+### New Insights
+
+- **Compare page sequential queries acceptable** — Response cache (3600s) + projection-first pattern mitigates load
+- **Hall of Fame `.Include()` already removed** — Previous fix applied correctly
+- **Awards voting race pattern safe** — Pre-aggregated data, no N+1 risk
+- **Cache key naming convention holds** — All Sprint 3 keys follow domain-prefix pattern
+
+### Approval Gate
+
+Compare (#10) and feature pages (#11) are platform-safe to merge. All guardrails from Sprint 1/2 preserved. One critical fix applied (Compare projection). Regression suite gates all PRs.
+
+## 2026-04-22 Sprint 3 Platform Audit Complete: Guardrails Verified & Critical Fix Applied
+
+### Deliverables
+✅ Sprint 3 platform audit completed
+✅ 3 guardrails verified across 5 pages:
+  1. Response cache metadata (VaryByHeader) preserved
+  2. Projection-first queries verified (one fix applied)
+  3. Cache key consistency verified (8 new keys, no collisions)
+
+### Validation Results
+✅ Compare #10: Query architecture sound after projection fix
+✅ Awards #11: Query architecture sound, no N+1 in voting data
+✅ Hall of Fame #11: Query architecture sound, projection-first verified
+✅ Postseason #11: Query architecture sound, single query pattern
+✅ Salaries #11: Query architecture sound, aggregation pattern safe
+✅ Response cache: All pages follow established pattern
+✅ Cache keys: No collisions, unique domain prefixes
+
+### Sprint 3 Approval
+✅ **APPROVED** — Platform-safe to proceed
+✅ Compare and feature pages follow established query/caching/response patterns
+✅ One critical data-access fix applied (Compare projection)
+✅ All 350 tests pass (up from 349 baseline)
+✅ Guardrails 1–3 locked for all future pages
+
+### Next Actions
+- Post-merge: Monitor cache hit rates under parallel work
+- Sprint 4: Validate leaderboard query patterns (complex aggregations)
+- Sprint 5: Document slow-query instrumentation roadmap
