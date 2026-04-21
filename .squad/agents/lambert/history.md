@@ -1,5 +1,8 @@
 # Lambert — Tester
 
+
+**Core Summary:** Lambert owns regression gates (344/344 tests baseline). Validates test coverage for each sprint, ensures no pre-existing behavior changes, and holds the quality baseline.
+
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor

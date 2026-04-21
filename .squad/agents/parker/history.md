@@ -1,5 +1,12 @@
 # Project Context
 
+
+## Core Context
+
+**Parker's Role:** Feature page migration (Awards, HoF, Postseason, Salaries in Sprint 3). Manages parallel work with filter preservation and leaderboard bug fixes (Sprint 4, #13).
+
+**Key Work:** Awards #11 (voting detail), HoF/Postseason/Salaries (4-page pattern), Pitching leaderboard bug fix. Parallel sequencing with Dallas #10.
+
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor

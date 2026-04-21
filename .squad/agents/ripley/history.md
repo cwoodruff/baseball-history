@@ -1,4 +1,27 @@
 # Project Context
+## Core Context
+
+**Ripley's Role:** Orchestration lead for htmxRazor migration (5 sprints, 12 issues). Manages sprint boundaries, design reviews, platform audits, and cross-agent sequencing.
+
+**Key Completed Work:**
+- Sprint 1 (Foundation): Shell architecture, primitives, regression gates
+- Sprint 2 (Foundation Pages): Players, Teams pages with modal decomposition
+- Sprint 3 (Comparison & Features): Compare, Awards, HoF, Postseason, Salaries
+- Sprint 4 (Leaderboards): Batting, Pitching with bug fixes
+- Sprint 5 (Polish): Homepage, search surfaces, docs
+- RHX/HTMX audit: No follow-up implementation needed
+
+**Patterns Established:**
+- Design review → Lambert baseline → Dallas parallel build → Ash validation → Lambert gate
+- htmx contracts frozen; partial returns on non-boosted requests; shell authority immovable
+- Response cache: `VaryByHeader="HX-Request"` for htmx vs full-page distinction
+- Component output size: ±5KB of baseline acceptable
+
+**Test Baseline:** 344/344 passing (final state)
+
+**Migration Complete:** All issues closed, all milestones archived. Next: validation and merge on htmxRazor.
+
+---
 
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
