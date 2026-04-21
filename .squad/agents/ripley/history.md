@@ -479,3 +479,90 @@ Avoiding filter-form container rewiring during Sprint 2 parallel feature work is
 - **Scribe**: Decision archival, team history updates
 
 ---
+
+## Sprint 2 Design Review (2026-04-21)
+
+### Review Participants
+- **Dallas** (Frontend, Issue #8 — Players pages)
+- **Parker** (Backend, Issue #9 — Teams pages)
+- **Lambert** (Regression gating)
+- **Ash** (Data/platform validation)
+
+### Key Findings
+
+#### Issue #8 Scope (Players Migration)
+- Pages: Index → _PlayersContent → _PlayerList → Modal handling
+- Current: Alphabet nav + pagination (htmx-aware), modal detail load
+- Components available: _AlphabetNav, _Pagination, _LoadingSpinner, _EmptyState, _PlayerCard
+- Risk: _PlayerModal.cshtml is 19KB; component migration may impact bundle size
+- Mitigation: Measure output size delta, defer if >+10KB
+
+#### Issue #9 Scope (Teams Migration)
+- Pages: Index → _TeamList + Franchise → _FranchiseSeasons + Season detail
+- Current: League filtering, franchise list, team roster tables (batters/pitchers/managers)
+- Components available: _TeamCard
+- Risk: SeasonModel loads 3 rosters in parallel; component rendering must use projected ViewModels (not lazy-load)
+- Mitigation: Parker ensures query projections complete before component input, Ash validates no N+1
+
+#### Parallelization Assessment
+- **APPROVED:** Dallas (#8) and Parker (#9) can work immediately in parallel
+- Rationale: Independent data flows, separate handlers, locked component contracts, isolated test coverage
+- No blocking dependencies between issues
+
+#### Shared Contracts (Locked, DO NOT CHANGE)
+1. Response detection: `Request.IsHtmxNonBoostedRequest()` decides full-page vs. partial
+2. Component input shapes: PaginationModel, AlphabetNavModel, EmptyStateModel (frozen from #7)
+3. Response caching: `[ResponseCache(Duration = 3600, VaryByHeader = "HX-Request")]` (no changes)
+4. htmx targets: `#players-content`, `#team-list` (no changes)
+5. Route structure: `/Players`, `/Players/Modal/{id}`, `/Teams`, `/Teams/Franchise/{id}`, `/Teams/Season` (no changes)
+
+#### Risk Ranking
+- **LOW:** Parker's work (backend isolated, purely view-layer migration)
+- **LOW:** Dallas's core Players migration (components proven, alphabet/pagination locked)
+- **MEDIUM:** Modal rendering size (19KB component + rendering cost assessment needed)
+- **MEDIUM:** Cache invalidation (ensure VaryByHeader logic holds under parallel requests)
+- **MEDIUM:** Roster loading pattern (SeasonModel query serialization must stay within component)
+
+#### Mitigations Assigned
+- **Ash:** Baseline Lighthouse before #8, post-merge comparison (reject >+10% regression)
+- **Ash:** Cache behavior verification (htmx requests still return partial, non-htmx return full)
+- **Ash:** Query projection audit (no lazy-load in component rendering, no N+1)
+- **Lambert:** Regression suite gates both PRs (41 tests must pass)
+- **Dallas:** Modal output size audit (defer if >+10KB impact)
+- **Parker:** Ensure all roster data projected before component input
+
+### Interfaces to Preserve (Read-Only)
+| Item | Owners | Locked By |
+|------|--------|-----------|
+| PlayerListViewModel | Dallas/Parker/Lambert | Regression tests |
+| TeamListViewModel | Parker/Lambert | Regression tests |
+| Route structure | Dallas/Parker | API integration tests |
+| Response caching | Dallas/Parker | Client cache contracts |
+| _Pagination input shape | Dallas/Parker | Sprint 1 lock |
+| htmx targets + queries | Dallas/Parker | htmx behavior tests |
+
+### Action Items by Agent
+**Dallas:**
+- [ ] Migrate Players Index, Content, List views (preserve Pagination, AlphabetNav, LoadingSpinner)
+- [ ] Assess Player Modal (measure size, decide include vs. defer)
+- [ ] Verify regression suite passes post-merge
+
+**Parker:**
+- [ ] Migrate Teams Index, TeamList views (no handler changes)
+- [ ] Migrate Franchise and Season views (ensure roster data projected before component input)
+- [ ] Verify regression suite passes post-merge
+
+**Lambert:**
+- [ ] Run baseline regression (41 tests pass before #8/#9 start)
+- [ ] Gate #8 merge on regression pass
+- [ ] Gate #9 merge on regression pass
+
+**Ash:**
+- [ ] Baseline Lighthouse on Players before #8
+- [ ] Post-merge Lighthouse comparison (reject >+10%)
+- [ ] Cache behavior + query projection audit
+
+### Decision: Parallelization Approval
+✅ **APPROVED** — Dallas and Parker can start Sprint 2 immediately on separate branches. Guardrails enforced by Lambert (regression) and Ash (performance/platform).
+
+---
