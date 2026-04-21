@@ -9,7 +9,7 @@ else
     <div class="card">
         <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
             <strong>@Model.Title</strong>
-            <span class="badge bg-light text-dark">@Model.TotalEntries.ToString("N0") players</span>
+            <rhx-badge rhx-variant="neutral">@Model.TotalEntries.ToString("N0") players</rhx-badge>
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
@@ -147,7 +147,7 @@ else
                             </a>
                             @if (leader.IsInHallOfFame)
                             {
-                                <span class="hof-badge ms-1">HOF</span>
+                                <rhx-badge rhx-variant="warning" rhx-size="sm" class="ms-1">HOF</rhx-badge>
                             }
                         </td>
                         @if (Model.SingleSeason)

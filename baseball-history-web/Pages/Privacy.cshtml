@@ -3,6 +3,16 @@
 @{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+@await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
+{
+    Title = ViewData["Title"]?.ToString() ?? "Privacy Policy",
+    Subtitle = "Reference page for site privacy details.",
+    Eyebrow = "Support"
+})
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <p class="mb-0">Use this page to detail your site's privacy policy.</p>
+    </div>
+</div>

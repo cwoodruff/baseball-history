@@ -26,9 +26,8 @@
     </script>
 
     <!-- Scripts in head so they survive hx-boost body swaps -->
-    @* htmx is injected by AddhtmxRazor(); keep component JS imports here as rhx-* components are adopted. *@
+    @* htmx is injected by AddhtmxRazor(); keep global runtime scripts here so shell behavior survives hx-boost swaps. *@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="~/js/site.js" asp-append-version="true" defer></script>
 </head>
 <body hx-boost="true">
 @await Html.PartialAsync("_ShellHeader")

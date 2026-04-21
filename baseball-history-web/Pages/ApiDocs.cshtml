@@ -4,32 +4,32 @@
     ViewData["Title"] = "API Documentation";
 }
 
-<div class="container">
-    <div class="row">
-        <div class="col-lg-10 offset-lg-1">
-            <h1 class="mb-3">REST API</h1>
-            <p class="lead">
-                Access over 150 years of Major League Baseball statistics programmatically.
-                All endpoints return JSON and require no authentication.
-            </p>
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        @await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
+        {
+            Title = "REST API",
+            Subtitle = "Access over 150 years of Major League Baseball statistics programmatically. All endpoints return JSON and require no authentication.",
+            Eyebrow = "Developer"
+        })
 
-            <div class="alert alert-info d-flex align-items-center mb-4">
-                <span class="me-2" style="font-size: 1.2rem;">&#128214;</span>
-                <div>
-                    <strong>Interactive API Explorer:</strong>
-                    Try endpoints directly in the
-                    <a href="/scalar/v1" target="_blank" rel="noopener">Scalar API Reference</a>
-                    (available in development mode), or view the raw
-                    <a href="/openapi/v1.json" target="_blank" rel="noopener">OpenAPI specification</a>.
-                </div>
+        <div class="alert alert-info d-flex align-items-center mb-4">
+            <span class="me-2" style="font-size: 1.2rem;">&#128214;</span>
+            <div>
+                <strong>Interactive API Explorer:</strong>
+                Try endpoints directly in the
+                <a href="/scalar/v1" target="_blank" rel="noopener">Scalar API Reference</a>
+                (available in development mode), or view the raw
+                <a href="/openapi/v1.json" target="_blank" rel="noopener">OpenAPI specification</a>.
             </div>
+        </div>
 
-            <!-- Base URL -->
-            <section class="mb-5">
+        <!-- Base URL -->
+        <section class="mb-5">
                 <h2>Base URL</h2>
                 <pre class="bg-dark text-light p-3 rounded"><code>https://your-host/api</code></pre>
                 <p>All endpoints below are relative to this base. Responses use <code>application/json</code>.</p>
-            </section>
+        </section>
 
             <!-- Pagination -->
             <section class="mb-5">

@@ -22,8 +22,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         ViewModel.SelectedCategory = category;
         ViewModel.CurrentPage = page;
 
-        // Get available years (cached)
-        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("hof_years", async entry =>
+        // Get available years (cached with namespace prefix)
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("halloffame_years", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return await context.HallOfFame
@@ -34,9 +34,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .ToListAsync();
         }))!;
 
-        // Build query
+        // Build query — projection-first (no Include)
         var query = context.HallOfFame
-            .Include(h => h.Player)
             .Where(h => h.Inducted == "Y");
 
         // Apply filters
@@ -51,7 +50,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         ViewModel.TotalPages = (int)Math.Ceiling((double)ViewModel.TotalInductees / PageSize);
         ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
 
-        // Get inductees
+        // Get inductees — project only needed fields (no lazy-load entities)
         var inductees = await query
             .OrderByDescending(h => h.Yearid)
             .ThenBy(h => h.Player.NameLast)
@@ -60,12 +59,15 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             .Select(h => new
             {
                 h.PlayerId,
-                h.Player,
+                FirstName = h.Player.NameFirst,
+                LastName = h.Player.NameLast,
                 h.Yearid,
                 h.Category,
                 h.VotedBy,
                 h.Votes,
-                h.Ballots
+                h.Ballots,
+                DebutYear = h.Player.Debut,
+                FinalYear = h.Player.FinalGame
             })
             .ToListAsync();
 
@@ -80,20 +82,20 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             return new HallOfFameInductee
             {
                 PlayerId = h.PlayerId,
-                FirstName = h.Player?.NameFirst,
-                LastName = h.Player?.NameLast,
-                FullName = $"{h.Player?.NameFirst} {h.Player?.NameLast}".Trim(),
+                FirstName = h.FirstName,
+                LastName = h.LastName,
+                FullName = $"{h.FirstName} {h.LastName}".Trim(),
                 InductionYear = h.Yearid,
                 Category = h.Category ?? "Player",
                 VotedBy = h.VotedBy,
                 VotePercentage = votePct,
-                DebutYear = h.Player?.Debut?.Year.ToString(),
-                FinalYear = h.Player?.FinalGame?.Year.ToString()
+                DebutYear = h.DebutYear?.Year.ToString(),
+                FinalYear = h.FinalYear?.Year.ToString()
             };
         }).ToList();
 
-        // Get category counts (cached)
-        var categoryCounts = (await cache.GetOrCreateAsync("hof_category_counts", async entry =>
+        // Get category counts (cached with namespace prefix)
+        var categoryCounts = (await cache.GetOrCreateAsync("halloffame_category_counts", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return await context.HallOfFame

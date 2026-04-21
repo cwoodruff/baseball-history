@@ -33,26 +33,12 @@
                                 <div class="list-group list-group-flush">
                                     @foreach (var player in Model.Players)
                                     {
-                                        <a href="#" class="list-group-item list-group-item-action d-flex align-items-center"
-                                           hx-get="/Players/Modal/@player.Id"
-                                           hx-target="#modal-container"
-                                           hx-swap="innerHTML"
-                                           hx-boost="false">
-                                            <div class="result-icon me-3">@player.Initials</div>
-                                            <div>
-                                                <div class="fw-bold">
-                                                    @player.Title
-                                                    @if (player.IsInHallOfFame)
-                                                    {
-                                                        <span class="hof-badge ms-1">HOF</span>
-                                                    }
-                                                </div>
-                                                @if (!string.IsNullOrEmpty(player.Subtitle))
-                                                {
-                                                    <small class="text-muted">@player.Subtitle</small>
-                                                }
-                                            </div>
-                                        </a>
+                                        @await Html.PartialAsync("Components/_SearchResultLink", new baseball_history_web.ViewModels.SearchResultLinkModel
+                                        {
+                                            Result = player,
+                                            ItemClass = "list-group-item list-group-item-action d-flex align-items-center",
+                                            IconClass = "result-icon me-3"
+                                        })
                                     }
                                 </div>
                             </div>
@@ -71,18 +57,13 @@
                                 <div class="list-group list-group-flush">
                                     @foreach (var team in Model.Teams)
                                     {
-                                        <a href="/Teams/Franchise/@team.Id" class="list-group-item list-group-item-action d-flex align-items-center"
-                                           data-team="@team.TeamId"
-                                           data-bs-dismiss="modal">
-                                            <div class="result-icon bg-team-gradient me-3">@team.Initials</div>
-                                            <div>
-                                                <div class="fw-bold">@team.Title</div>
-                                                @if (!string.IsNullOrEmpty(team.Subtitle))
-                                                {
-                                                    <small class="text-muted">@team.Subtitle</small>
-                                                }
-                                            </div>
-                                        </a>
+                                        @await Html.PartialAsync("Components/_SearchResultLink", new baseball_history_web.ViewModels.SearchResultLinkModel
+                                        {
+                                            Result = team,
+                                            ItemClass = "list-group-item list-group-item-action d-flex align-items-center",
+                                            IconClass = "result-icon bg-team-gradient me-3",
+                                            DismissModalOnClick = true
+                                        })
                                     }
                                 </div>
                             </div>

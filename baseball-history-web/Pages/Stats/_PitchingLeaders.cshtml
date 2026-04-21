@@ -9,7 +9,7 @@ else
     <div class="card">
         <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
             <strong>@Model.Title</strong>
-            <span class="badge bg-light text-dark">@Model.TotalEntries.ToString("N0") pitchers</span>
+            <rhx-badge rhx-variant="neutral">@Model.TotalEntries.ToString("N0") pitchers</rhx-badge>
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
@@ -28,7 +28,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            G @(Model.StatColumn == "g" ? "↓" : "")
+                            G @Html.Raw(Model.StatColumn == "g" ? "↓" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -37,7 +37,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            GS @(Model.StatColumn == "gs" ? "↓" : "")
+                            GS @Html.Raw(Model.StatColumn == "gs" ? "↓" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -46,7 +46,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            W @(Model.StatColumn == "w" ? "↓" : "")
+                            W @Html.Raw(Model.StatColumn == "w" ? "↓" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -55,7 +55,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            L @(Model.StatColumn == "l" ? "↑" : "")
+                            L @Html.Raw(Model.StatColumn == "l" ? "↑" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -64,7 +64,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            SV @(Model.StatColumn == "sv" ? "↓" : "")
+                            SV @Html.Raw(Model.StatColumn == "sv" ? "↓" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -73,7 +73,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            IP @(Model.StatColumn == "ip" ? "↓" : "")
+                            IP @Html.Raw(Model.StatColumn == "ip" ? "↓" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -82,7 +82,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            SO @(Model.StatColumn == "so" ? "↓" : "")
+                            SO @Html.Raw(Model.StatColumn == "so" ? "↓" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -91,7 +91,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            BB @(Model.StatColumn == "bb" ? "↑" : "")
+                            BB @Html.Raw(Model.StatColumn == "bb" ? "↑" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -100,7 +100,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            ERA @(Model.StatColumn == "era" ? "↑" : "")
+                            ERA @Html.Raw(Model.StatColumn == "era" ? "↑" : "")
                         </a>
                     </th>
                     <th class="text-end">
@@ -109,7 +109,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            WHIP @(Model.StatColumn == "whip" ? "↑" : "")
+                            WHIP @Html.Raw(Model.StatColumn == "whip" ? "↑" : "")
                         </a>
                     </th>
                 </tr>
@@ -129,7 +129,7 @@ else
                             </a>
                             @if (leader.IsInHallOfFame)
                             {
-                                <span class="hof-badge ms-1">HOF</span>
+                                <rhx-badge rhx-variant="warning" rhx-size="sm" class="ms-1">HOF</rhx-badge>
                             }
                         </td>
                         @if (Model.SingleSeason)

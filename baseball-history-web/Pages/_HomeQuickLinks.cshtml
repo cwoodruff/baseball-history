@@ -1,0 +1,24 @@
+@{
+    var quickLinks = new[]
+    {
+        new { Href = "/Players", Icon = "&#9918;", Title = "Players", Subtitle = "Browse A-Z" },
+        new { Href = "/Teams", Icon = "&#127941;", Title = "Teams", Subtitle = "All Franchises" },
+        new { Href = "/Stats/Batting", Icon = "&#128202;", Title = "Batting Stats", Subtitle = "Leaderboards" },
+        new { Href = "/Stats/Pitching", Icon = "&#9918;", Title = "Pitching Stats", Subtitle = "Leaderboards" }
+    };
+}
+
+<div class="row">
+    @foreach (var link in quickLinks)
+    {
+        <div class="col-md-3 col-6 mb-3">
+            <a href="@link.Href" class="card text-decoration-none h-100">
+                <div class="card-body text-center">
+                    <div class="h4 mb-2">@Html.Raw(link.Icon)</div>
+                    <div class="fw-bold">@link.Title</div>
+                    <small class="text-muted">@link.Subtitle</small>
+                </div>
+            </a>
+        </div>
+    }
+</div>

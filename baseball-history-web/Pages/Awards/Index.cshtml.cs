@@ -24,8 +24,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         ViewModel.SelectedLeague = league;
         ViewModel.CurrentPage = page;
 
-        // Get available awards (cached)
-        ViewModel.AvailableAwards = (await cache.GetOrCreateAsync("award_names", async entry =>
+        // Get available awards (cached with namespace prefix)
+        ViewModel.AvailableAwards = (await cache.GetOrCreateAsync("awards_names", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return await context.AwardsPlayers
@@ -35,8 +35,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .ToListAsync();
         }))!;
 
-        // Get available years (cached)
-        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("award_years", async entry =>
+        // Get available years (cached with namespace prefix)
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("awards_years", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return await context.AwardsPlayers
@@ -46,8 +46,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .ToListAsync();
         }))!;
 
-        // Get available leagues
-        ViewModel.AvailableLeagues = (await cache.GetOrCreateAsync("award_leagues", async entry =>
+        // Get available leagues (cached with namespace prefix)
+        ViewModel.AvailableLeagues = (await cache.GetOrCreateAsync("awards_leagues", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
             return await context.AwardsPlayers

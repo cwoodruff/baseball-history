@@ -4,62 +4,67 @@
     ViewData["Title"] = "Health Check";
 }
 
-<div class="container">
-    <h1>Health Check</h1>
+@await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
+{
+    Title = "Health Check",
+    Subtitle = "Quick status view for the read-only Lahman database connection.",
+    Eyebrow = "Support",
+    BadgeText = Model.DatabaseHealthy ? "Healthy" : "Needs attention",
+    BadgeVariant = Model.DatabaseHealthy ? "success" : "warning"
+})
 
-    <div class="card mt-4">
-        <div class="card-header">
-            Database Status
-        </div>
-        <div class="card-body">
-            @if (Model.DatabaseHealthy)
+<div class="card border-0 shadow-sm">
+    <div class="card-header">
+        Database Status
+    </div>
+    <div class="card-body">
+        @if (Model.DatabaseHealthy)
+        {
+            <div class="alert alert-success" role="alert">
+                SQLite database is accessible
+            </div>
+
+            @if (Model.SampleTeam != null)
             {
-                <div class="alert alert-success" role="alert">
-                    SQLite database is accessible
-                </div>
-
-                @if (Model.SampleTeam != null)
-                {
-                    <h5 class="card-title">Sample Team Record</h5>
-                    <table class="table table-bordered">
-                        <tr>
-                            <th>Team ID</th>
-                            <td>@Model.SampleTeam.TeamId</td>
-                        </tr>
-                        <tr>
-                            <th>Name</th>
-                            <td>@Model.SampleTeam.Name</td>
-                        </tr>
-                        <tr>
-                            <th>Year</th>
-                            <td>@Model.SampleTeam.YearId</td>
-                        </tr>
-                        <tr>
-                            <th>League</th>
-                            <td>@Model.SampleTeam.LgId</td>
-                        </tr>
-                        <tr>
-                            <th>Wins</th>
-                            <td>@Model.SampleTeam.W</td>
-                        </tr>
-                        <tr>
-                            <th>Losses</th>
-                            <td>@Model.SampleTeam.L</td>
-                        </tr>
-                    </table>
-                }
+                <h5 class="card-title">Sample Team Record</h5>
+                <table class="table table-bordered mb-0">
+                    <tr>
+                        <th>Team ID</th>
+                        <td>@Model.SampleTeam.TeamId</td>
+                    </tr>
+                    <tr>
+                        <th>Name</th>
+                        <td>@Model.SampleTeam.Name</td>
+                    </tr>
+                    <tr>
+                        <th>Year</th>
+                        <td>@Model.SampleTeam.YearId</td>
+                    </tr>
+                    <tr>
+                        <th>League</th>
+                        <td>@Model.SampleTeam.LgId</td>
+                    </tr>
+                    <tr>
+                        <th>Wins</th>
+                        <td>@Model.SampleTeam.W</td>
+                    </tr>
+                    <tr>
+                        <th>Losses</th>
+                        <td>@Model.SampleTeam.L</td>
+                    </tr>
+                </table>
             }
-            else
+        }
+        else
+        {
+            <div class="alert alert-danger" role="alert">
+                Database is not accessible
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
             {
-                <div class="alert alert-danger" role="alert">
-                    Database is not accessible
-                </div>
-
-                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-                {
-                    <p><strong>Error:</strong> @Model.ErrorMessage</p>
-                }
+                <p class="mb-0"><strong>Error:</strong> @Model.ErrorMessage</p>
             }
-        </div>
+        }
     </div>
 </div>

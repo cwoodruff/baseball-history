@@ -1,0 +1,69 @@
+@model IndexModel
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header card-header-mlb">
+                <strong>Career Home Run Leaders</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var leader in Model.CareerHrLeaders)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-secondary me-2">@leader.Rank</span>
+                            <a href="#" class="text-decoration-none"
+                               hx-get="/Players/Modal/@leader.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @leader.PlayerName
+                            </a>
+                            @if (leader.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </span>
+                        <span class="fw-bold text-mlb-navy">@leader.HomeRuns.ToString("N0")</span>
+                    </li>
+                }
+            </ul>
+            <div class="card-footer text-center">
+                <a href="/Stats/Batting?stat=hr" class="text-decoration-none">View All Leaders</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header card-header-mlb">
+                <strong>Career Wins Leaders</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                @foreach (var leader in Model.CareerWinsLeaders)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge bg-secondary me-2">@leader.Rank</span>
+                            <a href="#" class="text-decoration-none"
+                               hx-get="/Players/Modal/@leader.PlayerId"
+                               hx-target="#modal-container"
+                               hx-swap="innerHTML"
+                               hx-boost="false">
+                                @leader.PlayerName
+                            </a>
+                            @if (leader.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1">HOF</span>
+                            }
+                        </span>
+                        <span class="fw-bold text-mlb-navy">@leader.Wins.ToString("N0")</span>
+                    </li>
+                }
+            </ul>
+            <div class="card-footer text-center">
+                <a href="/Stats/Pitching?stat=w" class="text-decoration-none">View All Leaders</a>
+            </div>
+        </div>
+    </div>
+</div>

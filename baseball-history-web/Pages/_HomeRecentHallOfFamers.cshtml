@@ -1,0 +1,49 @@
+@model IndexModel
+
+@if (Model.RecentHofInductees.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Recent Hall of Fame Inductees</strong>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                @foreach (var player in Model.RecentHofInductees)
+                {
+                    <div class="col-md-4 col-6 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div
+                                class="me-3 rounded-circle bg-mlb-navy text-white d-flex align-items-center justify-content-center"
+                                style="width: 50px; height: 50px; font-weight: bold;">
+                                @{
+                                    var initials = "";
+                                    if (!string.IsNullOrEmpty(player.FirstName) && !string.IsNullOrEmpty(player.LastName))
+                                    {
+                                        initials = $"{player.FirstName[0]}{player.LastName[0]}";
+                                    }
+                                }
+                                @initials.ToUpper()
+                            </div>
+                            <div>
+                                <a href="#" class="text-decoration-none fw-bold"
+                                   hx-get="/Players/Modal/@player.PlayerId"
+                                   hx-target="#modal-container"
+                                   hx-swap="innerHTML"
+                                   hx-boost="false">
+                                    @player.FullName
+                                </a>
+                                <span class="hof-badge ms-1">HOF</span>
+                                <div class="small text-muted">
+                                    @player.DebutYear - @player.FinalYear
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <a href="/HallOfFame" class="text-decoration-none">View All Hall of Famers</a>
+        </div>
+    </div>
+}

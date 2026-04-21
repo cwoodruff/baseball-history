@@ -99,6 +99,8 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         Assert.Contains("PLAYERS", html);
         Assert.Contains("View all results for", html);
         Assert.Contains("hx-get=\"/Players/Modal/", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
+        Assert.Contains("search-results", html);
     }
 
     [Fact]
@@ -109,6 +111,59 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         AssertPartialResponse(html);
         Assert.Contains("id=\"searchAllResultsModal\"", html);
         Assert.Contains("Search Results for", html);
+        Assert.Contains("hx-get=\"/Players/Modal/", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
+    }
+
+    [Fact]
+    public async Task Search_TeamQuery_PreservesFranchiseNavigationContracts()
+    {
+        var html = await GetStringAsync("/Search?q=Yankees");
+
+        AssertPartialResponse(html);
+        Assert.Contains("TEAMS", html);
+        Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
+        Assert.Contains("data-team=\"NYA\"", html);
+    }
+
+    [Fact]
+    public async Task Search_AllResultsTeamQuery_DismissesModalOnNavigation()
+    {
+        var html = await GetStringAsync("/Search?handler=AllResults&q=Yankees");
+
+        AssertPartialResponse(html);
+        Assert.Contains("id=\"searchAllResultsModal\"", html);
+        Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
+        Assert.Contains("data-bs-dismiss=\"modal\"", html);
+    }
+
+    [Fact]
+    public async Task Index_FullPage_RendersHomepageLinksAndModalContracts()
+    {
+        var html = await GetStringAsync("/");
+
+        AssertFullPageShell(html);
+        Assert.Contains("Browse Players", html);
+        Assert.Contains("View Teams", html);
+        Assert.Contains("href=\"/Stats/Batting?stat=hr\"", html);
+        Assert.Contains("href=\"/HallOfFame\"", html);
+        Assert.Contains("hx-get=\"/Players/Modal/", html);
+        Assert.Contains("hx-target=\"#modal-container\"", html);
+    }
+
+    [Theory]
+    [InlineData("/About", ">About</h1>", "View Source on GitHub")]
+    [InlineData("/ApiDocs", ">REST API</h1>", "/openapi/v1.json")]
+    [InlineData("/Privacy", ">Privacy Policy</h1>", "Use this page to detail your site's privacy policy.")]
+    [InlineData("/Health", ">Health Check</h1>", "Database Status")]
+    [InlineData("/Error", ">Error</h1>", "Development Mode")]
+    public async Task SupportPages_FullPage_RenderWithinShell(string route, string headingMarker, string contentMarker)
+    {
+        var html = await GetStringAsync(route);
+
+        AssertFullPageShell(html);
+        Assert.Contains(headingMarker, html);
+        Assert.Contains(contentMarker, html);
     }
 
     [Fact]

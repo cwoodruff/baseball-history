@@ -2,7 +2,7 @@
 
 A web application for exploring Major League Baseball history using the Lahman
 Baseball Database. Baseball data and statistics from 1871 to 2025. Built with ASP.NET Core Razor Pages, Entity Framework Core,
-htmx, and Bootstrap.
+htmxRazor, htmx, and Bootstrap.
 
 ![Home Screenshot](./docs/home-screenshot.png)
 
@@ -32,7 +32,7 @@ over 150 years of Major League Baseball statistics, including:
 | Backend   | ASP.NET Core 10.0, Razor Pages       |
 | Database  | SQLite with Lahman Baseball Database |
 | ORM       | Entity Framework Core 10.0           |
-| Frontend  | htmx 2.0.4, Bootstrap 5              |
+| Frontend  | htmxRazor 2.0.1, htmx 2.0.4, Bootstrap 5 |
 
 ## Documentation
 
@@ -59,12 +59,25 @@ over 150 years of Major League Baseball statistics, including:
 git clone <repository-url>
 cd baseball-history
 
+# Build the solution
+dotnet build baseball-history.sln
+
 # Run the web application
 dotnet run --project baseball-history-web
+
+# Run the regression suite
+dotnet test baseball-history-tests
 ```
 
 The application will be available at `https://localhost:5001` or
 `http://localhost:5000`.
+
+### Migration Runtime Notes
+
+- htmxRazor serves its foundation assets from `/_rhx/`; component CSS imports stay centralized in `baseball-history-web/Pages/Shared/_Layout.cshtml`.
+- `rhx-button.css` and `rhx-badge.css` are intentionally retained because `Pages/About.cshtml`, team pages, and leaderboard partials still render those components.
+- The app uses two cache layers during navigation: 24-hour `IMemoryCache` entries for shared lookup data and a 3600-second response cache that varies by `HX-Request` so boosted/full-page and non-boosted partial responses do not collide.
+- When replacing `lahman.db`, restart each app instance after the file swap so in-memory lookup caches and warmed player-page data rebuild against the new database.
 
 ### Database
 

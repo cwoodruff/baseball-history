@@ -1,0 +1,23 @@
+@model IndexModel
+@{
+    var stats = new[]
+    {
+        new { Value = Model.TotalPlayers.ToString("N0"), Label = "Players" },
+        new { Value = Model.TotalFranchises.ToString("N0"), Label = "Franchises" },
+        new { Value = Model.HallOfFamers.ToString("N0"), Label = "Hall of Famers" }
+    };
+}
+
+<div class="row mb-4">
+    @foreach (var stat in stats)
+    {
+        <div class="col-md-4 col-6 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="h2 mb-0 text-mlb-navy">@stat.Value</div>
+                    <div class="text-muted">@stat.Label</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
