@@ -399,3 +399,25 @@ Safe-now shell work (#6) + spinner/loading reuse (#7) completed and integrated.
 - Safe-now #6 shell work (full staging)
 - Safe-now #7 spinner reuse (full staging)
 - Deliberate _FilterForm deferral documented
+
+## 2026-04-21 Sprint 2 Completion Milestone: Issue #8 Complete
+
+### Work Delivered
+- Players page successfully migrated to htmxRazor with modal decomposed into 5 page-local partials
+- Preserved all routing contracts, htmx targets, shell authority over `#modal-container`
+- Tests: 294 → 300 (+6 new Player-specific regression tests)
+
+### Quality Gates
+✅ Modal behavior unchanged (load, close, backdrop cleanup)
+✅ Response cache VaryByHeader="HX-Request" preserved
+✅ Shell contracts unchanged: `/Players`, `/Players/Modal/{id}`, `#players-content`, `#modal-container`
+✅ Size delta: ≤+5KB vs baseline (ACCEPT)
+
+### Sprint 2 Status
+✅ Dallas #8 complete
+✅ Parker #9 complete
+✅ Lambert gate ✅ + Ash guardrails ✅ locked
+**Sprint 2 appears complete from execution/gating perspective**
+
+### Next Phase
+Ready for Sprint 3 planning cycle

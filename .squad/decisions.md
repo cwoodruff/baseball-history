@@ -1032,3 +1032,45 @@ Zero test files were added or modified in `baseball-history-tests/`. The entire 
 
 **Approved for Execution:** All team constraints and platform concerns baked into milestone sequencing.
 
+
+---
+
+## Parker — Issue #9 Teams Migration Complete (2026-04-21)
+
+**Author:** Parker  
+**Date:** 2026-04-21  
+**Status:** ✅ COMPLETED
+
+Teams franchise and season handlers successfully migrated to projection-first contracts.
+
+### Decision
+
+Apply FranchiseDetailViewModel + TeamSeasonRecord + TeamSeasonViewModel pattern across Teams routes, preserving all existing shell contracts and response cache attributes.
+
+### Why
+
+- Consistent with Players (#8) projection-first approach
+- Eliminates Include-driven entity hydration in SeasonModel roster loading
+- Preserves response cache split (htmx partial vs full page)
+- Maintains route contracts unchanged
+
+### Files Modified
+
+- `baseball-history-web/Pages/Teams/Index.cshtml`
+- `baseball-history-web/Pages/Teams/Index.cshtml.cs`
+- `baseball-history-web/Pages/Teams/_TeamSeason.cshtml`
+- `baseball-history-web/Pages/Teams/_TeamSeasonContent.cshtml`
+- `baseball-history-web/Pages/Teams/_FranchiseDetail.cshtml`
+- `baseball-history-web/Pages/Teams/_TeamCard.cshtml`
+
+### Quality Gates Met
+
+- ✅ Tests: 300 → 302 (+2 new Teams-specific regression tests)
+- ✅ Build: Passed
+- ✅ Response cache: VaryByHeader="HX-Request" preserved
+- ✅ Shell contract: `/Teams`, `/Teams/{id}`, `#team-content` unchanged
+- ✅ rhx-badge: Applied across team card, franchise detail, season views
+
+### Blockers
+
+None. Sprint 2 complete.

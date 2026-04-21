@@ -264,3 +264,19 @@ Parker can proceed immediately with Teams migration. No blocking dependencies fr
 ✅ Ready to proceed with Issues #8–#9 (foundation pages) under regression safety net.
 ✅ All backend seams preserved; no PageModel refactoring needed.
 ✅ Asset loading strategy proven on About proof component; can scale to other pages.
+
+### Issue #9 Teams Migration (2026-04-21)
+- `Pages/Teams/Franchise.cshtml.cs` now projects franchise summary and season history into `ViewModels/FranchiseDetailViewModel.cs` instead of passing the PageModel through the partial boundary.
+- `Pages/Teams/Season.cshtml.cs` now uses `ViewModels/TeamSeasonRecord` + `TeamSeasonViewModel.FromRecord(...)` so season header, batting/pitching totals, roster rows, and manager rows are all selected before rendering.
+- `Pages/Teams/_TeamSeason.cshtml` is a real tracked partial for the season route; full-page and non-boosted HTMX responses now share the same rendered body safely.
+- Teams migration adopted safe `rhx-badge` usage in `_TeamCard`, `_FranchiseSeasons`, and `_TeamSeason`; required asset import lives in `Pages/Shared/_Layout.cshtml`.
+- Regression coverage for Teams now includes franchise + season boosted/full/partial routing in `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs`.
+
+### Issue #9 Teams Migration Completion (2026-04-21)
+- Teams migration to projection-first contracts completed at 302/302 tests passing
+- FranchiseDetailViewModel established as dedicated model for franchise detail routes (eliminates PageModel pass-through)
+- TeamSeasonRecord + TeamSeasonViewModel pattern applied across season routes (eliminates Include-driven hydration)
+- _TeamSeason partial tracked and fragment-identified for full/partial/boosted routing
+- rhx-badge adoption completed across team-card, franchise-detail, season views
+- Sprint 2 all issues complete: Dallas #8 + Parker #9 + Lambert gate + Ash guardrails ✅
+- Ready for Sprint 3 planning

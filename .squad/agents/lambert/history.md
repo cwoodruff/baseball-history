@@ -483,3 +483,23 @@ Ripley completed final Sprint 1 acceptance review. **ACCEPTED** — all issues d
 **Next Steps for Lambert:**
 - Continue Issue #5 regression suite expansion (post-migration test coverage for new pages)
 - Prepare for Sprint 2 gate verification (regression suite green before feature pages ship)
+
+## 2026-04-21 Sprint 2 Gate Holding Green: Issues #8–#9 Passed
+
+### Regression Suite Status
+✅ All 302/302 tests passing
+✅ Dallas #8 delivery: +6 new Player-specific regression tests
+✅ Parker #9 delivery: +2 new Teams-specific regression tests
+✅ Shell contracts verified unchanged (full-page, partial, boosted routing)
+✅ Cache behavior patterns consistent (VaryByHeader="HX-Request" applied)
+
+### Gate Verdict
+✅ **PASSED** — Sprint 2 ready for merge
+- No regression blockers
+- Platform guardrails 1–3 locked (Ash audit)
+- Ripley parallelization approved
+- Both feature migrations follow established patterns
+
+### Next Steps
+- Ready for git merge after orchestration logging
+- Sprint 3 planning can begin
