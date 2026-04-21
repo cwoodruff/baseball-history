@@ -246,6 +246,10 @@ The shell (_Layout.cshtml) owns:
 3. **Sprint 3:** Migrate Player/Search modals (TIER 2) — requires modal proof
 4. **Sprint 4+:** Evaluate shell redesign (TIER 3) — only if modal lifecycle is locked
 
+## 2026-04-21 ApiDocs Markup Repair
+
+- **ApiDocs wrapper rule:** `Pages/ApiDocs.cshtml` renders all endpoint sections directly inside the `.col-lg-10` shell after the alert; an extra closing `</div>` at the end breaks Razor compilation without changing any page behavior.
+
 ---
 
 ### CODEBASE OBSERVATIONS
@@ -534,3 +538,13 @@ Homepage, search surfaces, and support/info pages successfully migrated to htmx/
 
 ### Sprint 5 Gate Achievement
 #14 complete. All shell contracts preserved. Regression gate cleared by Lambert (344/344 tests).
+
+## ApiDocs Markup Repair (2026-04-21)
+
+**Status:** ✅ COMPLETE
+
+Surgical markup repair on `ApiDocs.cshtml`: fixed unmatched closing tag. Page behavior and content preserved. Zero regression impact.
+
+**File:** `baseball-history-web/Pages/ApiDocs.cshtml`
+
+This was a post-sprint hygiene fix to ensure all page markup is well-formed.
