@@ -1,5 +1,166 @@
 # Squad Decisions
 
+## Sprint 2 Completion: Players Migration (Dallas #8) & Guardrails Approval (2026-04-21)
+
+### Dallas — Issue #8 Players Page Migration Complete
+
+**Author:** Dallas  
+**Date:** 2026-04-21  
+**Status:** ✅ COMPLETED
+
+Players page successfully migrated to htmxRazor. Modal decomposed into 5 page-local partials while preserving all routing contracts, htmx targets, and shell authority over `#modal-container`.
+
+### Decision
+Keep the Players modal flow shell-owned and decompose the large player modal into page-local partials instead of introducing a shared modal component.
+
+### Why
+- `#modal-container` and Bootstrap modal lifecycle remain owned by `Pages/Shared/_Layout.cshtml`.
+- The Players modal markup was the riskiest part of #8, so the safest migration is structural only: split the view for maintainability while preserving the rendered contract.
+- `#players-content` stays the htmx target for alphabet and pagination updates so the heading count and active-letter state refresh together.
+
+### Files Modified
+- `baseball-history-web/Pages/Players/_PlayersContent.cshtml`
+- `baseball-history-web/Pages/Players/_PlayerList.cshtml`
+- `baseball-history-web/Pages/Players/_PlayerModal.cshtml`
+- `baseball-history-web/Pages/Players/_PlayerModalOverview.cshtml`
+- `baseball-history-web/Pages/Players/_PlayerCareerSummary.cshtml`
+- `baseball-history-web/Pages/Players/_PlayerBattingSeasonsTable.cshtml`
+- `baseball-history-web/Pages/Players/_PlayerPitchingSeasonsTable.cshtml`
+
+### Quality Gates Met
+- ✅ Tests: 294 → 300 (+6 new Player-specific regression tests)
+- ✅ Build: Passed
+- ✅ Modal behavior: Unchanged (load, close, backdrop cleanup)
+- ✅ Response cache: VaryByHeader="HX-Request" preserved
+- ✅ Shell contract: `/Players`, `/Players/Modal/{id}`, `#players-content`, `#modal-container` unchanged
+- ✅ Modal size: ≤+5KB vs baseline (ACCEPT)
+
+### Blockers
+None. Parker (#9) can proceed immediately.
+
+---
+
+## Sprint 2 Platform Audit & Guardrails Locked (2026-04-21)
+
+### Ash — Sprint 2 Platform Audit & Guardrails
+
+**Author:** Ash (Data/Platform)  
+**Date:** 2026-04-21  
+**Status:** ✅ APPROVED
+
+Sprint 2 is platform-safe to proceed. Both Players and Teams pages follow established query/caching/response patterns from Sprint 1. No data-access architectural changes required.
+
+### Key Finding
+One subtle N+1 risk identified in SeasonModel (roster loading) — mitigated by existing query projection pattern already in place.
+
+### Three Locked Guardrails for Sprint 2
+
+**Guardrail 1: Preserve Response Cache Metadata (CRITICAL)**
+- Both Players (#8) and Teams (#9) index pages MUST keep `[ResponseCache(Duration=3600, VaryByHeader="HX-Request")]`
+- Any new pages MUST add this attribute
+- No custom cache keys in handlers
+
+**Guardrail 2: Projection-First Queries (CRITICAL)**
+- All EF Core queries MUST complete `.Select()` projection in handler, not in view
+- Views must receive only materialized ViewModels/records, no IEnumerable or IQueryable
+- Prevents N+1 queries during component rendering
+
+**Guardrail 3: Cache Key Consistency (HIGH)**
+- Players page: `player_letters`, `hof_player_ids` cache keys unchanged
+- Teams page: No shared cache keys with Players
+- Any new filters: Use `cache.GetOrCreateAsync("unique_cache_key", ...)` with 24h TTL
+
+### Detailed Audit Findings
+
+**Players Page (#8) — Query Architecture Sound**
+- Projection-first: `.Select()` early, no full entity hydration ✓
+- Cache-aware: Uses `playerLetterCache` + `hofPlayerIds` cache (24h TTL) ✓
+- Pre-warmed: First page (letter A) cached at startup ✓
+- Partial detection: `Request.IsHtmxNonBoostedRequest()` gates response type ✓
+- Response cache: `[ResponseCache(..., VaryByHeader="HX-Request")]` in place ✓
+
+**Teams Pages (#9) — Query Architecture Sound**
+- Projection-first: `FranchiseSummary.FromFranchise()` builds ViewModel ✓
+- Aggregations in DB: `.Select()` calculates Wins/Losses/WSWins before leaving database ✓
+- Partial detection & response cache same pattern as Players ✓
+
+**SeasonModel Roster Loading (MEDIUM-RISK but Mitigated)**
+- Pattern: 8 sequential queries (team, HOF IDs, batting, RBI lookup, pitching, managers, years)
+- Risk: Medium (not HIGH because all queries indexed, but inefficient under load)
+- Mitigation already in place: Queries use `.Select()` projection (no lazy-load in view), response-cached at 3600s, no N+1 in component rendering
+- No action required: Pattern is safe. Component migration does not change query flow.
+
+**Cache Behavior Under Parallel Work**
+- Both pages use identical response cache pattern
+- htmx full-page requests get full-page response cached separately from partial ✓
+- Partial requests get partial-only cached separately from full-page ✓
+- Cache key auto-generated from route + query string + HX-Request header (no custom key conflicts) ✓
+
+### Success Criteria for Sprint 2 Merge
+✅ **Regression Suite:** All 294+ tests pass after each merge
+✅ **Cache Behavior:** htmx requests get partial, full-page requests get full page (separate caches)
+✅ **Query Projection:** No lazy-load IQueryable in component views
+✅ **Performance:** ≤ +5% Lighthouse FCP regression (or ≤ +10% acceptable per design review)
+✅ **Cache Keys:** No collisions between Players and Teams caches
+
+---
+
+## Sprint 2 Design Review: Feature Page Migrations Parallelization Approved (2026-04-21)
+
+### Ripley — Sprint 2 Design Review
+
+**Author:** Ripley  
+**Date:** 2026-04-21  
+**Status:** ✅ APPROVED
+
+Dallas (Players #8) and Parker (Teams #9) can work in parallel immediately. No blocking dependencies exist between the two issues. Both follow the same migration pattern, reference frozen component contracts, and have isolated query handlers.
+
+### Parallelization: YES — Dallas and Parker Can Start Immediately
+
+**Why Parallel is Safe**
+1. **Separate Data Flows:** Players and Teams queries are independent. No shared database access pattern.
+2. **No Shared Handlers:** Each issue modifies only its own PageModel files. No cross-issue PageModel inheritance.
+3. **Locked Component Contracts:** Sprint 1 froze component input/output shapes. Both teams reference same frozen set.
+4. **Test Isolation:** Regression suite tests each page independently. No cross-page test coupling.
+
+### Risk Profile
+- LOW for Parker (backend is isolated)
+- LOW for Dallas (components and contracts are locked)
+- MEDIUM for system-level validation (htmxRazor component rendering under load, cache invalidation across parallel migrations)
+
+### Main Risks & Mitigations
+
+**Risk 1: Component Rendering Under Load (MEDIUM)**
+- Mitigation: Ash validates baseline Lighthouse, post-merge delta ≤+5% (reject >+10%)
+
+**Risk 2: Cache Invalidation Across Parallel Work (LOW-MEDIUM)**
+- Mitigation: Preserve `[ResponseCache]` attribute + `VaryByHeader = "HX-Request"` exactly
+- Ash validates cache behavior in test
+- Lambert validates existing cache tests still pass
+
+**Risk 3: Modal Rendering Size (MEDIUM for #8 only)**
+- Dallas validates component output size vs current partial (accept ±5KB, reject >+10KB)
+
+**Risk 4: Multi-Query Roster Loading (MEDIUM for #9 only)**
+- Parker ensures query results projected to ViewModel before passing to component
+- Ash validates no N+1 in component rendering
+
+### Sequencing After Parallel Work
+
+Once both #8 and #9 complete and pass regression:
+1. **#10 (Dallas):** Stats pages (Batting, Pitching leaderboards)
+2. **#11 (Dallas):** HallOfFame, Awards, Postseason
+3. **#12 (Dallas):** Compare, Search
+4. **#13 (Remaining):** Salaries, Parks
+
+### Guardrails (Locked)
+1. Parker and Dallas preserve handler contracts, response cache metadata, and htmx target IDs
+2. Lambert gates both PRs on passing regression suite
+3. Ash validates performance delta (reject >+10% regression)
+4. Any interface contract change requires re-approval
+
+---
+
 ## Sprint 1 PR Completion Decision (2026-04-21)
 
 ### Ripley — Sprint 1 Complete

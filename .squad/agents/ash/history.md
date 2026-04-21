@@ -156,3 +156,52 @@
 All teams ready to proceed with component migrations under regression safety net.
 
 **Known Issue (Unrelated):** ApiSmokeTests.PlayerBatting baseline failure (expected NYA, actual BSN); not part of #4.
+
+## Sprint 2 Platform Audit (2026-04-21)
+
+**Status:** ✅ AUDIT COMPLETE — No blockers. Guardrails locked.
+
+### Baseline Health Check
+- **Regression suite:** 294/294 tests passing ✓
+- **Players page queries:** 3 (cached), or 0 on default request (pre-warmed) ✓
+- **Teams page queries:** 1 (franchise aggregation) ✓
+- **Cache keys:** 3 (player_letters, hof_player_ids, players_first_page) — no collisions ✓
+- **Response cache:** Dual-mode (htmx partial vs full-page) working ✓
+
+### Key Findings
+
+**Players Page (#8):**
+- Projection-first query pattern verified ✓
+- PlayerCacheService pre-warms default (letter A) at startup ✓
+- Modal queries independent (no shared state) ✓
+- Component migration risk: NONE (all data materialized before component render)
+
+**Teams Pages (#9):**
+- Index: Single aggregation query (no N+1) ✓
+- Franchise: Include(Teams) pattern acceptable (pre-cached 1hr TTL) ✓
+- **Season: MEDIUM risk — 8 sequential queries (batters, pitchers, managers, RBI lookup, years) — MITIGATED by response cache (3600s TTL means once/hour max) and projection pattern (all data materialized before view)**
+  - No changes needed; pattern is safe
+  - Roster rendering cannot re-query (all teams-ViewModel data passed to component)
+
+### Critical Guardrails Established
+1. **Response Cache Metadata** — `[ResponseCache(..., VaryByHeader="HX-Request")]` MANDATORY on all pages (prevents stale partials)
+2. **Projection-First Queries** — All EF `.Select()` must complete in handler, NO lazy IQueryable in views
+3. **Cache Key Consistency** — No collisions; shared keys frozen (player_letters, hof_player_ids); new filters use prefixed names
+
+### Risks Mitigated
+- Stale cache under parallel work → Response cache VaryByHeader locks partial/full separation
+- N+1 in component rendering → All rosters/lists materialized before component render
+- Cache key collision → Unique key naming + audit verified
+- Modal size regression → Independent query, no regression risk
+- Season page slow queries → Acceptable under response cache TTL; monitored for future optimization
+
+### Decisions Written
+- `.squad/decisions/inbox/ash-sprint2-guardrails.md` — Full platform guardrails + validation checklist
+
+### New Insights
+- **SeasonModel is intentionally sequential** (managers change mid-season; cannot batch aggregate). Response cache mitigates runtime impact.
+- **PlayerCacheService refresh (24h) is safe** — Lahman data is static; no out-of-band updates. Ops SOP documented in Sprint 1 history.
+- **htmxRazor component rendering cost** — Parallel work tests this for first time. Ash will baseline Lighthouse before #8 lands.
+
+### Approval Gate
+Dallas (#8) and Parker (#9) can start immediately. No blocking dependencies. Regression suite gates both PRs. Ash validates performance post-merge.

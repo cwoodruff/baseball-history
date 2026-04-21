@@ -5,6 +5,36 @@
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor
 - **Created:** 2026-04-16T10:57:49Z
 
+## 2026-04-21 Team Update: Sprint 2 Parallelization Approved & Guardrails Locked
+
+### Status: Sprint 2 Platform Cleared for Parallel Work
+
+Dallas Issue #8 (Players) complete with 300/300 tests passing. Parker Issue #9 (Teams) greenlit for immediate parallel start per Ripley design review and Ash platform audit.
+
+### Key Approvals
+- ✅ Ripley: Parallelization approved (separate data flows, no cross-handler dependencies)
+- ✅ Ash: 3 guardrails locked (response cache metadata, projection-first queries, cache key consistency)
+- ✅ Dallas: #8 complete with modal decomposition into 5 page-local partials (300/300 tests)
+- ✅ Lambert: Regression gate holds green
+
+### Guardrails for Parker #9
+1. **Preserve Response Cache Metadata:** Teams Index/Franchise/Season must keep `[ResponseCache(Duration=3600, VaryByHeader="HX-Request")]`
+2. **Projection-First Queries:** All rosters (batters, pitchers, managers) must be `.Select()` projected **in handler**, then materialized to List before passing to component (no lazy-load IQueryable in view)
+3. **Cache Key Consistency:** Any new filter caches must use `teams_*` prefix to avoid collisions with Players `player_letters`, `hof_player_ids`
+
+### SeasonModel Analysis (Parker's 8-Query Pattern)
+**Risk:** MEDIUM (team + HOF + batting + RBI + pitching + managers + years)
+
+**Mitigation Already In Place:**
+- ✅ All queries use `.Select()` projection (no lazy-load in view)
+- ✅ Response cache at 3600s TTL (runs ~1x per hour per unique request)
+- ✅ All queries indexed (acceptable under normal load)
+
+**Parker Action:** Materialize rosters to ViewModel before component input. Test confirms no N+1 in component rendering.
+
+### Parallel Work Gate
+Parker can proceed immediately with Teams migration. No blocking dependencies from Dallas #8.
+
 ## Learnings
 
 ### Architecture Review (2026-04-16)

@@ -110,6 +110,19 @@ The `VaryByHeader = "HX-Request"` ensures:
    return Page();
    ```
 
+4. **Letting a detail page expect a partial that does not exist** — boosted/full navigation works, but non-boosted htmx requests fail or drift
+   ```csharp
+   // ❌ WRONG
+   if (Request.IsHtmxNonBoostedRequest())
+       return Partial("_TeamSeason", model); // but no shared partial exists
+
+   // ✅ RIGHT
+   // Extract the page body into a shared partial and reuse it from the .cshtml page
+   if (Request.IsHtmxNonBoostedRequest())
+       return Partial("_TeamSeason", model);
+   return Page();
+   ```
+
 ## Testing This Pattern
 
 ```csharp
@@ -154,5 +167,7 @@ When migrating partials to htmxRazor components:
        return ViewComponent("PlayerList", viewModel);
    ```
 3. Or later, return component-rendered HTML via a service
+
+For detail pages with rich bodies (for example a team season page with roster tables and player modal links), first extract the shared body into a single partial and let both the full page and htmx response reuse that same template. That keeps route parity testable and prevents the full page from drifting away from the htmx path.
 
 The HTMX interaction logic is orthogonal to the component framework choice.

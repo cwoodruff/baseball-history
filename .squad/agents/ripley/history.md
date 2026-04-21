@@ -7,6 +7,47 @@
 
 ## Learnings
 
+## 2026-04-21 Sprint 2 Design Review Complete: Dallas #8 + Parker #9 Parallelization Approved
+
+### Outcome: ✅ APPROVED
+
+Sprint 2 design review facilitated Dallas Players #8 and Parker Teams #9 as parallel-safe work. Both issues cleared for immediate start with guardrails locked.
+
+### Key Approvals
+- ✅ Dallas #8 can proceed (low risk: components and contracts locked from Sprint 1)
+- ✅ Parker #9 can proceed immediately in parallel (separate data flows, no cross-handler dependencies)
+- ✅ Ash guardrails locked (response cache metadata, projection-first queries, cache key consistency)
+- ✅ Lambert regression gate holds at 300/300 tests
+
+### Parallelization Rationale
+1. **Separate Data Flows:** Players and Teams queries are independent (no shared DB access pattern)
+2. **No Shared Handlers:** Each issue modifies only its own PageModel files (no inheritance)
+3. **Locked Component Contracts:** Sprint 1 froze component input/output shapes (both teams reference same frozen set)
+4. **Test Isolation:** Regression suite tests each page independently (no cross-page coupling)
+
+### Risk Profile & Mitigations
+| Risk | Severity | Mitigation | Owner |
+|------|----------|-----------|-------|
+| Component rendering under load | MEDIUM | Ash baseline Lighthouse, delta ≤+5% | Ash |
+| Cache invalidation across parallel work | LOW-MEDIUM | Preserve VaryByHeader + no custom cache keys | Parker, Dallas |
+| Modal rendering size (#8) | MEDIUM | Measure output size (±5KB accept, >+10KB reject) | Dallas |
+| N+1 roster loading (#9) | MEDIUM | Materialize queries in handler (no lazy-load in view) | Parker |
+
+### Decision: Proceed Immediately
+Dallas and Parker can start today on separate branches. No blocking dependencies. Guardrails enforced by:
+1. Lambert: Regression suite (all tests must pass at merge)
+2. Ash: Performance validation (Lighthouse delta ≤+5%, reject >+10%)
+3. Code review: Preserve all handler contracts, response cache metadata, htmx target IDs
+
+### Sequencing After Parallel Completion
+Once #8 and #9 pass regression + performance gates:
+1. **#10:** Stats pages (Batting, Pitching) — Dallas lead, same migration pattern
+2. **#11:** HallOfFame, Awards, Postseason — Dallas lead
+3. **#12:** Compare, Search — Dallas lead (more complex state management)
+4. **#13:** Remaining (Salaries, Parks) — feature complete
+
+---
+
 - **Architecture:** Codebase is well-structured with proven htmx patterns, clean separation of concerns (Models/ViewModels/Pages), and comprehensive test coverage (247 tests).
 - **Data Access:** EF Core is correctly configured with NoTracking globally and projection patterns preventing N+1 queries. Composite keys on Batting/Pitching properly handled.
 - **Caching Strategy:** Thoughtful, not excessive. Pre-warmed player cache for hot path (first page), 24-hour TTL on memory cache entries, strategic use of `[ResponseCache]` with `VaryByHeader = "HX-Request"`.

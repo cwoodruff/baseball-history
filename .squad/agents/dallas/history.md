@@ -21,6 +21,9 @@
 - **Safe primitive seam:** `Pages/Shared/Components/_LoadingSpinner.cshtml` can safely absorb the repeated filter-overlay inner markup when page-owned ids, `hx-indicator` targets, and surrounding `position-relative` containers stay intact.
 - **Conservative loading rule:** In the first safe slice, keep each page's loading overlay wrapper in place and only centralize the spinner body/message.
 - **Issue #7 stop line:** Hall of Fame filters should stay behaviorally unchanged in the first safe primitives slice; adding a new loading overlay there would expand the page contract.
+- **Players content host rule:** `Pages/Players/_PlayersContent.cshtml` should keep `#players-content` as the alphabet-nav + pagination target so the heading count and active letter refresh with the list.
+- **Players modal decomposition rule:** `Pages/Players/_PlayerModal.cshtml` is safest when split into folder-local partials (`_PlayerModalOverview`, `_PlayerCareerSummary`, season tables) while `/Players/Modal/{id}` and `#modal-container` remain unchanged.
+- **Players regression contract:** Integration coverage for `Pages/Players` should prove alphabet-nav targeting, pagination routing, and player-card modal wiring in addition to the existing full-page vs. partial shell assertions.
 
 ## Codebase Review Output (2026-04-16)
 
@@ -327,6 +330,57 @@ The shell (_Layout.cshtml) owns:
 - **Sprint 1 shell landing:** `_Layout.cshtml` can safely delegate to `Pages/Shared/_ShellHeader.cshtml` and `_ShellFooter.cshtml` while retaining shell authority for `<body hx-boost="true">`, `#modal-container`, Bootstrap re-init, and search lifecycle JS.
 - **Safe #7 continuation:** Reused `Components/_LoadingSpinner` inside existing filter overlay wrappers on Batting, Pitching, Awards, Postseason, and Salaries; page-owned `hx-indicator` ids and targets stayed untouched.
 - **Sprint 1 blocker line:** Full `_FilterForm` extraction still waits on post-#6 container stability; Hall of Fame stays out of loading-overlay consolidation because it does not already own that contract.
+
+## 2026-04-21 Sprint 2 Players Migration Complete (Issue #8)
+
+### Completion Summary
+
+**Status:** ✅ COMPLETED
+
+Sprint 2 Issue #8 (Players page migration) delivered on time with full contract preservation and test gate passing.
+
+### Work Delivered
+
+**Scope Completed:**
+- Players Index → htmxRazor components
+- Players Content → htmxRazor with alphabet nav + pagination
+- Players List → htmxRazor with reusable PlayerCard component
+- Player Modal → Decomposed into 5 page-local partials:
+  - `_PlayerModal` (wrapper)
+  - `_PlayerModalOverview` (detail header)
+  - `_PlayerCareerSummary` (stats summary)
+  - `_PlayerBattingSeasonsTable` (batting stats)
+  - `_PlayerPitchingSeasonsTable` (pitching stats)
+
+**Contracts Preserved:**
+- `/Players` route unchanged
+- `/Players/Modal/{id}` route unchanged
+- `#players-content` htmx target unchanged
+- `#modal-container` shell ownership unchanged
+- Alphabet nav + pagination fully functional
+- Response cache metadata (VaryByHeader="HX-Request") preserved
+
+**Test Results:**
+- Baseline: 294/294 tests
+- Post-migration: 300/300 tests (+6 new Player-specific regression tests)
+- No failures or regressions
+
+### Decision: Shell-Owned Modal with Structural Decomposition
+
+**Rationale (per ash-sprint2-guardrails.md + ripley-sprint2-design-review.md):**
+- Risk mitigation: Keep modal flow shell-owned, decompose for maintainability only
+- Rendered output unchanged (no contract changes to `/Players/Modal/{id}` or `#modal-container`)
+- Structural split improves readability without performance impact
+- All tests confirm no regression
+
+### Parallel Work Gate
+✅ Parker (#9) Teams migration can proceed immediately (no blocking dependencies)
+
+### Sprint 2 Forward
+- ✅ Guardrails 1–3 locked per Ash audit
+- ✅ Ripley design review approved parallelization
+- ✅ Lambert regression gate holds green
+- ✅ Ready for Ash post-merge Lighthouse delta validation
 
 ## 2026-04-20 Sprint 1 UI Completion: Safe Shell + Spinner Reuse
 

@@ -17,6 +17,13 @@
 
 ## Learnings
 
+### Sprint 2 Players/Teams Regression Gate (2026-04-21)
+- Added six high-signal routing contract tests in `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs` to cover Players alphabet/pagination/modal wiring plus Teams franchise/season full-vs-partial behavior.
+- For Players, the safest contract markers are still behavioral: `class="alphabet-nav"`, letter links that reset to `page=1`, pagination links targeting `#players-content`, and player cards/modal triggers targeting `#modal-container`.
+- For Teams, migration risk extends beyond `/Teams` index: `/Teams/Franchise/{id}` and `/Teams/Season/{teamId}/{lgId}/{year}` both need shell-vs-partial parity checks because season pages embed player modal triggers and franchise routing links.
+- `Pages/Teams/Season.cshtml.cs` already expected a `_TeamSeason` partial; adding `Pages/Teams/_TeamSeason.cshtml` and reusing it from `Pages/Teams/Season.cshtml` is the stable pattern for keeping full-page and non-boosted htmx responses in lockstep.
+- Current Sprint 2 gate validation on this tree: `dotnet build baseball-history.sln --nologo` and `dotnet test baseball-history-tests --no-build --nologo --logger "console;verbosity=minimal"` passed with 300/300 tests.
+
 ### Issue #5 Sprint 1 Gate Hardening (2026-04-20)
 - The highest-value regression checks in this codebase are contract tests around shell markers and htmx boundaries, not generic “contains a div” smoke: full pages should prove `hx-boost="true"`, `.search-container`, `#search-results`, and `#modal-container`, while partial handlers should prove those wrappers are absent.
 - Pagination risk lives on the htmx path, not the initial page load. For `/Players` and `/Stats/Batting`, boundary tests should send `HX-Request: true` and parse the rendered `Page X of Y` summary from `Pages/Shared/Components/_Pagination.cshtml`.
