@@ -657,3 +657,285 @@ Avoiding filter-form container rewiring during Sprint 2 parallel feature work is
 ✅ **APPROVED** — Dallas and Parker can start Sprint 2 immediately on separate branches. Guardrails enforced by Lambert (regression) and Ash (performance/platform).
 
 ---
+
+## 2026-04-21 Sprint 4 Design Review Complete: Sequential, Not Parallel
+
+### Outcome: ✅ APPROVED — Parker Sequential (#12 → #13)
+
+**Decision:** Issue #12 (Batting) MUST complete and pass all gates before Issue #13 (Pitching) begins. Both assigned to Parker for sequential execution.
+
+### Why Sequential vs Parallel?
+
+Sprint 4 differs from Sprint 2/3 parallelization because Batting and Pitching share **high coupling**:
+
+1. **Shared ViewModel:** Both use `LeaderboardViewModel` — parallel changes risk conflicting filter/pagination/stat semantics at merge
+2. **Identical Filter Structure:** 6 controls with identical htmx wiring (only threshold param differs: `minAb` vs `minIp`)
+3. **Near-Duplicate Table Structure:** Both have ~200-line partials with htmx-enabled column headers, pagination query rebuilding, player HOF badges
+4. **Ascending Sort Risk:** Pitching has ERA/WHIP ascending (lower-better) semantics — parallel work risks inconsistent ordering helper evolution
+5. **Filter Extraction Deferred:** Sprint 3 explicitly rejected filter-form extraction during parallel feature work; Batting/Pitching have structurally identical filters making this deferral critical
+
+### Benefits of Sequential Approach
+
+- **#12 Establishes Pattern:** Batting becomes reference implementation; all design decisions (filter layout, loading overlay, table header links) locked before Pitching starts
+- **#13 Reuses #12:** Pitching becomes mechanical application with only stat columns, threshold param name (`minIp`), and ascending-sort semantics changed
+- **Zero Merge Risk:** No merge conflicts, no dual-path filter evolution, no ordering-logic divergence
+- **Net Faster Delivery:** Elimination of merge reconciliation + duplicate filter investigation + behavioral regression debugging likely makes net time faster despite sequential calendar
+
+### Main Risks
+
+| Risk | Severity | Mitigation |
+|------|----------|-----------|
+| Ordering logic divergence (ERA/WHIP ascending) | **HIGH** | #13 preserves ascending semantics; Lambert adds ascending-sort test |
+| Filter form duplication (2 pages) | **MEDIUM** | Explicitly NOT extracted (deferral enforced); sequential prevents divergence |
+| ViewModel shape drift | **MEDIUM** | Both use `LeaderboardViewModel`; sequential ensures #13 inherits #12 shape |
+| Cache key collisions | **LOW** | Separate: `batting_years`/`batting_leagues` vs `pitching_years`/`pitching_leagues` |
+| Pagination query-string logic | **LOW** | Identical pattern; #13 reuses #12 implementation |
+
+### Critical Contracts to Preserve
+
+**Handler Contracts (CRITICAL):**
+- Routes: `/Stats/Batting` and `/Stats/Pitching` unchanged
+- Query params: `stat`, `fromYear`, `toYear`, `league`, `minAb`/`minIp`, `singleSeason`, `page`
+- Response cache: `[ResponseCache(Duration=3600, VaryByHeader="HX-Request")]`
+
+**htmx Contracts (CRITICAL):**
+- Full-page: filter form + `<div id="leaderboard">` + initial partial
+- htmx partial: Only `_BattingLeaders`/`_PitchingLeaders` (via `IsHtmxNonBoostedRequest()`)
+- Filter form `id="filter-form"`, result target `id="leaderboard"`, loading `id="loading-indicator"`
+
+**Stat Ordering Semantics (HIGH):**
+- **Batting:** All stats descending (higher better)
+- **Pitching:** ERA/WHIP/L/BB ascending (lower better), all others descending
+- Table headers show `↓` descending, `↑` ascending, based on active stat
+
+### Explicit Out-of-Scope for Sprint 4
+
+1. ❌ **Do NOT extract `_FilterForm.cshtml`** — Deferred post-Sprint-4 per Sprint 3 decision
+2. ❌ **Do NOT refactor shared ordering helpers** — Issue #12 explicitly defers unless implementation forces it
+3. ❌ **Do NOT change `LeaderboardViewModel` shape** — Both pages share this; changes affect both
+4. ❌ **Do NOT modify shared components** — Pagination/cards/spinner/empty-state frozen from Sprint 3
+5. ❌ **Do NOT change response cache strategy** — `VaryByHeader="HX-Request"` locked pattern
+
+### Success Criteria
+
+**Issue #12 Complete:**
+- ✅ Batting filters/sorting/paging/htmx identical to pre-migration
+- ✅ All regression tests pass (300+)
+- ✅ Response cache preserved, htmx partial detection correct
+- ✅ Pagination preserves filter state
+- ✅ `_LoadingSpinner` and `_EmptyState` reused
+- ✅ No ordering-helper extraction (deferred)
+- ✅ No filter-form extraction (deferred)
+
+**Issue #13 Complete:**
+- ✅ Pitching filters/sorting/paging/htmx identical to pre-migration
+- ✅ **ERA/WHIP show lowest first (ascending)**
+- ✅ **L/BB show lowest first (ascending)**
+- ✅ All other stats show highest first (descending)
+- ✅ Table headers show `↑` for ERA/WHIP/L/BB when active, `↓` for others
+- ✅ All regression tests pass
+- ✅ Ascending-sort test passes (Lambert adds)
+- ✅ Implementation consistent with #12 approach
+
+### Post-Sprint 4 Deferred Work
+
+**Filter Form Extraction:** Create `_FilterForm.cshtml` to deduplicate Batting/Pitching/Awards/HallOfFame/Postseason/Salaries. Requires design review (Awards has award-type dropdown, Salaries year-only).
+
+**Ordering Helper Extraction:** If #12 reveals significant duplication, extract into shared helper (e.g., `LeaderboardOrderingHelpers.cs`). Careful testing needed for ascending vs descending semantics.
+
+**Stat Column Parameterization:** Extract stat-column header generation to reduce table header link duplication (11-13 nearly identical `<th>` blocks per partial). Deferred due to `hx-include`/`hx-target` regression risk.
+
+### Key Files
+
+**Batting (#12):**
+- `baseball-history-web/Pages/Stats/Batting.cshtml` (118 lines)
+- `baseball-history-web/Pages/Stats/_BattingLeaders.cshtml` (202 lines)
+- `baseball-history-web/Pages/Stats/Batting.cshtml.cs` (PageModel handler)
+
+**Pitching (#13):**
+- `baseball-history-web/Pages/Stats/Pitching.cshtml` (118 lines)
+- `baseball-history-web/Pages/Stats/_PitchingLeaders.cshtml` (183 lines)
+- `baseball-history-web/Pages/Stats/Pitching.cshtml.cs` (PageModel handler)
+
+**Shared:**
+- `baseball-history-web/ViewModels/LeaderboardViewModel.cs` (shared ViewModel)
+- `baseball-history-web/Pages/Shared/Components/_LoadingSpinner.cshtml` (reused)
+- `baseball-history-web/Pages/Shared/Components/_EmptyState.cshtml` (reused)
+- `baseball-history-web/Pages/Shared/Components/_Pagination.cshtml` (reused)
+
+### Action Items
+
+**Parker (#12 — Start Immediately):**
+1. Start Batting migration on branch from `htmxRazor` HEAD
+2. Migrate both files using Sprint 3 filter-browser pattern
+3. Preserve handler contracts, htmx targets, query strings, sorting, pagination
+4. Reuse `_LoadingSpinner`, `_EmptyState` components
+5. Verify partial response = only `_BattingLeaders`
+6. Document ordering observations (do NOT extract)
+7. Pass Lambert regression gate before #13
+
+**Parker (#13 — After #12 Gates Pass):**
+1. Use #12 as reference implementation
+2. Apply identical filter layout, htmx wiring, pagination
+3. **CRITICAL:** Preserve ascending sort for ERA/WHIP/L/BB
+4. Verify `↑` indicators for ascending stats
+5. Test ERA/WHIP show lowest first
+6. Pass Lambert regression + ascending-sort test
+
+**Lambert (Gates):**
+- After #12: Full regression (300+ tests), filter state preservation
+- After #13: Full regression, ascending-sort validation (ERA/WHIP lowest-first)
+- Block merge on any regression/sort-order deviation
+
+**Ash (Platform):**
+- After #12: Cache behavior (no key collisions), query projection unchanged
+- After #13: Cache behavior (separate keys), ascending-sort performance (no query inefficiency)
+
+### Rationale Summary
+
+Sequential execution locks the migration pattern in #12, makes #13 a mechanical reuse, eliminates merge conflicts, and preserves ascending-sort semantics without regression risk. Parker owns both issues and can deliver efficiently in sequence with Lambert/Ash gating each merge.
+
+---
+
+
+## 2026-04-21 Sprint 4 Retrospective: Pitching Test Failures Root Cause
+
+### Status: 🔥 BLOCKER IDENTIFIED AND ASSIGNED
+
+Sprint 4 test failures traced to **product bug in Pitching.cshtml.cs**, not invalid test assumptions.
+
+#### Root Cause: Type Mismatch in Expression Tree Builder
+
+**Bug:** `DynExpr<T>()` method (line 266) returns `Func<T, int>` but SQLite stores pitching stats (`W`, `L`, `G`, `SO`) as `short` (Int16). When single-season mode projects from raw `Pitching` entity, anonymous type retains `short` types, causing runtime exception:
+
+```
+System.ArgumentException: Expression of type 'System.Int16' cannot be used for return type 'System.Int32'
+```
+
+**Impact:** ALL single-season Pitching requests return 500 errors. Career mode unaffected (`.GroupBy().Sum()` produces `int` types).
+
+#### Failure Analysis
+
+**9 test failures breakdown:**
+- 6 failures: Missing sort indicators (`ERA ↑`, `WHIP ↑`, `W ↓`, `SO ↓`) — CAUSED BY 500 ERROR
+- 2 failures: Missing `hof-badge` — CAUSED BY 500 ERROR
+- 1 failure: 500 Internal Server Error — TYPE MISMATCH BUG
+
+**Test validity:** Sort indicator tests are correctly written (request matching stat, assert matching indicator). Failures stem from upstream 500 error preventing render.
+
+**HOF badge test:** Minor issue — searches for `"hof-badge"` class but markup uses `<rhx-badge>` element. Should search for `"rhx-badge"` or `"HOF</rhx-badge>"`.
+
+#### Action Plan & Ownership
+
+**Parker (BLOCKING):**
+- Fix `DynExpr<T>` to cast property to `int` before returning:
+  ```csharp
+  var converted = System.Linq.Expressions.Expression.Convert(prop, typeof(int));
+  return System.Linq.Expressions.Expression.Lambda<Func<T, int>>(converted, param);
+  ```
+- Verify all 5 expression tree methods (DynEra, DynWhip, DynK9, DynBb9, DynWpct) handle type conversion
+- Manual smoke test: `/Stats/Pitching?stat=w&singleSeason=true`
+
+**Lambert (NON-BLOCKING):**
+- Update `StatsPitching_HOFBadge_AppearsForInductees` to search for `"rhx-badge"` instead of `"hof-badge"`
+
+**Reviewer Lockout Enforced:**
+- Parker MUST fix bug (cannot review own fix)
+- Ash or Dallas MUST review Parker's fix (not Lambert, not Parker per reviewer lockout rule)
+
+#### Success Criteria
+✅ 326/326 tests passing  
+✅ No 500 errors on single-season mode  
+✅ Sort indicators visible when sorting by that stat  
+✅ HOF badge renders for Hall of Fame pitchers
+
+#### Learnings
+
+**Pattern Risk:** Type mismatch pattern likely affects other expression tree builders. All 5 methods (DynEra, DynWhip, K9, Bb9, Wpct) cast to `double`, which should handle `short` → `double` safely, but verify during fix.
+
+**Test Value:** Lambert's comprehensive PitchingLeaderboardTests exposed real product bug that existing tests missed. This validates Sprint 4 test investment.
+
+**Sequential Execution Validation:** Sprint 4 sequential approach (#12 Batting → #13 Pitching) was correct. Pitching bug would have blocked both if parallelized. Sequential exposed bug in #13 without contaminating #12 delivery.
+
+**Key Files:**
+- `baseball-history-web/Pages/Stats/Pitching.cshtml.cs` (lines 262-266, 269-342 for all expression builders)
+- `baseball-history-web/Models/Pitching.cs` (lines 18-39 show `short?` types)
+- `baseball-history-tests/Pages/PitchingLeaderboardTests.cs` (lines 42-187 for affected tests)
+- `baseball-history-web/Pages/Stats/_PitchingLeaders.cshtml` (line 132 for HOF badge markup)
+
+**Decision:** Documented in `.squad/decisions/inbox/ripley-sprint4-retro.md`
+
+## 2026-04-21 Sprint 5 Design Review Complete: Parallel with Frozen Search Shell
+
+### Outcome: ✅ APPROVED — Dallas #14 + Ash #15 in parallel, Parker on standby
+
+**Decision:** Sprint 5 can start immediately, but only if the global search shell remains frozen. Dallas owns page-level migration for homepage/search/support surfaces; Ash trails with cache/asset/docs follow-through based on what #14 actually settles. Parker is not needed unless search migration forces a PageModel/query seam.
+
+### Key Contracts Locked
+- `_Layout.cshtml` keeps shell authority over `hx-boost`, `#modal-container`, modal lifecycle JS, and outside-click search cleanup.
+- `_ShellHeader.cshtml` keeps shell authority over the global search input, `name="q"`, `hx-get="/Search"`, and `#search-results`.
+- `/Search?q=...` stays the dropdown partial route; `/Search?handler=AllResults&q=...` stays the all-results modal route.
+- Homepage links, support-page routes, and existing modal targets remain unchanged.
+
+### Risk Calls
+- Highest risk is silent search-shell drift, not homepage or support-page markup.
+- `Search.cshtml` is effectively a shell endpoint today; turning Sprint 5 into a standalone search-page redesign would be scope creep.
+- #15 must document only what Sprint 5 proves; broader cleanup ideas remain explicit backlog.
+
+### Learnings
+- Search is a shell-owned, partial-first surface in this app: header owns the trigger/dropdown host; layout owns cleanup and modal orchestration; the Search PageModel only supplies partial payloads.
+- Sprint 5 parallelization is safe because #14 is mostly UI migration and #15 is follow-through documentation/audit, but only while search contracts stay frozen.
+- Good regression evidence already exists in `PageRoutingIntegrationTests` for `/Search`, `#modal-container`, `#search-results`, and full-shell markers, so design review should lean on those instead of inventing new contracts.
+
+### Key Files
+- `baseball-history-web/Pages/Shared/_Layout.cshtml`
+- `baseball-history-web/Pages/Shared/_ShellHeader.cshtml`
+- `baseball-history-web/Pages/Search.cshtml`
+- `baseball-history-web/Pages/Search.cshtml.cs`
+- `baseball-history-web/Pages/_SearchResults.cshtml`
+- `baseball-history-web/Pages/_SearchAllResultsModal.cshtml`
+- `baseball-history-web/Pages/Index.cshtml`
+- `baseball-history-tests/Pages/PageRoutingIntegrationTests.cs`
+
+**Decision:** Documented in `.squad/decisions/inbox/ripley-sprint5-design-review.md`
+
+## Sprint 5 Design Review Complete (2026-04-21)
+
+**Status:** ✅ APPROVED
+
+Sprint 5 design review approved with parallel execution on clean boundary. Shell authority locked; search contracts frozen; homepage/support/info page migration approved.
+
+### Key Decisions
+- **Shell authority immovable:** `_ShellHeader.cshtml` + `_Layout.cshtml` remain owners of search/modal/boost
+- **Search contracts frozen:** Route, handlers, partial names, and player-modal targeting all preserved
+- **Parallelization approved:** Dallas #14 and Ash #15 can run in parallel
+- **Parker deferred:** Only escalate if Dallas hits handler/query seam changes
+
+### Contracts Locked
+- `/Search` route, `name="q"` input, `#search-results` and `#modal-container` targets all unchanged
+- Homepage links and player modal triggers preserved
+- Support page routes (`/About`, `/ApiDocs`, `/Error`, `/Privacy`, `/Health`) all unchanged
+
+### Sequencing
+1. Lambert confirms baseline
+2. Dallas migrates homepage + support pages first
+3. Dallas migrates search partials (contracts exact)
+4. Lambert re-runs regression gate
+5. Ash finalizes #15 after #14 settles
+
+### Acceptance Gate
+Sprint 5 acceptable when no pre-migration holdout pages remain, shell still owns search/modal, and no route/handler/cache contract changed accidentally.
+
+---
+
+## Sprint 5 Orchestration Complete (2026-04-21)
+
+**Status:** ✅ CLOSED
+
+All Sprint 5 deliverables completed and verified:
+- Dallas #14: Homepage/search/support pages migrated successfully
+- Ash #15: Cache SOP documented, asset audit complete
+- Lambert: Regression gate 344/344 PASS
+- Ripley: Design review approved; orchestration documented
+
+Test suite at 344/344. Repository ready for release.

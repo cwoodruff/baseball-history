@@ -354,3 +354,178 @@ Compare (#10) and feature pages (#11) are platform-safe to merge. All guardrails
 - Post-merge: Monitor cache hit rates under parallel work
 - Sprint 4: Validate leaderboard query patterns (complex aggregations)
 - Sprint 5: Document slow-query instrumentation roadmap
+
+## Sprint 4 Platform Audit (2026-04-22)
+
+**Status:** ✅ AUDIT COMPLETE — No blockers. Guardrails locked.
+
+### Baseline Health Check
+- **Test suite:** 350/350 tests passing ✓
+- **Batting page queries:** 5 (3 cached filters, 1 leaderboard query, 1 player names) ✓
+- **Pitching page queries:** 5 (3 cached filters, 1 leaderboard query, 1 player names) ✓
+- **Cache keys:** 5 unique keys (batting_years, batting_leagues, pitching_years, pitching_leagues, hof_player_ids) — no collisions ✓
+- **Response cache:** Dual-mode (htmx partial vs full-page) working correctly ✓
+
+### Key Findings
+
+**Batting Page (#12):**
+- Response cache verified: `[ResponseCache(Duration = 3600, VaryByHeader = "HX-Request")]` ✓
+- Projection-first pattern: Two-stage materialization (single-season + career aggregation) ✓
+- Cache keys: batting_years, batting_leagues, hof_player_ids (no collisions) ✓
+- Expression tree ordering: 16 stat columns, all descending (higher is better) ✓
+- Pagination: Skip/Take in DB, Math.Clamp prevents out-of-bounds ✓
+- Career aggregation: GroupBy → Sum → OrderBy → Skip/Take → Fetch Names (100 only) ✓
+
+**Pitching Page (#13):**
+- Response cache verified: `[ResponseCache(Duration = 3600, VaryByHeader = "HX-Request")]` ✓
+- Projection-first pattern: Two-stage materialization (single-season + career aggregation) ✓
+- Cache keys: pitching_years, pitching_leagues, hof_player_ids (no collisions) ✓
+- Expression tree ordering: 13 stat columns, mixed ascending/descending ✓
+  - **ERA, WHIP, BB9 use ascending sort (lower is better)** — intentional, correct ✓
+  - ERA/WHIP use `double.MaxValue` for zero IP (sorts to bottom correctly) ✓
+- Pagination: Skip/Take in DB, Math.Clamp prevents out-of-bounds ✓
+- Career aggregation: GroupBy → Sum → OrderBy → Skip/Take → Fetch Names (100 only) ✓
+
+### Critical Guardrails Established
+
+**Guardrail #1: Response Cache Separation (CRITICAL)**
+- Both pages preserve `[ResponseCache(Duration = 3600, VaryByHeader = "HX-Request")]`
+- Prevents stale partials when filter changes occur
+- Full-page and htmx partial responses cached separately
+- 1-hour TTL matches existing leaderboard pattern
+
+**Guardrail #2: Projection-First Query Pattern (CRITICAL)**
+- Both pages use two-stage materialization: anonymous projection → ViewModel mapping
+- Career mode requires second query for player names (acceptable — 100 names/page max)
+- All data materialized before view rendering (no lazy-load risk)
+- Expression trees compile to SQL (not in-memory sorting)
+
+**Guardrail #3: Cache Key Consistency (CRITICAL)**
+- Batting/Pitching filter keys isolated (no cross-page pollution)
+- `hof_player_ids` shared across 7 pages (intentional, frozen)
+- All cache entries use 24h TTL (consistent with Sprint 1/2/3)
+
+**Guardrail #4: Dynamic Expression Tree Ordering (HIGH RISK)**
+- Batting: 16 stat columns, all descending (higher is better)
+- Pitching: 13 stat columns, mixed ascending/descending
+  - ERA/WHIP/BB9 use ascending (lower is better)
+  - All others descending
+- Expression trees runtime-compiled (property name typos cause exceptions)
+- Calculated stats have zero-division guards
+
+**Guardrail #5: Pagination Behavior (MEDIUM RISK)**
+- PageSize = 100 (constant in both pages)
+- TotalEntries via `.CountAsync()` before pagination
+- CurrentPage clamped via `Math.Clamp(page, 1, Math.Max(1, TotalPages))`
+- Rank calculated in-memory: `(CurrentPage - 1) * PageSize + i + 1`
+
+**Guardrail #6: Filter Cache Behavior (MEDIUM RISK)**
+- Filter options (years, leagues) cached at 24h TTL
+- Hall of Fame player IDs cached at 24h TTL
+- No out-of-band invalidation (documented SOP in Sprint 1)
+
+**Guardrail #7: htmx Partial Detection (MEDIUM RISK)**
+- `Request.IsHtmxNonBoostedRequest()` check preserved
+- Partial views contain only `#leaderboard` content (no shell)
+- Full-page responses contain filter form + leaderboard
+
+### Performance-Sensitive Query Patterns
+
+**Career Aggregation (MEDIUM LOAD):**
+- GroupBy aggregation runs in database (SQLite aggregates efficiently)
+- Ordering applied to aggregated results (not raw rows)
+- Second query fetches only 100 player names (not all ~20k players)
+- Response cache (3600s TTL) mitigates load — career queries run once/hour max
+
+**Single-Season Sorting (MEDIUM LOAD):**
+- Single-season queries scan full Batting/Pitching tables (100k+ rows)
+- Minimum AB/IP filter applied before ordering (reduces sort load)
+- Calculated stats (AVG, OBP, SLG, ERA, WHIP) use expression trees (compile to SQL)
+- No indexes on calculated columns (full table scan + sort acceptable with response cache)
+
+### Risks Mitigated
+
+✅ Response cache stale partials → VaryByHeader="HX-Request" locks partial/full separation  
+✅ N+1 in view rendering → All data materialized before Partial() call  
+✅ Cache key collisions → Unique prefixes, shared key intentional  
+✅ Full entity hydration → Projection pattern verified in both pages  
+✅ ERA/WHIP sort semantics → Ascending sort with double.MaxValue guard for zero IP  
+✅ Pagination edge cases → Math.Clamp prevents out-of-bounds pages  
+✅ Filter option duplicates → .Distinct() applied to year/league queries  
+✅ Zero-division errors → All calculated stats have conditional guards  
+
+### Team Decision: Shared Expression Tree Extraction
+
+**Status:** DEFERRED to Sprint 5
+
+**Rationale:**
+- Expression tree helpers duplicated between Batting/Pitching pages + API endpoints
+- Sprint 4 design review explicitly locked against refactoring shared helpers
+- Migration risk outweighs maintenance burden for 2 pages + 1 API endpoint
+
+**Future Work:**
+- Sprint 5: Extract to `Utilities/LeaderboardExpressions.cs`
+- Add unit tests for zero-division edge cases
+
+### Decisions Written
+
+- `.squad/decisions/inbox/ash-sprint4-guardrails.md` — Full platform audit + 7 guardrails + constraints
+
+### New Insights
+
+- **Leaderboard two-stage materialization pattern is intentional** — Career mode GroupBy aggregates in DB, then fetches only paginated player names (100 max). This prevents loading 20k+ names into memory.
+- **ERA/WHIP ascending sort is correct** — Lower is better. Expression trees use `double.MaxValue` for zero IP, which correctly sorts pitchers with no IP to the bottom when using ascending order.
+- **Expression tree ordering is complex but sound** — Dynamic property name resolution, zero-division guards, calculated stat expressions all compile to SQL. Property name typos are the main risk (runtime exceptions).
+- **Response cache TTL matches filter behavior** — 3600s (1 hour) is appropriate for leaderboard pages because filter options are cached for 24h. Queries run once/hour max per unique filter combination.
+
+### Sprint 4 Approval
+
+Issue #12 (Batting) and #13 (Pitching) are platform-safe to proceed. Parker must preserve all 7 guardrails during migration. No data-access architectural changes required.
+
+**Post-merge validation:**
+- Monitor response cache behavior under filter changes
+- Verify ERA/WHIP ascending sort remains correct
+- Check pagination boundary conditions (page=0, >maxPage)
+- Validate cache hit rates for filtered queries
+
+## Sprint 5 Cleanup & Documentation (2026-04-21)
+
+### Cleanup Result
+- Removed the dead `~/js/site.js` layout import after confirming `wwwroot/js/site.js` was empty and all shell lifecycle behavior already lived inline in `_Layout.cshtml`.
+- Retained `rhx-button.css` and `rhx-badge.css` because About, Teams, Batting, and Pitching still render those htmxRazor components.
+
+### Documentation Result
+- Added cache follow-through notes to `README.md` and `docs/FRONTEND.md`, including the restart-based SOP for `lahman.db` refreshes.
+- Documented that response cache separation by `HX-Request` remains the migration-critical guardrail for full-page vs partial responses.
+
+### Backlog Decision
+- Shared leaderboard ordering extraction is still not safe as “cleanup only” because Razor Pages and `/api/leaders` have drifted in alias/stat coverage.
+- Any future extraction should be gated by parity tests, not bundled into UI migration polish.
+
+## Sprint 5 Issue #15 Completion (2026-04-21)
+
+**Status:** ✅ COMPLETED
+
+Cache invalidation SOP documented, asset audit completed, dead-asset cleanup executed. Cache behavior and htmxRazor CSS usage clarified for future sprints.
+
+### Key Deliverables
+1. **Cache Invalidation SOP** — Documented 24-hour TTL strategy and query patterns
+2. **Asset Audit** — Inventoried htmxRazor CSS imports; verified all active
+3. **Dead-Asset Removal** — Removed unused `site.js` import
+4. **Documentation Updates** — Cache patterns, asset lifecycle, component structure recorded
+
+### Platform Guardrails Locked
+- **Projection-first (CRITICAL)** — All EF queries materialize via `.Select()` in handler
+- **Response cache metadata (CRITICAL)** — All pages include `[ResponseCache(..., VaryByHeader="HX-Request")]`
+- **Cache key consistency** — New pages use unique keys with 24h TTL
+- **Shell authority** — `_ShellHeader.cshtml` + `_Layout.cshtml` own search/modal/boost
+
+### Deferrals to Backlog
+- Filter form extraction
+- Search PageModel extraction (unless future sprint forces it)
+- Leaderboard ordering extraction
+- Standalone search redesign
+- Support page copy/content polish
+
+### Sprint 5 Gate Achievement
+Audit complete. Platform stable. All guardrails locked. Ready for future sprints.

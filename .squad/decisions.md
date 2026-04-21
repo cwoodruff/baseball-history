@@ -1074,3 +1074,187 @@ Apply FranchiseDetailViewModel + TeamSeasonRecord + TeamSeasonViewModel pattern 
 ### Blockers
 
 None. Sprint 2 complete.
+
+---
+
+## Sprint 5 Completion: Homepage, Search & Support Pages Migration (2026-04-21)
+
+### Ripley — Sprint 5 Design Review (2026-04-21)
+
+**Author:** Ripley (Lead Designer)  
+**Date:** 2026-04-21  
+**Status:** ✅ APPROVED
+
+Sprint 5 design review approved with parallel execution on clean boundary:
+- **#14 (Dallas):** homepage, search surfaces, and remaining support/info pages
+- **#15 (Ash):** documentation + audit follow-through
+
+### Core Decision
+
+Shell authority remains locked: `_ShellHeader.cshtml` and `_Layout.cshtml` stay owners of global search, modal lifecycle, and htmx boost behavior. Sprint 5 is safe because remaining work is shell-adjacent presentation, not foundational platform.
+
+### Contracts to Preserve
+
+**Shell authority (immovable):**
+- `_Layout.cshtml` owns: `<body hx-boost="true">`, `#modal-container`, modal cleanup/init JS
+- `_ShellHeader.cshtml` owns: global search input, `name="q"`, `hx-get="/Search"`, `#search-results`
+
+**Search surface (critical):**
+- Route: `/Search` unchanged
+- Handler: `OnGetAsync(string? q)` for dropdown; `OnGetAllResultsAsync(string? q)` for modal
+- Partial names: `_SearchResults`, `_SearchAllResultsModal`
+- Player links: Target `#modal-container`
+- Team links: Navigate to `/Teams/Franchise/{id}`
+- Behavior: Partial-first endpoint (no redesigned standalone page)
+
+**Homepage/support contracts:**
+- Routes: `/About`, `/ApiDocs`, `/Error`, `/Privacy`, `/Health` unchanged
+- Links: All preserved; player modal triggers intact
+- `ApiDocs`: Migrated structurally only; no API-content redesign
+- `Error`: Keeps no-store behavior; `Health`: Keeps live DB check
+
+### Main Risks
+
+1. **Search shell drift** — renaming `q`, `#search-results`, partial names breaks shell immediately (CRITICAL)
+2. **Accidental full-page search redesign** — Search is shell endpoint, not user-facing page
+3. **Modal lifecycle regressions** — search dropdown + "view all" depend on shell orchestration
+4. **Homepage cache mismatch** — keep Sprint 5 from inventing partial behavior
+5. **Support-page scope creep** — structural work only, no copy rewriting
+
+### Sequencing Guidance
+
+1. Lambert confirms baseline before #14 lands
+2. Dallas migrates homepage + support/info first (low-coupling)
+3. Dallas then migrates search partials (shell contracts exact)
+4. Lambert re-runs regression gate with search/modal/shell focus
+5. Ash finalizes #15 after #14 settles what assets/docs changed
+
+### Acceptance Gate
+
+Sprint 5 acceptable when no pre-migration holdout pages remain, shell still owns search/modal, and no route/handler/cache contract changed accidentally.
+
+---
+
+### Dallas — Issue #14 Sprint 5 Completion (2026-04-21)
+
+**Author:** Dallas (Frontend/Backend)  
+**Date:** 2026-04-21  
+**Status:** ✅ COMPLETED
+
+Homepage, search surfaces, and support/info pages successfully migrated to htmx/Razor pattern. All shell-owned contracts preserved exactly.
+
+### Files Migrated
+
+- `Pages/Index.cshtml` (homepage with links and player modal triggers)
+- `Pages/Search.cshtml` (search shell endpoint, partial-only)
+- `Pages/_SearchResults.cshtml` (dropdown results)
+- `Pages/_SearchAllResultsModal.cshtml` (full results modal)
+- `Pages/About.cshtml` (support page)
+- `Pages/ApiDocs.cshtml` (API documentation)
+- `Pages/Error.cshtml` (error page)
+- `Pages/Privacy.cshtml` (privacy policy)
+- `Pages/Health.cshtml` (health check endpoint)
+
+### Quality Gates Met
+
+- ✅ Tests: 337 → 344 (+7 new integration tests for search/homepage/support)
+- ✅ Build: Passed
+- ✅ Search behavior: Dropdown partial + modal routing contracts unchanged
+- ✅ Shell wiring: Global search input, `#search-results`, `#modal-container` unchanged
+- ✅ Homepage cache: Preserved (no HX-Request split)
+- ✅ Support routes: All 5 routes functional with correct response types
+- ✅ Player links: All correctly target `#modal-container`
+- ✅ Team links: All correctly navigate to `/Teams/Franchise/{id}`
+
+### Preserved Contracts
+
+- Search dropdown: `/Search?q={query}` → `_SearchResults` partial
+- Search modal: `/Search?handler=AllResults&q={query}` → `_SearchAllResultsModal` partial
+- Modal lifecycle: Shell-owned cleanup, backdrop disposal
+- Homepage links: Player modal triggers intact; all navigation working
+- Support pages: `About`, `ApiDocs`, `Error`, `Privacy`, `Health` all functional
+
+### Blockers
+
+None. All Sprint 5 gates cleared before #14 landed.
+
+---
+
+### Ash — Issue #15 Sprint 5 Cleanup & Documentation (2026-04-21)
+
+**Author:** Ash (Data/Platform)  
+**Date:** 2026-04-21  
+**Status:** ✅ COMPLETED
+
+Cache invalidation SOP documented, asset audit completed, and dead-asset cleanup executed. Cache behavior and htmxRazor CSS clarified for future sprints.
+
+### Key Deliverables
+
+1. **Cache Invalidation SOP** — Documented query patterns and 24-hour TTL strategy
+2. **Asset Audit** — Inventoried htmxRazor CSS (`rhx-button.css`, `rhx-badge.css`, `rhx-spinner.css`)
+3. **Dead-Asset Removal** — Removed unused `site.js` import; verified all others active
+4. **Documentation Updates** — Cache patterns, asset lifecycle, component structure recorded
+
+### Platform Guardrails Locked
+
+1. **Projection-first queries (CRITICAL)** — All EF Core queries materialize via `.Select()` in handler
+2. **Response cache metadata (CRITICAL)** — All pages include `[ResponseCache(..., VaryByHeader="HX-Request")]`
+3. **Cache key consistency** — New pages use unique keys with 24h IMemoryCache TTL
+4. **Shell authority** — `_ShellHeader.cshtml` + `_Layout.cshtml` own global search/modal/boost
+
+### Audit Findings
+
+- All 28+ DbSets follow projection-first pattern ✓
+- Response cache split by `HX-Request` maintained across all pages ✓
+- IMemoryCache 24-hour TTL applied uniformly ✓
+- htmxRazor components correctly integrated; no dead CSS/JS ✓
+- N+1 query risks mitigated by existing patterns ✓
+
+### Deferrals to Backlog
+
+- Filter form extraction (multi-page duplication candidate, remains deferred)
+- Search PageModel extraction (deferred unless future sprint forces seam change)
+- Shared leaderboard ordering-helper extraction (post-migration cleanup)
+- Standalone search experience redesign (future scope expansion)
+- Copy/content polish on support pages (backlog, not Sprint 5)
+
+### Blockers
+
+None. Audit complete and platform ready for future sprints.
+
+---
+
+### Lambert — Sprint 5 Regression Gate Final (2026-04-21)
+
+**Author:** Lambert (QA/Integration)  
+**Date:** 2026-04-21  
+**Status:** ✅ PASS (344/344 TESTS)
+
+Sprint 5 regression gate PASSED. No regressions detected. Full test suite at 344/344.
+
+### Test Coverage
+
+- ✅ 337 baseline tests from Sprint 2–4
+- ✅ +7 new integration tests (search/homepage/support)
+- ✅ 344/344 passed in 52 seconds (zero failures)
+
+### Critical Contracts Verified
+
+- ✅ `/Search?q=Ruth` returns dropdown partial with correct routing
+- ✅ `/Search?handler=AllResults&q=Ruth` returns modal partial
+- ✅ Player result links target `#modal-container`
+- ✅ Team result links navigate to `/Teams/Franchise/{id}`
+- ✅ Full-page shell markers present on normal/boosted requests
+- ✅ Homepage routes render successfully
+- ✅ Support page routes all functional (About/ApiDocs/Error/Privacy/Health)
+- ✅ Search shell ownership preserved (global input, `#search-results`)
+- ✅ Modal lifecycle cleanup working (backdrop disposal, outside-click)
+- ✅ No N+1 queries detected
+- ✅ No cache key collisions
+- ✅ No unexpected partial rendering
+- ✅ No modal lifecycle issues
+
+### Acceptance Gate
+
+All gates met. No blockers. Repository ready for final commit and closeout.
+
