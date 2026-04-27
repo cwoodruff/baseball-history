@@ -9,6 +9,8 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Read connection string from config (overridable in Azure App Settings)
 var connectionString = builder.Configuration.GetConnectionString("Lahman")
                        ?? "Data Source=lahman.db;Mode=ReadOnly;Cache=Shared";
@@ -48,6 +50,8 @@ builder.Services.AddhtmxRazor();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // Enable SQLite WAL mode using a separate writable connection (WAL is persistent, only needs to be set once)
 {
