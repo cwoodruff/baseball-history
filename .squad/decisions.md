@@ -1,5 +1,90 @@
 # Squad Decisions
 
+## Issue #19: .NET Aspire Integration — APPROVED & SHIPPED (2026-04-21)
+
+### Overview
+Issue #19 proposes adding .NET Aspire to baseball-history for local development orchestration and infrastructure foundation. **Decision: ✅ APPROVED & IMPLEMENTATION COMPLETE.** This is a low-risk, high-value infrastructure change. Aspire is development-only; it does not touch the web project's logic, database, or htmx patterns. The web project remains entirely unaware of the orchestration layer.
+
+### Approved Architecture
+1. **New `baseball-history-aspire` project** (AppHost)
+   - .NET 10 Aspire AppHost (class library)
+   - Single responsibility: register and orchestrate services
+   - Service reference to `baseball-history-web` project
+   - Exposes web service on localhost (development only)
+   - Reserved for future services (tests, workers, APIs)
+
+2. **Zero web project changes**
+   - No `Aspire.Hosting` package references in `baseball-history-web.csproj`
+   - `Program.cs` unchanged
+   - All htmx, htmxRazor, Entity Framework Core patterns frozen
+   - No conditional Aspire-aware middleware or environment checks
+
+### Non-Negotiable Guardrails (Enforced)
+- ✋ **No** `Aspire.Hosting` references in `baseball-history-web.csproj`
+- ✋ **No** Aspire middleware in web app
+- ✅ Aspire SDK references ONLY in `baseball-history-aspire.csproj`
+- ✅ Web app works identically standalone (`dotnet run`) or orchestrated (`aspire start`)
+
+### Implementation Summary (Parker)
+- Created `baseball-history-aspire` AppHost project
+- Configured minimal Aspire.AppHost.Sdk dependency
+- AppHost.cs is 6 lines: AddProject → WithExternalHttpEndpoints → WithHttpHealthCheck("/")
+- Health check uses existing root page endpoint (no code changes to web project)
+- Zero Aspire SDK in web project dependencies
+- All tests pass; backward compatibility verified
+- README and DEVELOPMENT.md updated with Aspire quick-start
+
+### Verification Results (Lambert — QA/Test)
+- ✅ Build Passed: `dotnet build baseball-history.sln` (2.1s)
+- ✅ Test Suite Passed: 344/344 regression tests (53.4s runtime)
+- ✅ Backward Compatibility: `dotnet run --project baseball-history-web` works standalone
+- ✅ Web Project Isolation: Zero Aspire SDK dependencies
+- ✅ Documentation Updated: README + DEVELOPMENT.md
+- ✅ Solution Structure Clean: No scaffold artifacts
+- ✅ AppHost Implementation Sound: Minimal, clean, production-ready
+
+### Acceptance Criteria (All Met)
+1. ✅ Create `baseball-history-aspire` project — DONE
+2. ✅ Configure service references for web project — DONE
+3. ✅ Add Aspire manifests and orchestration — DONE
+4. ✅ Update solution file structure — DONE
+5. ✅ Document launch process in README — DONE
+6. ✅ All existing tests pass — DONE (344/344 tests)
+7. ✅ Backward compatibility maintained — DONE
+8. ✅ Zero web project coupling — DONE
+
+### Quality Gates Met
+| Gate | Result | Evidence |
+|------|--------|----------|
+| Build | ✅ PASS | All 3 projects build in 2.1s |
+| Tests | ✅ PASS | 344/344 tests passed |
+| Backward Compatibility | ✅ PASS | `dotnet run` works standalone |
+| Web Project Isolation | ✅ PASS | No Aspire SDK in web .csproj or Program.cs |
+| Documentation | ✅ PASS | README and DEVELOPMENT.md updated |
+| No Scaffold Debris | ✅ PASS | Only essential Aspire files present |
+
+### Risk Assessment
+**LOW RISK** — The change is purely additive. The web project has no Aspire runtime dependencies, so existing deployment and standalone workflows are completely unaffected. The AppHost only runs during local development via `aspire start`.
+
+### Approval
+| Role | Name | Decision | Timestamp |
+|------|------|----------|-----------|
+| Lead | Ripley | ✅ APPROVED | 2026-04-21T14:55Z |
+| Developer | Parker | ✅ IMPLEMENTED | 2026-04-21T15:10Z |
+| QA/Test | Lambert | ✅ APPROVED | 2026-04-21T15:10Z |
+| Coordinator | — | ✅ SHIPPED | 2026-04-21T19:11Z |
+
+### Next Steps
+1. ✅ Add `*.db-shm` and `*.db-wal` to .gitignore (separate commit recommended)
+2. ✅ Close GitHub issue #19
+
+### Notes
+- **Development-Only:** AppHost runs only during local development via `aspire start`. No production impact.
+- **Future-Proofing:** Architecture ready for multi-service expansion if needed (background workers, APIs).
+- **Zero Runtime Coupling:** Existing deployments and standalone startup workflows completely unaffected.
+
+---
+
 ## Sprint 2 Completion: Players Migration (Dallas #8) & Guardrails Approval (2026-04-21)
 
 ### Dallas — Issue #8 Players Page Migration Complete
@@ -3716,3 +3801,49 @@ All of these methods cast properties to `double`, which should handle `short` �
 ## Start Now? YES
 
 Both issues cleared for immediate parallel start. No blocking dependencies.
+
+---
+
+# Ripley — RHX/HTMX Audit (2026-04-21)
+
+## Decision
+Do not treat every `rhx-*` tag in this repo as a backend-connected htmx surface.
+
+## Why
+The only live htmxRazor components in `.cshtml` are `rhx-badge` and one `rhx-button` on `/About`. Those are being used as presentational primitives, while real backend interaction remains on surrounding page markup (`hx-get`, `hx-target`, `hx-swap`, `hx-push-url`) or on shell-level `hx-boost`.
+
+## Verified Surfaces
+- **Stats/Batting** and **Stats/Pitching**: migrated badges sit inside correctly wired htmx filter/sort/pagination surfaces with non-boosted partial returns.
+- **Teams** list/detail/season views: migrated badges are decorative; player modal links and page handlers still carry the htmx contracts.
+- **Search**: included in the audit because it is a shell-owned htmx surface, but it has no live `rhx-*` component usage today.
+- **Support pages** (`About`, `Health`, `Error`, `Privacy`, `ApiDocs`): page headers use presentational badges only; `/About` has the lone `rhx-button`, which is a client-side GitHub link, not a backend action.
+
+## Implication
+No follow-up implementation work is needed from this audit. Future review should only demand `hx-*` wiring when the `rhx-*` component itself owns an interaction contract, not when it is just replacing a badge/button visual primitive.
+
+---
+
+# Ripley — htmxRazor Migration Closeout (2026-04-21)
+
+## Decision
+Close all migration issues (#4–#15) and umbrella tracking issue (#16). Close all sprint milestones (Sprints 1–5).
+
+## Why
+All work has landed on the `htmxRazor` branch and is complete:
+
+- **Sprint 1** (Foundation): #4–#7 — integration, regression gates, shared shell, primitives ✅
+- **Sprint 2** (Foundation Pages): #8–#9 — Players and Teams migrations ✅
+- **Sprint 3** (Comparison & Features): #10–#11 — Compare, Awards, Hall of Fame, Postseason, Salaries ✅
+- **Sprint 4** (Leaderboards): #12–#13 — Batting and Pitching leaderboards with bug fix ✅
+- **Sprint 5** (Polish & Documentation): #14–#15 — Homepage, search surfaces, and cache/asset docs ✅
+- **RHX/HTMX audit**: Complete — no follow-up implementation work needed ✅
+
+Evidence: `htmxRazor` branch commits 506bd50 ("sprint 5 done"), 299fa71 (Sprint 5 closeout), and historical sprint completion logs.
+
+## Next Phase
+Umbrella issue #16 remains closed. The next phase is **validation and merge** — separate work not tracked in the sprint milestones.
+
+## Key Files
+- `.squad/decisions/inbox/ripley-rhx-htmx-audit.md` — audit decision
+- `.squad/agents/ripley/history.md` — historical context for all 5 sprints
+- `htmxRazor` branch HEAD for merged sprint decisions

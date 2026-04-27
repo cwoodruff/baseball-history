@@ -51,8 +51,11 @@ over 150 years of Major League Baseball statistics, including:
 
 - .NET 10.0 SDK
 - SQLite (included with .NET)
+- Aspire CLI (`aspire`) for the orchestrated local development workflow
 
 ### Running the Application
+
+#### Preferred: Aspire AppHost orchestration
 
 ```bash
 # Clone the repository
@@ -62,15 +65,26 @@ cd baseball-history
 # Build the solution
 dotnet build baseball-history.sln
 
-# Run the web application
-dotnet run --project baseball-history-web
+# Start the Aspire AppHost
+aspire start --apphost baseball-history-aspire/baseball-history-aspire.csproj
 
 # Run the regression suite
 dotnet test baseball-history-tests
 ```
 
-The application will be available at `https://localhost:5001` or
-`http://localhost:5000`.
+Use `aspire describe --apphost baseball-history-aspire/baseball-history-aspire.csproj`
+to see the dashboard URL and the dynamically assigned web endpoint for the `web`
+resource.
+
+#### Backward-compatible standalone web startup
+
+```bash
+# Run the web application without Aspire
+dotnet run --project baseball-history-web
+```
+
+The Aspire AppHost is additive and does not replace the direct `dotnet run`
+workflow for the existing web project.
 
 ### Migration Runtime Notes
 
@@ -78,6 +92,9 @@ The application will be available at `https://localhost:5001` or
 - `rhx-button.css` and `rhx-badge.css` are intentionally retained because `Pages/About.cshtml`, team pages, and leaderboard partials still render those components.
 - The app uses two cache layers during navigation: 24-hour `IMemoryCache` entries for shared lookup data and a 3600-second response cache that varies by `HX-Request` so boosted/full-page and non-boosted partial responses do not collide.
 - When replacing `lahman.db`, restart each app instance after the file swap so in-memory lookup caches and warmed player-page data rebuild against the new database.
+- The Aspire AppHost only orchestrates `baseball-history-web` for local
+  development; it does not change the web app's runtime contracts or require
+  Aspire-specific code in the web project.
 
 ### Database
 
@@ -91,6 +108,7 @@ present. The SQLite database file (`lahman.db`) should be placed in the
 
 ```
 baseball-history/
+├── baseball-history-aspire/       # Aspire AppHost for local orchestration
 ├── baseball-history-web/          # Main web application
 │   ├── Models/                    # Entity models and DbContext
 │   ├── ViewModels/                # View models for pages

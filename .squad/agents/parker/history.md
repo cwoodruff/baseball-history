@@ -1,5 +1,12 @@
 # Project Context
 
+
+## Core Context
+
+**Parker's Role:** Feature page migration (Awards, HoF, Postseason, Salaries in Sprint 3). Manages parallel work with filter preservation and leaderboard bug fixes (Sprint 4, #13).
+
+**Key Work:** Awards #11 (voting detail), HoF/Postseason/Salaries (4-page pattern), Pitching leaderboard bug fix. Parallel sequencing with Dallas #10.
+
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor
@@ -36,6 +43,11 @@ Dallas Issue #8 (Players) complete with 300/300 tests passing. Parker Issue #9 (
 Parker can proceed immediately with Teams migration. No blocking dependencies from Dallas #8.
 
 ## Learnings
+
+### Issue #19 Aspire integration (2026-04-21)
+- Ripley guardrail held: safest backend seam was additive only — new `baseball-history-aspire` AppHost with a project reference to `baseball-history-web`, no web SDK/package changes, and no `Program.cs` edits.
+- Using `WithHttpHealthCheck("/")` in the AppHost gives Aspire a working HTTP probe while keeping the existing web app contracts untouched.
+- Docs must present Aspire as the preferred local orchestration path while explicitly preserving `dotnet run --project baseball-history-web` as a supported standalone workflow.
 
 ### Architecture Review (2026-04-16)
 

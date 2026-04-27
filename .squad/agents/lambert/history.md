@@ -1,5 +1,8 @@
 # Lambert — Tester
 
+
+**Core Summary:** Lambert owns regression gates (344/344 tests baseline). Validates test coverage for each sprint, ensures no pre-existing behavior changes, and holds the quality baseline.
+
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor
@@ -658,3 +661,12 @@ All gates met. No blockers. Repository ready for final commit and Sprint 5 close
 **Status:** ✅ CLOSED
 
 Sprint 5 regression gate confirms all deliverables met and quality gates passed. Repository stable at 344/344 tests. Ready for release and Sprint 6 roadmap.
+
+### Issue #19 Aspire Integration Review (2026-04-21)
+- Approved the .NET Aspire AppHost implementation for issue #19 with zero regressions detected. All 344 tests passed, standalone `dotnet run` still works, and the web project has no Aspire runtime dependencies.
+- Parker's implementation is a clean, additive orchestration layer: `baseball-history-aspire` contains only 5 essential files (AppHost.cs, .csproj, appsettings, launchSettings), and the web project is referenced via ProjectReference with no SDK pollution.
+- The AppHost uses `WithHttpHealthCheck("/")` against the existing home page, so no code changes to the web project were necessary. This preserves the "Aspire is dev-only orchestration" contract stated in the issue non-goals.
+- Build passed in 2.1s, all three projects (web, tests, aspire) build cleanly. Test suite completed in 53.4s with no failures.
+- Documentation is correct: README.md and DEVELOPMENT.md both clarify Aspire workflow as "Preferred" and standalone as "Backward-compatible", and explain that the AppHost does not replace direct `dotnet run`.
+- Minor cleanup noted: SQLite WAL files (`*.db-shm`, `*.db-wal`) should be added to .gitignore to prevent accidental commit, but this is not a blocker for #19 approval.
+- **Quality gate:** Issue #19 is ready to close. The implementation meets all acceptance criteria and poses LOW RISK (purely additive, no existing deployment or standalone workflows affected).

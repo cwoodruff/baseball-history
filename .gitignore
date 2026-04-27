@@ -428,3 +428,13 @@ CLAUDE.md
 .squad/sessions/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+# Squad runtime state (local diagnostic artifacts — not committed)
+.squad/orchestration-log/
+.squad/log/
+.squad/decisions/inbox/
+.squad/sessions/
+.squad-workstream
+
+# Squad worktree directories
+.worktree-*/

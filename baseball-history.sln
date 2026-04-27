@@ -7,6 +7,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "database", "database", "{F6A96521-9D5F-4100-9436-5A3C10C08667}"
 	ProjectSection(SolutionItems) = preProject
 		database\lahman.db = database\lahman.db
+		database\Managers.sql = database\Managers.sql
+		database\Appearances.sql = database\Appearances.sql
+		database\AllstarFull.sql = database\AllstarFull.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03C0A8B8-3B21-46A1-9DA2-3FF365E59B32}"
@@ -20,6 +23,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03C0A8B8-3
 		docs\DATABASE.md = docs\DATABASE.md
 		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-aspire", "baseball-history-aspire\baseball-history-aspire.csproj", "{B278CBDC-6E33-45BF-AF5F-C9F7C91809BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-servicedefaults", "baseball-history-servicedefaults\baseball-history-servicedefaults.csproj", "{C8943EB1-2DF1-426B-874E-B55D9839377F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,5 +42,13 @@ Global
 		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA17B8F9-17F5-4CCE-ABA6-6F18407C17A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B278CBDC-6E33-45BF-AF5F-C9F7C91809BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B278CBDC-6E33-45BF-AF5F-C9F7C91809BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B278CBDC-6E33-45BF-AF5F-C9F7C91809BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B278CBDC-6E33-45BF-AF5F-C9F7C91809BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8943EB1-2DF1-426B-874E-B55D9839377F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8943EB1-2DF1-426B-874E-B55D9839377F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8943EB1-2DF1-426B-874E-B55D9839377F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8943EB1-2DF1-426B-874E-B55D9839377F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

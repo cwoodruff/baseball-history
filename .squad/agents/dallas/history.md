@@ -1,5 +1,14 @@
 # Project Context
 
+
+## Core Context
+
+**Dallas's Role:** Feature page migration lead. Migrates Players, Teams, Compare, and Sprint 5 pages. Manages modal decomposition, state management, and partial view contracts.
+
+**Key Work:** Players #8 (5 partials, modal preserved), Teams #9, Compare #10 (dual-player state), Homepage/search #14.
+
+**Pattern:** Decompose components into page-local partials; preserve all htmx contracts, response caching, and modal lifecycle.
+
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor

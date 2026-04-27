@@ -1,4 +1,99 @@
 # Project Context
+## Core Context
+
+**Ripley's Role:** Orchestration lead for htmxRazor migration (5 sprints, 12 issues) + infrastructure decisions. Manages sprint boundaries, design reviews, platform audits, and cross-agent sequencing.
+
+**Key Completed Work:**
+- Sprint 1 (Foundation): Shell architecture, primitives, regression gates
+- Sprint 2 (Foundation Pages): Players, Teams pages with modal decomposition
+- Sprint 3 (Comparison & Features): Compare, Awards, HoF, Postseason, Salaries
+- Sprint 4 (Leaderboards): Batting, Pitching with bug fixes
+- Sprint 5 (Polish): Homepage, search surfaces, docs
+- RHX/HTMX audit: No follow-up implementation needed
+- **Issue #19 (Aspire):** Design review + execution plan (2026-04-21)
+
+**Patterns Established:**
+- Design review → Lambert baseline → Dallas parallel build → Ash validation → Lambert gate
+- htmx contracts frozen; partial returns on non-boosted requests; shell authority immovable
+- Response cache: `VaryByHeader="HX-Request"` for htmx vs full-page distinction
+- Component output size: ±5KB of baseline acceptable
+- **Aspire guardrails:** Zero web project SDK coupling, Program.cs agnostic, dev-only orchestration
+
+**Test Baseline:** 344/344 passing (final state)
+
+**Migration Complete:** All sprint issues closed, all milestones archived. Next: validation and merge on htmxRazor.
+
+---
+
+## 2026-04-21 Issue #19 Design Review: .NET Aspire Integration — APPROVED
+
+### Outcome: ✅ APPROVED
+Ripley facilitated design review for Issue #19 (Aspire integration). Approved safest integration shape: new AppHost project (dev-only orchestration), zero web project coupling, backward-compatible launch modes.
+
+### Decision: Approved Pattern
+- **New `baseball-history-aspire` project** (AppHost class library)
+  - Registers web service reference
+  - Exposes on localhost (dev only)
+  - Reserved for future services
+  
+- **Zero web project changes**
+  - No Aspire SDK in `baseball-history-web.csproj`
+  - Program.cs untouched
+  - All htmx patterns frozen
+  - `dotnet run` must work without Aspire
+
+### Execution Plan
+| Task | Owner | Effort |
+|------|-------|--------|
+| #19a: Create AppHost scaffold | Parker | 2–3h |
+| #19b: Wire service + endpoint | Parker | 2–3h |
+| #19c: Integration test + health | Lambert | 1–2h |
+| #19d & #19e: Documentation | Parker | 2h |
+
+**Total:** 7–10 hours. Linear dependency; Parker can start immediately on #19a.
+
+### Non-Negotiable Guardrails (Parker)
+1. **Zero Aspire SDK in web.csproj** — Aspire only in AppHost
+2. **Program.cs agnostic** — No Aspire middleware or conditionals
+3. **Dual launch parity** — Both `dotnet run` and `aspire start` work identically
+4. **Database connection string unchanged** — Current file path or env override, no code changes
+5. **htmx patterns frozen** — Zero changes to response cache, VaryByHeader, or htmx detection logic
+
+### Risks Identified
+| Risk | Severity | Mitigation | Owner |
+|------|----------|-----------|-------|
+| AppHost startup failure | MEDIUM | Integration test + health verification | Lambert |
+| Port conflict | LOW | Aspire dynamic assignment; document via `aspire describe` | Parker |
+| SDK leak | HIGH | Code review + diff inspection (Ripley gate) | Ripley |
+| Scope creep (multi-service) | MEDIUM | Scope explicit: web only; defer future services | Ripley gate |
+
+### Quality Gates (Before Merge)
+- ✅ `dotnet build` passes
+- ✅ `dotnet run --project baseball-history-web` works (backward compat)
+- ✅ `aspire start` launches web successfully
+- ✅ Health endpoint responds
+- ✅ No Aspire SDK in web.csproj (diff inspection)
+- ✅ All 344 tests pass
+- ✅ README + DEVELOPMENT.md updated
+
+### Assignment & Readiness
+- **Parker:** Lead dev, #19a + #19b + #19d + #19e. **CAN START IMMEDIATELY.**
+- **Lambert:** QA/test, #19c. Start after #19b.
+- **Ripley:** Gate review pre-merge. Enforce guardrails.
+
+**Decision:** Parker can start today on AppHost scaffold. Deliver #19a skeleton + #19b by EOD tomorrow for Ripley gate review.
+
+### Strategic Note
+Aspire integration is **infrastructure-only, zero-risk** because:
+1. Web project unchanged (no SDK dependency, no code changes)
+2. Orthogonal to htmx patterns (frozen from Sprint 5)
+3. Purely additive (new project, no modifications to existing code)
+4. Backward-compatible launch modes (standalone or orchestrated)
+5. Foundation for future services (reserved, not required)
+
+This pattern **scales:** future services (tests, workers, APIs) add as separate projects registered in AppHost. No cascade of changes required.
+
+---
 
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
@@ -945,3 +1040,63 @@ Test suite at 344/344. Repository ready for release.
 - **Live `rhx-*` usage is narrow.** Current `.cshtml` usage is `rhx-badge` across support/team/stats views plus a single `rhx-button` on `/About`; `_Layout.cshtml` only references `/_rhx/css/components/*` assets and is not itself a component-use site.
 - **In this repo, `rhx-*` does not imply backend htmx wiring.** The shipped htmxRazor primitives in use are presentational; backend interaction still lives on surrounding anchors/forms/selects or shell-level `hx-boost`, so audits must verify the page surface contract rather than expecting `hx-*` on each badge/button.
 - **Interactive surfaces containing migrated badges are already wired.** Stats leaderboards keep explicit `hx-get`/`hx-target`/partial-return paths, team pages keep modal links and htmx partial handlers intact, and shell-owned search remains `hx-get="/Search"` plus modal targeting through `#modal-container`. No missing backend htmx connection was found in live `rhx-*` component usage.
+
+## GitHub Migration Closeout (2026-04-21)
+
+**Status:** ✅ COMPLETE
+
+All GitHub migration tracking issues (#4–#15) and umbrella issue (#16) closed. All 5 sprint milestones archived.
+
+### Closeout Actions
+- Closed all migration issues #4–#7 (Sprint 1: Foundation)
+- Closed all migration issues #8–#9 (Sprint 2: Foundation Pages)
+- Closed all migration issues #10–#11 (Sprint 3: Comparison & Features)
+- Closed all migration issues #12–#13 (Sprint 4: Leaderboards)
+- Closed all migration issues #14–#15 (Sprint 5: Polish & Documentation)
+- Closed umbrella tracking issue #16
+- Archived all 5 sprint milestones (Sprints 1–5)
+
+### Migration Work Summary
+The htmxRazor migration is complete across all pages:
+1. Shared shell and primitives foundation
+2. Player and Team foundation pages
+3. Comparison and feature pages (Awards, HallOfFame, Postseason, Salaries)
+4. Leaderboard pages (Batting, Pitching) with bug fixes
+5. Homepage, search surfaces, and documentation
+
+### Decisions Documented
+- `.squad/decisions.md` — RHX/HTMX audit decision (no follow-up needed)
+- `.squad/decisions.md` — Migration closeout decision
+- `.squad/orchestration-log/2026-04-21T18:33:10Z-ripley.md` — orchestration log
+- `.squad/log/2026-04-21T18:33:10Z-github-closeout.md` — session log
+
+### Next Phase
+**Validation and merge** — out of sprint scope. The repository is ready for:
+1. Code review on `htmxRazor` branch
+2. Testing and QA validation
+3. Merge to main
+
+No migration tracking issues remain open.
+
+## 2026-04-27 Index Page EF Core Warning Resolution
+
+**Status:** ✅ COMPLETE
+
+Resolved EF Core warning on Index page regarding `First()`/`FirstOrDefault()` without deterministic ordering on grouped results.
+
+### Details
+
+- **Warning:** "... calling FirstOrDefault() without OrderBy on grouped result"
+- **Root Cause:** Index.cshtml.cs was consuming a grouped result with non-deterministic First() selector
+- **Resolution:** Added deterministic ordering before consuming grouped result
+
+### Verification
+
+- ✅ Build passed: zero warnings, zero errors
+- ✅ All tests passing: 344/344 regression suite
+- ✅ Code quality gates met
+
+### Artifacts
+
+- Orchestration log: `.squad/orchestration-log/2026-04-27T18:40:07Z-ripley.md`
+- Session log: `.squad/log/2026-04-27T18:40:07Z-index-warning.md`

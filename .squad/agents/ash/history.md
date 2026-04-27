@@ -1,5 +1,12 @@
 # Project Context
 
+
+## Core Context
+
+**Ash's Role:** Platform validation and guardrails. Monitors cache efficiency, lighthouse metrics, response time, and approval gates. Certifies platform readiness for each sprint.
+
+**Key Work:** Cache SOP documentation, asset audits, parallel validation on Ash #15 (Sprint 5).
+
 - **Owner:** Woody
 - **Project:** Baseball History migration to htmxRazor
 - **Stack:** C#, .NET 10, ASP.NET Core Razor Pages, Entity Framework Core, SQLite, htmx, Bootstrap 5, htmxRazor

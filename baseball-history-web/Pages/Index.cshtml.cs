@@ -66,6 +66,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         var yearRange = await context.Teams
             .GroupBy(_ => 1)
             .Select(g => new { Min = g.Min(t => (int)t.YearId), Max = g.Max(t => (int)t.YearId) })
+            .OrderBy(_ => 1)
             .FirstOrDefaultAsync();
 
         if (yearRange != null)
