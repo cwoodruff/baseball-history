@@ -1077,3 +1077,26 @@ The htmxRazor migration is complete across all pages:
 3. Merge to main
 
 No migration tracking issues remain open.
+
+## 2026-04-27 Index Page EF Core Warning Resolution
+
+**Status:** ✅ COMPLETE
+
+Resolved EF Core warning on Index page regarding `First()`/`FirstOrDefault()` without deterministic ordering on grouped results.
+
+### Details
+
+- **Warning:** "... calling FirstOrDefault() without OrderBy on grouped result"
+- **Root Cause:** Index.cshtml.cs was consuming a grouped result with non-deterministic First() selector
+- **Resolution:** Added deterministic ordering before consuming grouped result
+
+### Verification
+
+- ✅ Build passed: zero warnings, zero errors
+- ✅ All tests passing: 344/344 regression suite
+- ✅ Code quality gates met
+
+### Artifacts
+
+- Orchestration log: `.squad/orchestration-log/2026-04-27T18:40:07Z-ripley.md`
+- Session log: `.squad/log/2026-04-27T18:40:07Z-index-warning.md`
