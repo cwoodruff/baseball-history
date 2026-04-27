@@ -24,15 +24,31 @@ dotnet restore
 # Build solution
 dotnet build
 
-# Run the application
+# Preferred: start the Aspire AppHost
+aspire start --apphost baseball-history-aspire/baseball-history-aspire.csproj
+```
+
+Use `aspire describe --apphost baseball-history-aspire/baseball-history-aspire.csproj`
+to inspect the dashboard URL and the current `web` endpoint that Aspire
+assigned.
+
+### Standalone Startup Still Supported
+
+```bash
+# Run the application without Aspire
 dotnet run --project baseball-history-web
 ```
+
+Issue #19 adds an orchestration layer; it does not replace the existing web
+project startup flow.
 
 ### Database Setup
 
 1. Download the Lahman Baseball Database (SQLite version)
 2. Place `lahman.db` in the `baseball-history-web` directory
 3. The application will automatically connect on startup
+4. If you are running through Aspire, restart the AppHost after replacing the
+   database file so the `web` resource restarts against the updated copy
 
 ### Configuration
 
@@ -57,6 +73,10 @@ dotnet run --project baseball-history-web
 
 ```
 baseball-history/
+├── baseball-history-aspire/
+│   ├── AppHost.cs            # Aspire resource graph for local orchestration
+│   ├── appsettings.json
+│   └── Properties/
 ├── baseball-history-web/
 │   ├── Extensions/           # Extension methods
 │   │   └── HtmxExtensions.cs
@@ -120,6 +140,17 @@ public class ExampleModel : PageModel
     }
 }
 ```
+
+### Aspire AppHost Notes
+
+- `baseball-history-aspire` is a dev-only orchestration project. It references
+  `baseball-history-web` as a project resource and exposes it through Aspire's
+  dashboard and resource model.
+- The AppHost uses the existing home page (`/`) as a lightweight HTTP health
+  probe so the web project stays unchanged.
+- Do not add the Aspire SDK or service-defaults packages to
+  `baseball-history-web` unless a future issue explicitly approves runtime
+  changes there.
 
 ### View Models
 
