@@ -15,6 +15,9 @@
 ## Learnings
 
 - Initial squad seed for data, caching, and runtime review during migration.
+- 2026-06-08: Postgres migration replay files for Lahman exports now live under `database/postgres-inserts/`, one `{TableName}.sql` file per requested table sourced from the root `lahman.db`.
+- 2026-06-08: For SQLite-to-Postgres export work in this repo, quote every table/column identifier and normalize empty strings to `NULL` for numeric/date-like fields plus numeric-text/date-text columns such as `People.weight`, `People.height`, `People.debut`, and `People.finalGame`.
+- 2026-06-08: `dotnet test baseball-history.sln --nologo` currently fails in `baseball-history-tests/IntegrationTestBase.cs` because the test host cannot determine an HTTPS redirect port; that baseline issue is unrelated to the insert-file export.
 
 ## Sprint 1 Audit & Guardrails (2026-04-20)
 
@@ -536,3 +539,6 @@ Cache invalidation SOP documented, asset audit completed, dead-asset cleanup exe
 
 ### Sprint 5 Gate Achievement
 Audit complete. Platform stable. All guardrails locked. Ready for future sprints.
+
+
+2026-06-08T23:55:53Z — Team update: Ash generated Postgres per-table INSERT exports; Lambert reviewed and approved; Coordinator updated identity now.

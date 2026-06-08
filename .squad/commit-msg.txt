@@ -1,0 +1,7 @@
+Scribe: merge decision inbox, record Postgres export session
+
+- Merged .squad/decisions/inbox into decisions.md
+- Removed inbox entries
+- Recorded orchestration and session logs
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

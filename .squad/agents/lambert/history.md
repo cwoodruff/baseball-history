@@ -670,3 +670,12 @@ Sprint 5 regression gate confirms all deliverables met and quality gates passed.
 - Documentation is correct: README.md and DEVELOPMENT.md both clarify Aspire workflow as "Preferred" and standalone as "Backward-compatible", and explain that the AppHost does not replace direct `dotnet run`.
 - Minor cleanup noted: SQLite WAL files (`*.db-shm`, `*.db-wal`) should be added to .gitignore to prevent accidental commit, but this is not a blocker for #19 approval.
 - **Quality gate:** Issue #19 is ready to close. The implementation meets all acceptance criteria and poses LOW RISK (purely additive, no existing deployment or standalone workflows affected).
+
+### Lahman Postgres Export Review (2026-06-08)
+
+- Verified all 27 Lahman tables in `lahman.db` have matching non-empty exports in `database/postgres-inserts/`.
+- Spot checks on `People`, `Teams`, `Batting`, `HallOfFame`, and `TeamsHalf` showed quoted identifiers, safe apostrophe escaping, and empty numeric SQLite values normalized to `NULL`.
+- No material migration bug found; approved for landing.
+
+
+2026-06-08T23:55:53Z — Team update: Reviewed and approved Lahman Postgres per-table INSERT exports (landing approved).

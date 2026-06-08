@@ -1,9 +1,8 @@
----
-updated_at: 2026-04-16T10:50:33.728Z
-focus_area: Initial setup
+updated_at: 2026-06-08T19:46:28-04:00
+focus_area: Postgres migration SQL export generation
 active_issues: []
 ---
 
 # What We're Focused On
 
-Getting started. Updated by coordinator at session start.
+Generating Postgres-compatible per-table INSERT scripts from the active Lahman SQLite database.

@@ -1,5 +1,28 @@
 # Decisions
 
+## 2026-06-08 — Ash: Postgres Insert Export Decision
+
+**Decision:** Export one replayable Postgres-compatible per-table INSERT file per source table into `database/postgres-inserts/`, preserving row order and using one statement per row.
+
+**Why:** Keeps existing `database/` SQL assets untouched; makes replay/diff/debug straightforward; quotes identifiers to avoid Postgres parser hazards; converts SQLite empty strings to `NULL` for numeric/date-like fields (notably `People.weight`, `People.height`, `People.debut`, `People.finalGame`).
+
+**Output Paths:** `database/postgres-inserts/{TableName}.sql` (27 files; e.g., `People.sql`, `Batting.sql`, `Teams.sql`, ...)
+
+**Validation:** File counts and non-empty exports verified against `lahman.db` row counts.
+
+---
+
+## 2026-06-08 — Lambert: Lahman Postgres export approval
+
+Reviewed per-table Postgres insert scripts against `lahman.db`.
+
+- All Lahman tables have a matching non-empty `.sql` file.
+- Identifiers are quoted, apostrophes are escaped correctly, and empty numeric SQLite values are represented safely.
+
+**Decision:** ✅ Approved for landing.
+
+---
+
 ## 2026-04-16 — Dallas: Shell First-Slice Extraction (Issue #6)
 
 **Decision:** Safe shell first-slice is extracting full header and footer chrome from `Pages/Shared/_Layout.cshtml` into `Pages/Shared/_ShellHeader.cshtml` and `Pages/Shared/_ShellFooter.cshtml`.
