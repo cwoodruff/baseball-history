@@ -6,7 +6,9 @@
 
 ## Core Context
 
-ash has been contributing in their role: Platform validation & guardrails lead: cache, migrations, and export validation. Key facts condensed: regression safety & guardrails are authoritative for sprint gates; shell/primitives extraction progressed under guarded reviews; Lahman Postgres export artifacts produced and validated (2026-06-08).
+ash is platform validation & guardrails lead responsible for cache behavior, leaderboard expression analysis, Lahman Postgres schema generation, and migration documentation. Key responsibilities: (1) **Platform Guardrails Authority** — Locked 7 critical guardrails (projection-first queries, response cache metadata VaryByHeader, shell authority, expression tree patterns, zero-division guards); (2) **Migration Validation** — Generated PostgreSQL per-table CREATE/INSERT scripts from live SQLite (2026-06-08), created POSTGRES-MIGRATION.md with User Secrets + Key Vault architecture (2026-06-09), resolved `/Health` vs `/health` route ambiguity by moving machine probe to `/healthz` (commit 6a5f202); (3) **Technical Insights** — Leaderboard two-stage materialization intentional (GroupBy in DB, fetch paginated names); ERA/WHIP ascending sort correct with double.MaxValue for zero-IP guard; response cache TTL (3600s) matches filter cache (24h); expression tree ordering complex but sound if property names validated; (4) **Configuration Architecture** — ConnectionStrings:Lahman as single runtime contract across environments; local dev via User Secrets, Azure via Key Vault + Managed Identity; no connection strings ever committed.
+
+**Deferrals Locked:** Shared expression tree extraction (Sprint 5), filter form extraction, search PageModel extraction, leaderboard ordering extraction.
 
 ## Recent Updates
 

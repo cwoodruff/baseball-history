@@ -6,7 +6,13 @@
 
 ## Core Context
 
-Lambert established and maintains the regression safety net (multiple integration suites, 40+ tests), approves platform gate decisions (shell extraction, Guardrails), and validates migration artifacts (Lahman Postgres export). Key facts: regression suite is authoritative for sprint gates; Aspire integration reviewed and accepted; Lahman Postgres per-table insert export reviewed and approved (2026-06-08).
+Lambert established and maintains the regression safety net (350+ tests), approves platform gate decisions (shell extraction, guardrails), and validates migration artifacts. Core responsibilities: (1) **Regression Gate Authority** — All sprints gated on regression suite pass; baseline 306+ tests escalated to 350 post-Aspire; (2) **Quality Gates** — Approves shell extraction, leaderboard patterns, cache guardrails, configuration contracts; (3) **Platform Validation** — Lahman Postgres export reviewed (2026-06-08), Aspire integration approved (344/344 tests, 2026-04-21), PostgreSQL migration acceptance gated on full suite green (350/350, 2026-06-09); (4) **Critical Learnings** — Custom elements in test harness render as span containers not original tags; htmx partial responses omit full filter forms (requires flexible assertions); ERA/WHIP ascending sort semantics require explicit UI indicator validation; PostgreSQL handoff blocked until real connection string configured and full suite rerun green.
+
+**Key Artifacts:**
+- Sprint 1–5 regression gates: 7 gate decisions documented, all passed
+- Platform guardrails locked: projection-first, response cache metadata, shell authority
+- PostgreSQL acceptance: 3-stage review (rejected, rejected+fixed docs, accepted after route fix); final verdict: 350/350 tests passing, no live credentials tracked, documentation aligned with runtime
+- Aspire integration: 344/344 tests, zero regressions, clean architectural separation
 
 ## Recent Updates
 
