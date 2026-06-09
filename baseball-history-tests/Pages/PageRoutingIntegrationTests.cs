@@ -1,9 +1,26 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace baseball_history_tests.Pages;
 
 public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory) : IntegrationTestBase(factory)
 {
+    [Fact]
+    public async Task Healthz_ReadyEndpoint_ReturnsOk()
+    {
+        var response = await Client.GetAsync("/healthz");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Alive_LivenessEndpoint_ReturnsOk()
+    {
+        var response = await Client.GetAsync("/alive");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     [Fact]
     public async Task Players_FullPage_RendersShellAndPlayersHost()
     {
