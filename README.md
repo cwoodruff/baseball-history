@@ -42,6 +42,8 @@ over 150 years of Major League Baseball statistics, including:
   configuration
 - [PostgreSQL Migration Guide](./docs/POSTGRES-MIGRATION.md) - Configuration for
   local development (User Secrets) and Azure deployment (Key Vault)
+- [MCP Server Plan](./docs/MCP-SERVER-PLAN.md) - Approved MCP M1 architecture,
+  scope, and review gates
 - [Frontend Design](./docs/FRONTEND.md) - htmx patterns, Bootstrap theming, and CSS
   architecture
 - [Features](./docs/FEATURES.md) - Detailed feature documentation

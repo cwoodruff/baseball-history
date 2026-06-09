@@ -8,6 +8,8 @@ internal static class TestDatabaseFactory
 {
     private static readonly Lazy<string> ConnectionString = new(LoadConnectionString);
 
+    internal static string GetConnectionString() => ConnectionString.Value;
+
     internal static BaseballDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<BaseballDbContext>()
