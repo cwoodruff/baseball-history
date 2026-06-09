@@ -7,9 +7,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "database", "database", "{F6A96521-9D5F-4100-9436-5A3C10C08667}"
 	ProjectSection(SolutionItems) = preProject
 		database\lahman.db = database\lahman.db
-		database\Managers.sql = database\Managers.sql
-		database\Appearances.sql = database\Appearances.sql
-		database\AllstarFull.sql = database\AllstarFull.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03C0A8B8-3B21-46A1-9DA2-3FF365E59B32}"

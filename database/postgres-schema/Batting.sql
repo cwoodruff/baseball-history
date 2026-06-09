@@ -1,0 +1,28 @@
+-- Generated from lahman.db (Batting)
+CREATE TABLE "Batting" (
+    "playerID" varchar(20) NOT NULL,
+    "yearID" smallint NOT NULL,
+    "stint" smallint NOT NULL,
+    "teamID" varchar(4) NOT NULL,
+    "lgID" varchar(3) NOT NULL,
+    "G" smallint,
+    "AB" smallint,
+    "R" smallint,
+    "H" smallint,
+    "2B" smallint,
+    "3B" smallint,
+    "HR" smallint,
+    "RBI" smallint,
+    "SB" smallint,
+    "CS" smallint,
+    "BB" smallint,
+    "SO" smallint,
+    "IBB" smallint,
+    "HBP" smallint,
+    "SH" smallint,
+    "SF" smallint,
+    "GIDP" smallint,
+    CONSTRAINT "Batting_pkey" PRIMARY KEY ("playerID", "yearID", "stint", "teamID", "lgID"),
+    CONSTRAINT "Batting_teamID_lgID_yearID_fkey" FOREIGN KEY ("teamID", "lgID", "yearID") REFERENCES "Teams" ("teamID", "lgID", "yearID"),
+    CONSTRAINT "Batting_playerID_fkey" FOREIGN KEY ("playerID") REFERENCES "People" ("playerID")
+);

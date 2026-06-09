@@ -1,0 +1,27 @@
+-- Generated from lahman.db (Appearances)
+CREATE TABLE "Appearances" (
+    "yearID" smallint NOT NULL,
+    "teamID" varchar(4) NOT NULL,
+    "lgID" varchar(3) NOT NULL,
+    "playerID" varchar(20) NOT NULL,
+    "G_all" smallint,
+    "GS" smallint,
+    "G_batting" smallint,
+    "G_defense" smallint,
+    "G_p" smallint,
+    "G_c" smallint,
+    "G_1b" smallint,
+    "G_2b" smallint,
+    "G_3b" smallint,
+    "G_ss" smallint,
+    "G_lf" smallint,
+    "G_cf" smallint,
+    "G_rf" smallint,
+    "G_of" smallint,
+    "G_dh" smallint,
+    "G_ph" smallint,
+    "G_pr" smallint,
+    CONSTRAINT "Appearances_pkey" PRIMARY KEY ("playerID", "lgID", "teamID", "yearID"),
+    CONSTRAINT "Appearances_teamID_lgID_yearID_fkey" FOREIGN KEY ("teamID", "lgID", "yearID") REFERENCES "Teams" ("teamID", "lgID", "yearID"),
+    CONSTRAINT "Appearances_playerID_fkey" FOREIGN KEY ("playerID") REFERENCES "People" ("playerID")
+);
