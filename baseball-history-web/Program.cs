@@ -11,12 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Read connection string from config (overridable in Azure App Settings)
-var connectionString = builder.Configuration.GetConnectionString("Lahman")
-                       ?? "Data Source=lahman.db;Mode=ReadOnly;Cache=Shared";
+var connectionString = builder.Configuration.GetConnectionString("Lahman");
+if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains('<'))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:Lahman must be set via user-secrets, environment variables, or Azure App Service configuration.");
+}
 
 builder.Services.AddDbContext<BaseballDbContext>(options =>
-    options.UseSqlite(connectionString)
+    options.UseNpgsql(connectionString, npgsqlOptions => npgsqlOptions.EnableRetryOnFailure())
         .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
 builder.Services.AddMemoryCache();
@@ -52,15 +55,6 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-
-// Enable SQLite WAL mode using a separate writable connection (WAL is persistent, only needs to be set once)
-{
-    using var walConnection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=lahman.db");
-    walConnection.Open();
-    using var cmd = walConnection.CreateCommand();
-    cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
-    cmd.ExecuteNonQuery();
-}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

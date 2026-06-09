@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>baseball_history_web</RootNamespace>
+        <UserSecretsId>baseball-history-web-7f2bf07b-8af4-4da0-9594-1c0da8d0d3c0</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,19 +16,11 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.7" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-    </ItemGroup>
-
-    <!-- Include SQLite database in publish output -->
-    <ItemGroup>
-        <None Update="lahman.db">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-        </None>
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\baseball-history-servicedefaults\baseball-history-servicedefaults.csproj" />

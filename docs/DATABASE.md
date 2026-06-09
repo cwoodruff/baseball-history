@@ -12,9 +12,9 @@ from 1871 to the present.
 
 ## Database Technology
 
-- **Database Engine**: SQLite
+- **Database Engine**: PostgreSQL
 - **ORM**: Entity Framework Core 10.0
-- **Database File**: `lahman.db` (~60MB)
+- **Connection Key**: `ConnectionStrings:Lahman`
 
 ## Entity Relationship Diagram
 
@@ -236,28 +236,29 @@ modelBuilder.Entity<Teams>()
 
 ### Value Converters
 
-Custom converters handle data type mismatches:
+Custom converters handle data type mismatches between PostgreSQL column types
+and the app's existing model surface:
 
 ```csharp
-// DateOnly converter for empty strings
+// DateOnly converter for varchar-backed dates
 var dateOnlyConverter = new ValueConverter<DateOnly?, string?>(
     v => v.HasValue ? v.Value.ToString("yyyy-MM-dd") : null,
     v => string.IsNullOrWhiteSpace(v) ? null : DateOnly.Parse(v));
 
 entity.Property(e => e.Debut)
-    .HasConversion(dateOnlyConverter)
-    .HasColumnType("nvarchar(20)");
+    .HasConversion(dateOnlyConverter);
 
-entity.Property(e => e.FinalGame)
-    .HasConversion(dateOnlyConverter)
-    .HasColumnType("nvarchar(20)");
+// Legacy string properties backed by numeric PostgreSQL columns
+// use value converters so page/view-model formatting code stays stable.
 ```
 
 ## Data Type Considerations
 
-### String Fields Requiring Parsing
+### Legacy String Fields Requiring Parsing
 
-Some numeric fields are stored as strings in the Lahman database:
+Some application-facing properties intentionally remain strings even though the
+PostgreSQL database stores them in numeric columns. EF Core converters bridge
+that gap so existing formatting code still works.
 
 | Entity     | Field          | Stored As | Parse Method     |
 |------------|----------------|-----------|------------------|

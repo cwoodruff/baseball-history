@@ -90,3 +90,9 @@ SQLite stores pitching stats (`W`, `L`, `G`, `SO`, etc.) as `short` (Int16), not
 
 ### Reviewer Note
 Ready for Ash review. All contract-preserving requirements met. No user-facing behavior changes except improved error handling (500 → 200 with data). Lambert's gate should rerun successfully after this merge.
+
+## Learnings
+
+- 2026-06-09: `baseball-history-web/Program.cs` now expects `ConnectionStrings:Lahman` from user-secrets, env vars, or Azure App Service/Key Vault; committed config only carries placeholders.
+- 2026-06-09: `baseball-history-web/Models/BaseballDbContext.cs` normalizes SQLite-scaffolded metadata for PostgreSQL by clearing old collations/store types and adding converters for legacy string properties backed by numeric columns.
+- 2026-06-09: `baseball-history-tests/Database/PostgreSqlModelTests.cs` is the no-secret smoke test for Npgsql model/query translation; full integration tests still need a real PostgreSQL connection string.

@@ -16,7 +16,7 @@ GO
 --- Replace <REPLACE_ME> with a real password
 USE master
 CREATE Login cwoodruff
-    WITH Password='5cEZpbhz&p5i&DaA2*N68Nn4sJINd2-localonly'
+    WITH Password='<REPLACE_ME>'
 GO
 
 USE baseballhistory

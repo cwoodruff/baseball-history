@@ -45,8 +45,8 @@ application.
                               │ SQL Queries
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     SQLite Database                              │
-│                    (lahman.db ~60MB)                             │
+│                  PostgreSQL Lahman Database                      │
+│       (configured via ConnectionStrings:Lahman at runtime)      │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐   │
 │  │  People  │ │ Batting  │ │ Pitching │ │ Teams/Franchises │   │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘   │
@@ -147,7 +147,7 @@ public class PlayerDetailViewModel
 ```
 1. Browser → GET /Players
 2. Razor Page → Query database via EF Core
-3. EF Core → Execute SQL on SQLite
+3. EF Core → Execute SQL on PostgreSQL
 4. Page Model → Build ViewModel
 5. Razor View → Render full HTML page
 6. Browser ← Complete HTML document

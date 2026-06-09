@@ -117,7 +117,7 @@ public class Sprint5SurfaceIntegrationTests(WebApplicationFactory<Program> facto
         AssertFullPageShell(html);
         Assert.Contains(">Health Check</h1>", html);
         Assert.Contains("Database Status", html);
-        Assert.Contains("SQLite database is accessible", html);
+        Assert.Contains("PostgreSQL database connection is accessible", html);
         Assert.Contains("Sample Team Record", html);
     }
 

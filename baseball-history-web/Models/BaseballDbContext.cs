@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace baseball_history_web.Models;
 
@@ -78,6 +81,69 @@ public partial class BaseballDbContext : DbContext
             return date;
         return null;
     }
+
+    private static short? ConvertToNullableShort(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return short.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static short ConvertToShort(string value) =>
+        short.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
+
+    private static int? ConvertToNullableInt(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static int ConvertToInt(string value) =>
+        int.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture);
+
+    private static double? ConvertToNullableDouble(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static double ConvertToDouble(string value) =>
+        double.Parse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
+
+    private static readonly ValueConverter<string?, short?> NullableShortStringConverter = new(
+        value => ConvertToNullableShort(value),
+        value => value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : null);
+
+    private static readonly ValueConverter<string, short> ShortStringConverter = new(
+        value => ConvertToShort(value),
+        value => value.ToString(CultureInfo.InvariantCulture));
+
+    private static readonly ValueConverter<string?, int?> NullableIntStringConverter = new(
+        value => ConvertToNullableInt(value),
+        value => value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : null);
+
+    private static readonly ValueConverter<string, int> IntStringConverter = new(
+        value => ConvertToInt(value),
+        value => value.ToString(CultureInfo.InvariantCulture));
+
+    private static readonly ValueConverter<string?, double?> NullableDoubleStringConverter = new(
+        value => ConvertToNullableDouble(value),
+        value => value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : null);
+
+    private static readonly ValueConverter<string, double> DoubleStringConverter = new(
+        value => ConvertToDouble(value),
+        value => value.ToString(CultureInfo.InvariantCulture));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1642,7 +1708,45 @@ public partial class BaseballDbContext : DbContext
             .HasForeignKey(s => new { s.TeamIdloser, s.LgIdloser, s.YearId })
             .HasPrincipalKey(t => new { t.TeamId, t.LgId, t.YearId });
 
+        NormalizeForPostgreSql(modelBuilder);
         OnModelCreatingPartial(modelBuilder);
+    }
+
+    private static void NormalizeForPostgreSql(ModelBuilder modelBuilder)
+    {
+        foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(entityType => entityType.GetProperties()))
+        {
+            var columnType = property.GetColumnType();
+            if (property.ClrType == typeof(string) && !string.IsNullOrWhiteSpace(columnType))
+            {
+                ApplyStringNumericConverter(property, columnType!);
+            }
+
+            property.SetColumnType(null);
+            property.SetCollation(null);
+        }
+    }
+
+    private static void ApplyStringNumericConverter(IMutableProperty property, string columnType)
+    {
+        var normalizedColumnType = columnType.ToLowerInvariant();
+
+        if (normalizedColumnType is "smallint" or "tinyint")
+        {
+            property.SetValueConverter(property.IsNullable ? NullableShortStringConverter : ShortStringConverter);
+            return;
+        }
+
+        if (normalizedColumnType == "int")
+        {
+            property.SetValueConverter(property.IsNullable ? NullableIntStringConverter : IntStringConverter);
+            return;
+        }
+
+        if (normalizedColumnType == "float")
+        {
+            property.SetValueConverter(property.IsNullable ? NullableDoubleStringConverter : DoubleStringConverter);
+        }
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

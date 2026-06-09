@@ -7,7 +7,7 @@
 @await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
 {
     Title = "Health Check",
-    Subtitle = "Quick status view for the read-only Lahman database connection.",
+    Subtitle = "Quick status view for the configured Lahman PostgreSQL connection.",
     Eyebrow = "Support",
     BadgeText = Model.DatabaseHealthy ? "Healthy" : "Needs attention",
     BadgeVariant = Model.DatabaseHealthy ? "success" : "warning"
@@ -21,7 +21,7 @@
         @if (Model.DatabaseHealthy)
         {
             <div class="alert alert-success" role="alert">
-                SQLite database is accessible
+                PostgreSQL database connection is accessible
             </div>
 
             @if (Model.SampleTeam != null)

@@ -35,6 +35,11 @@ assigned.
 ### Standalone Startup Still Supported
 
 ```bash
+# Set the PostgreSQL connection string locally
+dotnet user-secrets set --project baseball-history-web \
+  "ConnectionStrings:Lahman" \
+  "Host=localhost;Port=5432;Database=lahman;Username=postgres;Password=YOUR_LOCAL_PASSWORD;SSL Mode=Disable"
+
 # Run the application without Aspire
 dotnet run --project baseball-history-web
 ```
@@ -44,20 +49,27 @@ project startup flow.
 
 ### Database Setup
 
-1. Download the Lahman Baseball Database (SQLite version)
-2. Place `lahman.db` in the `baseball-history-web` directory
-3. The application will automatically connect on startup
-4. If you are running through Aspire, restart the AppHost after replacing the
-   database file so the `web` resource restarts against the updated copy
+1. Provision or obtain a PostgreSQL database loaded with the Lahman schema/data
+2. Store the connection string outside git with `dotnet user-secrets`:
+   ```bash
+   dotnet user-secrets set --project baseball-history-web \
+     "ConnectionStrings:Lahman" \
+     "Host=<server>;Port=5432;Database=lahman;Username=<user>;Password=<password>;SSL Mode=Require;Trust Server Certificate=true"
+   ```
+3. The app reads the same `ConnectionStrings:Lahman` key from user-secrets,
+   environment variables (`ConnectionStrings__Lahman`), Azure App Service
+   settings, or Key Vault-backed configuration
+4. If running through Aspire, restart the AppHost after updating the connection
+   string so the `web` resource reconnects cleanly
 
 ### Configuration
 
-**appsettings.json**:
+**appsettings.json** (safe sample only):
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=lahman.db"
+    "Lahman": "Host=<set-in-user-secrets-or-app-service>;Port=5432;Database=lahman;Username=<set-in-user-secrets-or-app-service>;Password=<set-in-user-secrets-or-app-service>;SSL Mode=Require;Trust Server Certificate=true"
   },
   "Logging": {
     "LogLevel": {
@@ -66,6 +78,9 @@ project startup flow.
   }
 }
 ```
+
+Use user-secrets for local work. In Azure, set the same key via App Service
+configuration or a Key Vault reference.
 
 ---
 
@@ -350,8 +365,8 @@ The application includes a health check page at `/Health` that verifies:
 
 **Database queries failing:**
 
-- Check connection string in appsettings.json
-- Verify database file exists and is accessible
+- Check `ConnectionStrings:Lahman` in user-secrets, environment variables, or App Service configuration
+- Verify the PostgreSQL server is reachable and the user has read access
 - Check for LINQ translation errors (use `.ToList()` before complex operations)
 
 ### Logging
@@ -384,12 +399,12 @@ dotnet publish -c Release -o ./publish
 | Variable                               | Description         |
 |----------------------------------------|---------------------|
 | `ASPNETCORE_ENVIRONMENT`               | Set to "Production" |
-| `ConnectionStrings__DefaultConnection` | Database path       |
+| `ConnectionStrings__Lahman`            | PostgreSQL connection string |
 
 ### Checklist
 
 - [ ] Build in Release mode
-- [ ] Verify database file is included
+- [ ] Verify `ConnectionStrings__Lahman` is configured in the target environment
 - [ ] Set environment to Production
 - [ ] Enable HTTPS
 - [ ] Configure logging

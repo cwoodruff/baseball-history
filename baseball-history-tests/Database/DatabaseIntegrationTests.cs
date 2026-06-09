@@ -5,21 +5,9 @@ namespace baseball_history_tests.Database;
 
 public class DatabaseIntegrationTests
 {
-    private static string GetDatabasePath()
-    {
-        var testDir = AppContext.BaseDirectory;
-        var solutionDir = Path.GetFullPath(Path.Combine(testDir, "..", "..", "..", ".."));
-        return Path.Combine(solutionDir, "baseball-history-web", "lahman.db");
-    }
-
     private BaseballDbContext CreateContext()
     {
-        var dbPath = GetDatabasePath();
-        var options = new DbContextOptionsBuilder<BaseballDbContext>()
-            .UseSqlite($"Data Source={dbPath}")
-            .Options;
-
-        return new BaseballDbContext(options);
+        return TestDatabaseFactory.CreateContext();
     }
 
     [Fact]
