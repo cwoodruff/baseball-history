@@ -1,0 +1,6 @@
+Scribe: summarize large agent histories into Core Context
+
+- Condensed old entries into ## Core Context for large history.md files (ash, dallas, lambert, parker, ripley)
+- Kept recent updates for context
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

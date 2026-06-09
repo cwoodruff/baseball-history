@@ -90,3 +90,13 @@ Audit complete. Platform stable. All guardrails locked. Ready for future sprints
 
 
 2026-06-08T23:55:53Z — Team update: Ash generated Postgres per-table INSERT exports; Lambert reviewed and approved; Coordinator updated identity now.
+
+## Learnings
+
+### 2026-06-08 — Lahman PostgreSQL schema export
+- The live `/Users/cwoodruff/Git/baseball-history/lahman.db` database is the authoritative source for Lahman table shape; generating schema from checked-in SQL dumps risks drifting from current constraints.
+- PostgreSQL-safe Lahman DDL works best when every identifier is double-quoted, SQLite `COLLATE NOCASE` clauses are dropped, and composite primary-key columns are forced to `NOT NULL` even when SQLite metadata leaves them nullable.
+- The generated schema deliverables now live in `database/postgres-schema/`, with a reusable generator at `scripts/generate_postgres_schema.py` and an ordered replay file at `database/postgres-schema/all_tables.sql`.
+- `AllstarFull` should keep only the `playerID -> People.playerID` foreign key in Postgres because the live SQLite source does not enforce a team foreign key for historical all-star rows.
+
+2026-06-08T23:55:53Z — Team update: Ash generated Postgres-compatible per-table CREATE TABLE scripts from /Users/cwoodruff/Git/baseball-history/lahman.db into `database/postgres-schema/` and added `scripts/generate_postgres_schema.py`.

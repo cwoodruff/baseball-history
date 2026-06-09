@@ -35,6 +35,8 @@ Initial setup complete.
 
 ## Infrastructure Enhancement: .NET Aspire Integration (2026-04-21)
 
+2026-06-09T00:10:49Z — Orchestration: Merged Postgres schema/inserts decisions from inbox, created orchestration and session logs, and updated agent histories for ash and lambert.
+
 - **Issue #19:** Add .NET Aspire to the solution
 - **Requester:** Copilot (via Scribe)
 - **Type:** Infrastructure enhancement

@@ -1,0 +1,3 @@
+scribe: merge postgres-schema decisions, add logs and update histories
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

@@ -260,3 +260,31 @@ Reviewed per-table Postgres insert scripts against `lahman.db`.
 - ✅ Component migrations may proceed with regression safety net
 - ✅ Team ready for Phase B rollout (filtered by Phase B gates)
 - ✅ Orchestration log recorded at 2026-04-16T20:57:47Z
+
+---
+
+# 2026-06-08 — Ash: Lahman Postgres schema generation decision
+
+**Decision:** Generate PostgreSQL table DDL directly from the live `lahman.db` metadata and preserve only the constraints present in that source database.
+
+**Why:** The checked-in SQL assets already show migration drift across formats. Reading `PRAGMA table_info`, `PRAGMA index_list`, and `PRAGMA foreign_key_list` from the live SQLite file keeps table shapes, primary keys, unique constraints, and foreign keys aligned with the real dataset.
+
+**Important nuance:** `AllstarFull` retains the `playerID` foreign key to `People`, but it should not gain a synthetic team foreign key. The live source omits that relationship, matching known historical all-star team rows that do not resolve cleanly through `Teams`.
+
+**Artifacts:**
+- `scripts/generate_postgres_schema.py`
+- `database/postgres-schema/{TableName}.sql`
+- `database/postgres-schema/all_tables.sql`
+
+---
+
+# 2026-06-08 — Lambert: Lahman Postgres Export Review
+
+Approved.
+
+## Validation
+
+- All 27 Lahman tables have matching non-empty Postgres DDL files.
+- Spot checks on People, Teams, Batting, HallOfFame, HomeGames, and TeamsHalf showed quoted identifiers, preserved keys, and sensible type mapping.
+- No material migration bug found.
+

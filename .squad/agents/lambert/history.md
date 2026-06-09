@@ -110,3 +110,9 @@ Sprint 5 regression gate confirms all deliverables met and quality gates passed.
 
 
 2026-06-08T23:55:53Z — Team update: Reviewed and approved Lahman Postgres per-table INSERT exports (landing approved).
+
+2026-06-08T23:55:53Z — Team update: Lambert reviewed and approved the generated Postgres-compatible per-table CREATE TABLE scripts in `database/postgres-schema/`.
+
+## Learnings
+
+- For bulk schema exports, verify both coverage and fidelity: count matching files first, then spot-check composite keys, foreign keys, and awkward identifiers against the live source DB.
