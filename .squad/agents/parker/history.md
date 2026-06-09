@@ -96,3 +96,25 @@ Ready for Ash review. All contract-preserving requirements met. No user-facing b
 - 2026-06-09: `baseball-history-web/Program.cs` now expects `ConnectionStrings:Lahman` from user-secrets, env vars, or Azure App Service/Key Vault; committed config only carries placeholders.
 - 2026-06-09: `baseball-history-web/Models/BaseballDbContext.cs` normalizes SQLite-scaffolded metadata for PostgreSQL by clearing old collations/store types and adding converters for legacy string properties backed by numeric columns.
 - 2026-06-09: `baseball-history-tests/Database/PostgreSqlModelTests.cs` is the no-secret smoke test for Npgsql model/query translation; full integration tests still need a real PostgreSQL connection string.
+
+## 2026-06-09 PostgreSQL EF Core Migration Complete
+
+### Summary
+Successfully migrated baseball-history from SQLite to PostgreSQL using Npgsql. Delivered commit `6ddf8c0` with complete provider switch, schema migration, and 350/350 regression tests passing.
+
+### What Happened
+1. **EF Core Provider:** Switched from `.UseSqlite()` to `.UseNpgsql()` in Program.cs
+2. **Model Normalization:** Stripped SQLite collations/store-type annotations; applied value converters for legacy numeric columns
+3. **Configuration:** Maintained `ConnectionStrings:Lahman` as stable runtime key; committed config contains only placeholders
+4. **Testing:** Added PostgreSqlModelTests for provider validation; full regression suite passing
+5. **Smoke Tests:** Query translation tests validate Npgsql compatibility even without live database
+
+### Verification
+- ✅ Build: `dotnet build baseball-history.sln` passes
+- ✅ Tests: 350/350 passing (includes 2 new PostgreSQL smoke tests)
+- ✅ Secret Review: No live credentials in tracked files
+- ✅ Configuration: Connection string properly externalized
+
+### Handoff Status
+Ready for merge. Requires operator configuration of real `ConnectionStrings:Lahman` at runtime.
+

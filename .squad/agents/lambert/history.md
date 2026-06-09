@@ -116,3 +116,75 @@ Sprint 5 regression gate confirms all deliverables met and quality gates passed.
 ## Learnings
 
 - For bulk schema exports, verify both coverage and fidelity: count matching files first, then spot-check composite keys, foreign keys, and awkward identifiers against the live source DB.
+
+## 2026-06-09 — PostgreSQL migration review gate
+
+**Status:** ❌ REJECTED FOR HANDOFF
+
+- Parker's migration commit builds cleanly, and the targeted PostgreSQL model/translation smoke checks pass.
+- No obvious live database secret remains in tracked app/config files; the repository only contains placeholders/examples plus intentionally fake secret-handling training samples.
+- The environment is still not handoff-safe: 119 of 348 tests fail immediately when `ConnectionStrings:Lahman` is missing, so the broad regression suite has not been re-established on a configured PostgreSQL instance here.
+- Ash's current branch docs are incomplete/inconsistent with runtime behavior: `README.md` links to `docs/POSTGRES-MIGRATION.md`, but that file is not present, and README still tells readers the current runtime uses SQLite/`lahman.db` even though `Program.cs` now hard-requires a PostgreSQL connection string.
+- Reviewer gate: reject until the user-facing configuration story is committed and consistent, then rerun the full regression suite against a real PostgreSQL-backed Lahman database.
+
+2026-06-09T08:19:59-04:00 — Team update: Lambert rejected PostgreSQL migration handoff pending committed config docs and a full Postgres-backed regression rerun after `ConnectionStrings:Lahman` is supplied.
+
+## 2026-06-09 — PostgreSQL migration final re-review
+
+**Status:** ❌ REJECTED FOR HANDOFF
+
+- Ash's doc/config follow-up resolved the prior documentation blocker: `README.md`, `docs/DEVELOPMENT.md`, `docs/FRONTEND.md`, and the new `docs/POSTGRES-MIGRATION.md` now consistently describe PostgreSQL as the runtime and `lahman.db` as historical migration input only.
+- Validation on this tree: `dotnet build baseball-history.sln --nologo` passed, and targeted `PostgreSqlModelTests` passed (2/2).
+- Secret review remains clean for tracked app/config material: only placeholders/examples are present (`<password>`, `YOUR_LOCAL_PASSWORD`, `placeholder`, `<REPLACE_ME>`), plus intentionally fake secret-handling training samples.
+- The handoff gate is still not re-established in this environment because the full suite still fails fast without external configuration: `dotnet test baseball-history-tests --no-build --nologo --logger "console;verbosity=minimal"` fails 119/348 due to missing `ConnectionStrings:Lahman`.
+- Reviewer verdict stays reject until someone supplies a real PostgreSQL Lahman connection string/database to the environment and reruns the full integration suite green.
+
+2026-06-09T08:28:52-04:00 — Team update: Lambert confirmed the docs/config rejection reason is fixed, but kept the PostgreSQL migration handoff rejected because the full integration suite still cannot pass here without a real configured `ConnectionStrings:Lahman` PostgreSQL database.
+
+## 2026-06-09 — PostgreSQL migration acceptance re-review
+
+**Status:** ✅ ACCEPTED FOR HANDOFF
+
+- Final-state review across commits `6ddf8c0`, `8a59a17`, and `6a5f202` is now handoff-safe: runtime is PostgreSQL-only via `ConnectionStrings:Lahman`, docs are aligned, and the `/Health` vs `/health` route collision is resolved by moving the machine-ready probe to `/healthz` while preserving the human support page at `/Health`.
+- Validation on this tree: `dotnet build baseball-history.sln --nologo` passed, and `dotnet test baseball-history-tests --no-restore --nologo --logger "console;verbosity=minimal"` passed **350/350**.
+- Regression evidence includes the dedicated readiness/liveness route tests (`/healthz`, `/alive`) plus the existing `/Health` full-page support-page coverage inside the green suite.
+- Tracked-file secret review remains clean for runtime material: checked-in app/config/docs only contain placeholders or clearly fake examples (`<...>`, `YOUR_LOCAL_PASSWORD`, `placeholder`), not a live raw database password. Fake secret-pattern examples remain in the training skill docs, but they are not real credentials.
+- Remaining handoff work is operational, not code-blocking: Azure still needs a real PostgreSQL connection string exposed as `ConnectionStrings__Lahman` (preferably via Key Vault reference), managed identity access to that secret, and an app restart/recycle after configuration is applied.
+
+2026-06-09T08:40:25-04:00 — Team update: Lambert accepted the PostgreSQL migration for handoff after the `/Health` route fix; build passed, the full suite is green at 350/350, and no tracked runtime file contains a live database password.
+
+## 2026-06-09 PostgreSQL Acceptance Review Complete
+
+### Summary
+Completed final acceptance review of PostgreSQL migration and health route fix. Verified all 350/350 tests passing, no credentials leaked, and documentation matches runtime behavior.
+
+### Review Scope
+- Parker's PostgreSQL migration (commit `6ddf8c0`)
+- Ash's documentation and health route fix (commits `8a59a17`, `6a5f202`)
+- Dallas's salary currency formatting fix (Issue #18)
+
+### Verification Executed
+- ✅ Build: `dotnet build baseball-history.sln` passes
+- ✅ Full Regression Suite: 350/350 tests passing
+- ✅ Secret Review: Only placeholders in tracked files; no live database passwords
+- ✅ Configuration: `ConnectionStrings:Lahman` properly externalized
+- ✅ Documentation: README and POSTGRES-MIGRATION.md provide clear guidance
+- ✅ Routes: Health endpoint ambiguity resolved
+
+### Quality Gates Met
+| Gate | Result | Evidence |
+|------|--------|----------|
+| Build | ✅ PASS | All projects build |
+| Tests | ✅ PASS | 350/350 regression tests |
+| Secret Safety | ✅ PASS | No live credentials tracked |
+| Configuration | ✅ PASS | Runtime contract validated |
+| Documentation | ✅ PASS | Setup path clear |
+| Routes | ✅ PASS | No ambiguity |
+
+### Acceptance Decision
+✅ ACCEPT PostgreSQL migration for handoff.
+
+**Rationale:** Documentation matches runtime behavior; configuration contract is consistent; quality gates all passing; no security risks identified.
+
+**Consequences:** Engineering can merge; Azure deployment still requires operator to configure real `ConnectionStrings:Lahman` before app startup.
+
