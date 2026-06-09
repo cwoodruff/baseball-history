@@ -30,7 +30,7 @@ over 150 years of Major League Baseball statistics, including:
 | Component | Technology                           |
 |-----------|--------------------------------------|
 | Backend   | ASP.NET Core 10.0, Razor Pages       |
-| Database  | SQLite with Lahman Baseball Database |
+| Database  | PostgreSQL (runtime) with Lahman data |
 | ORM       | Entity Framework Core 10.0           |
 | Frontend  | htmxRazor 2.0.1, htmx 2.0.4, Bootstrap 5 |
 
@@ -40,6 +40,8 @@ over 150 years of Major League Baseball statistics, including:
   patterns
 - [Database Design](./docs/DATABASE.md) - Database schema and Entity Framework
   configuration
+- [PostgreSQL Migration Guide](./docs/POSTGRES-MIGRATION.md) - Configuration for
+  local development (User Secrets) and Azure deployment (Key Vault)
 - [Frontend Design](./docs/FRONTEND.md) - htmx patterns, Bootstrap theming, and CSS
   architecture
 - [Features](./docs/FEATURES.md) - Detailed feature documentation
@@ -50,10 +52,20 @@ over 150 years of Major League Baseball statistics, including:
 ### Prerequisites
 
 - .NET 10.0 SDK
-- SQLite (included with .NET)
+- Access to a PostgreSQL database loaded with Lahman data
 - Aspire CLI (`aspire`) for the orchestrated local development workflow
 
 ### Running the Application
+
+Before starting the app, set a real `ConnectionStrings:Lahman` value outside git. For local development, use user-secrets:
+
+```bash
+dotnet user-secrets set --project baseball-history-web \
+  "ConnectionStrings:Lahman" \
+  "Host=<server>;Port=5432;Database=lahman;Username=<user>;Password=<local-password>;SSL Mode=Require;Trust Server Certificate=true"
+```
+
+See [POSTGRES-MIGRATION.md](./docs/POSTGRES-MIGRATION.md) for the full local and Azure setup story.
 
 #### Preferred: Aspire AppHost orchestration
 
@@ -86,23 +98,24 @@ dotnet run --project baseball-history-web
 The Aspire AppHost is additive and does not replace the direct `dotnet run`
 workflow for the existing web project.
 
-### Migration Runtime Notes
+### Runtime Configuration Notes
 
-- htmxRazor serves its foundation assets from `/_rhx/`; component CSS imports stay centralized in `baseball-history-web/Pages/Shared/_Layout.cshtml`.
-- `rhx-button.css` and `rhx-badge.css` are intentionally retained because `Pages/About.cshtml`, team pages, and leaderboard partials still render those components.
-- The app uses two cache layers during navigation: 24-hour `IMemoryCache` entries for shared lookup data and a 3600-second response cache that varies by `HX-Request` so boosted/full-page and non-boosted partial responses do not collide.
-- When replacing `lahman.db`, restart each app instance after the file swap so in-memory lookup caches and warmed player-page data rebuild against the new database.
-- The Aspire AppHost only orchestrates `baseball-history-web` for local
-  development; it does not change the web app's runtime contracts or require
-  Aspire-specific code in the web project.
+- The current runtime is PostgreSQL-backed and requires `ConnectionStrings:Lahman`.
+- Local development should set that key with `dotnet user-secrets`.
+- Azure App Service should provide the same key through configuration, ideally as a Key Vault reference backed by Managed Identity.
+- No real passwords or full connection strings are committed to this repository.
+- The Aspire AppHost only orchestrates `baseball-history-web` for local development; it does not change the web app's runtime contracts or require Aspire-specific code in the web project.
+- htmxRazor still serves its foundation assets from `/_rhx/`, and response caching still varies by `HX-Request` so full-page and partial responses do not collide.
 
 ### Database
 
-The application uses
-the [Lahman Baseball Database](https://www.seanlahman.com/baseball-archive/statistics/),
+The application uses the [Lahman Baseball Database](https://www.seanlahman.com/baseball-archive/statistics/),
 a comprehensive database of Major League Baseball statistics from 1871 to
-present. The SQLite database file (`lahman.db`) should be placed in the
-`baseball-history-web` directory.
+present, loaded into PostgreSQL for runtime use.
+
+`ConnectionStrings:Lahman` must point at that PostgreSQL database. The legacy
+`lahman.db` SQLite file is historical migration input only; new local or Azure
+setups should not rely on copying it into `baseball-history-web`.
 
 ## Project Structure
 

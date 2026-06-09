@@ -100,3 +100,60 @@ Audit complete. Platform stable. All guardrails locked. Ready for future sprints
 - `AllstarFull` should keep only the `playerID -> People.playerID` foreign key in Postgres because the live SQLite source does not enforce a team foreign key for historical all-star rows.
 
 2026-06-08T23:55:53Z — Team update: Ash generated Postgres-compatible per-table CREATE TABLE scripts from /Users/cwoodruff/Git/baseball-history/lahman.db into `database/postgres-schema/` and added `scripts/generate_postgres_schema.py`.
+
+## 2026-06-09 — PostgreSQL Migration Configuration Guidance
+
+**Status:** ✅ COMPLETED
+
+Created complete configuration documentation for PostgreSQL migration, safe for both current state (SQLite) and post-migration (Postgres). Work done:
+
+### Deliverables
+
+1. **New**: `docs/POSTGRES-MIGRATION.md` (8.8 KB)
+   - Local dev setup via User Secrets (`dotnet user-secrets`)
+   - Azure deployment via App Service Configuration + Key Vault + Managed Identity
+   - Security architecture clearly defined per environment
+   - Troubleshooting guide for connection string issues
+   - Migration path for developers
+
+2. **Updated**: `docs/DEVELOPMENT.md`
+   - Database Setup section now covers both SQLite and PostgreSQL contexts
+   - Configuration section includes User Secrets example for PostgreSQL
+   - Cross-references POSTGRES-MIGRATION.md
+
+3. **Updated**: `README.md`
+   - Technology Stack clarified: "SQLite → PostgreSQL (migrating)"
+   - Documentation index now includes POSTGRES-MIGRATION.md
+   - Migration Runtime Notes separated current behavior from PostgreSQL context
+
+4. **Decision**: `.squad/decisions/inbox/ash-postgres-config.md`
+   - Documented configuration pattern for team
+   - Rationale for User Secrets + Key Vault approach
+   - Safe for pre-Parker state; no changes needed when Parker merges his app changes
+
+### Platform-Level Guarantees
+
+- ✅ **No secrets in repo**: Connection strings with credentials never committed; User Secrets + Key Vault architecture explicitly documented
+- ✅ **Safe now and after migration**: Docs describe what will happen; Parker's app changes don't require doc updates
+- ✅ **Environment-aware**: Clear responsibility matrix (local dev = User Secrets, Azure = Key Vault, fallback = appsettings.json)
+- ✅ **Troubleshooting coverage**: Connection failures traced to root causes with fixes
+
+### Configuration Hierarchy (Locked)
+
+When app switches to PostgreSQL, configuration resolution is:
+1. **Local dev**: User Secrets (via `dotnet user-secrets set "ConnectionStrings:Lahman" "...";`)
+2. **Azure**: Key Vault reference (via App Service config: `@Microsoft.KeyVault(VaultName=...;SecretName=Lahman-ConnectionString)`)
+3. **Fallback**: appsettings.json value (development fallback only)
+
+Application code (Program.cs) reads `builder.Configuration.GetConnectionString("Lahman")` — no change needed there.
+
+### Ready for Parker
+
+Parker's upcoming migration (SQLite → .UseNpgsql()) doesn't require doc updates because:
+- Connection string key stays "Lahman"
+- Configuration hierarchy unchanged
+- Examples already show PostgreSQL patterns
+- Developers onboarding post-merge get the full picture immediately
+
+
+2026-06-09T12:45:00Z — Followed up PostgreSQL docs/config gap: created docs/POSTGRES-MIGRATION.md, aligned README + DEVELOPMENT + FRONTEND with the now-required ConnectionStrings:Lahman PostgreSQL runtime, clarified Azure App Service + Key Vault setup, and moved lahman.db guidance into historical migration-only context.

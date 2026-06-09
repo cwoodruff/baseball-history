@@ -182,10 +182,11 @@ Pages that support both full-page and non-boosted HTMX responses use:
 
 This keeps full-page shell responses separate from partial-only responses. Shared lookup data (letters, years, leagues, Hall of Fame IDs, and the warmed default Players page) stays in `IMemoryCache` for 24 hours.
 
-**Operational follow-through when refreshing `lahman.db`:**
-1. Replace the database file.
-2. Restart each app instance so `IMemoryCache` and the hosted `PlayerCacheService` rebuild from the new data.
-3. Verify one full-page request and one non-boosted HTMX request on a migrated page (for example `/Players` and `/Stats/Batting`) so both response-cache variants are repopulated.
+**Historical data-refresh follow-through (only when regenerating Postgres artifacts from the legacy `lahman.db` source):**
+1. Refresh the SQLite source artifact used for export/migration work.
+2. Rebuild or reload the PostgreSQL target data before restarting the app.
+3. Restart each app instance so `IMemoryCache` and the hosted `PlayerCacheService` rebuild from the active PostgreSQL dataset.
+4. Verify one full-page request and one non-boosted HTMX request on a migrated page (for example `/Players` and `/Stats/Batting`) so both response-cache variants are repopulated.
 
 ## CSS Architecture
 

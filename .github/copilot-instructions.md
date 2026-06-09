@@ -57,7 +57,7 @@ dotnet run --project baseball-history-web
 - Reuse the existing cache strategy before adding new ones:
   - 24-hour `IMemoryCache` entries for shared lookup data and warmed defaults
   - `PlayerCacheService` for the default Players landing page
-  - restart app instances after replacing `lahman.db` so warmed caches rebuild against fresh data
+  - if you regenerate Postgres data from the legacy `lahman.db` source, restart app instances after the PostgreSQL reload so warmed caches rebuild against fresh data
 - Query patterns matter:
   - the DbContext is configured globally as `NoTracking`
   - project only the columns needed for the page or DTO
@@ -67,4 +67,4 @@ dotnet run --project baseball-history-web
 - Treat `baseball-history-aspire` as local orchestration only. It should reference the web app as a project resource and use the existing `/` health check; do not move Aspire-specific runtime concerns into `baseball-history-web` unless the change is explicitly about that.
 - htmxRazor component assets are centralized in `_Layout.cshtml`. If a page starts using additional `rhx-*` components, add the required component CSS there so the styles survive boosted navigation.
 - Team and league presentation is driven by shared components and team-color CSS variables rather than page-specific styling. Reuse components under `Pages/Shared/Components/**` before introducing new markup patterns.
-- The SQLite connection defaults to `lahman.db`, and the web project is configured to copy `lahman.db` to output/publish. Be careful about working directory assumptions when changing startup, tests, or deployment behavior.
+- Runtime configuration now comes from `ConnectionStrings:Lahman` and targets PostgreSQL. Treat `lahman.db` as a legacy migration/export source only, and be careful about working directory assumptions when touching schema-export scripts or historical data refresh workflows.

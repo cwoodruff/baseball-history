@@ -10,6 +10,7 @@ History application.
 - .NET 10.0 SDK
 - IDE: Visual Studio 2022, VS Code with C# extension, or JetBrains Rider
 - Git
+- Access to a PostgreSQL database loaded with Lahman data
 
 ### Getting Started
 
@@ -49,6 +50,8 @@ project startup flow.
 
 ### Database Setup
 
+This repo now expects PostgreSQL at runtime. See [POSTGRES-MIGRATION.md](./POSTGRES-MIGRATION.md) for the full migration and Azure rollout guidance.
+
 1. Provision or obtain a PostgreSQL database loaded with the Lahman schema/data
 2. Store the connection string outside git with `dotnet user-secrets`:
    ```bash
@@ -61,6 +64,8 @@ project startup flow.
    settings, or Key Vault-backed configuration
 4. If running through Aspire, restart the AppHost after updating the connection
    string so the `web` resource reconnects cleanly
+5. Treat the old `lahman.db` file as migration input only; it is no longer the
+   runtime database for new setups
 
 ### Configuration
 
@@ -79,8 +84,9 @@ project startup flow.
 }
 ```
 
-Use user-secrets for local work. In Azure, set the same key via App Service
-configuration or a Key Vault reference.
+Use user-secrets for local work. In Azure, prefer an App Service setting named
+`ConnectionStrings__Lahman` whose value is a Key Vault reference. Direct App
+Service storage is acceptable only as a short-term fallback.
 
 ---
 
