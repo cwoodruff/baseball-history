@@ -8,7 +8,10 @@ namespace baseball_history_mcp.Tools;
 public sealed class BaseballReferenceTools(
     IPlayerReadService players,
     IFranchiseReadService franchises,
-    ILeaderboardReadService leaderboards)
+    ITeamReadService teams,
+    ILeaderboardReadService leaderboards,
+    IHallOfFameReadService hallOfFame,
+    ISalaryReadService salaries)
 {
     [McpServerTool(Name = "search_players", ReadOnly = true, Title = "Search Players"), Description("Search players by free-text query or last-name prefix with paging.")]
     public Task<PagedReadResult<PlayerLookupItem>> SearchPlayersAsync(
@@ -40,9 +43,17 @@ public sealed class BaseballReferenceTools(
         CancellationToken cancellationToken = default)
         => franchises.GetFranchiseAsync(franchiseId, cancellationToken);
 
-    [McpServerTool(Name = "get_batting_leaders", ReadOnly = true, Title = "Get Batting Leaders"), Description("Read batting leaderboards in career or single-season form.")]
+    [McpServerTool(Name = "get_team_season", ReadOnly = true, Title = "Get Team Season"), Description("Get one exact team-season by team id, league, and year so franchise-era lookups stay deterministic.")]
+    public Task<TeamSeasonReadModel?> GetTeamSeasonAsync(
+        [Description("Team id such as NYA.")] string teamId,
+        [Description("Exact league id such as AL or NL.")] string league,
+        [Description("Exact season year.")] int year,
+        CancellationToken cancellationToken = default)
+        => teams.GetTeamSeasonAsync(teamId, league, year, cancellationToken);
+
+    [McpServerTool(Name = "get_batting_leaders", ReadOnly = true, Title = "Get Batting Leaders"), Description("Read batting leaderboards in career or single-season form. Supported stats: hr, h, r, rbi, sb, 2b, 3b, bb, g, ab, avg, obp, slg, ops.")]
     public Task<PagedReadResult<BattingLeaderboardEntry>> GetBattingLeadersAsync(
-        [Description("Stat to rank by, for example hr, hits, avg, obp, slg, or ops.")] string stat = "hr",
+        [Description("Stat to rank by. Use one of: hr, h, r, rbi, sb, 2b, 3b, bb, g, ab, avg, obp, slg, ops. Aliases like hits and homeruns are also accepted.")] string stat = "hr",
         [Description("Optional lower year bound.")] int? fromYear = null,
         [Description("Optional upper year bound.")] int? toYear = null,
         [Description("Optional league filter such as AL or NL.")] string? league = null,
@@ -55,9 +66,9 @@ public sealed class BaseballReferenceTools(
             new BattingLeaderboardQuery(stat, fromYear, toYear, league, minAtBats, singleSeason, page, pageSize),
             cancellationToken);
 
-    [McpServerTool(Name = "get_pitching_leaders", ReadOnly = true, Title = "Get Pitching Leaders"), Description("Read pitching leaderboards in career or single-season form.")]
+    [McpServerTool(Name = "get_pitching_leaders", ReadOnly = true, Title = "Get Pitching Leaders"), Description("Read pitching leaderboards in career or single-season form. Supported stats: w, l, so, sv, cg, sho, ip, g, gs, hr, k9, wpct, era, whip, bb9.")]
     public Task<PagedReadResult<PitchingLeaderboardEntry>> GetPitchingLeadersAsync(
-        [Description("Stat to rank by, for example w, so, era, whip, k9, bb9, or wpct.")] string stat = "w",
+        [Description("Stat to rank by. Use one of: w, l, so, sv, cg, sho, ip, g, gs, hr, k9, wpct, era, whip, bb9. Aliases like wins and strikeouts are also accepted.")] string stat = "w",
         [Description("Optional lower year bound.")] int? fromYear = null,
         [Description("Optional upper year bound.")] int? toYear = null,
         [Description("Optional league filter such as AL or NL.")] string? league = null,
@@ -69,4 +80,33 @@ public sealed class BaseballReferenceTools(
         => leaderboards.GetPitchingLeadersAsync(
             new PitchingLeaderboardQuery(stat, fromYear, toYear, league, minInningsPitched, singleSeason, page, pageSize),
             cancellationToken);
+
+    [McpServerTool(Name = "list_hall_of_fame_inductees", ReadOnly = true, Title = "List Hall of Fame Inductees"), Description("List inducted Hall of Fame rows with optional year/category filters and bounded paging.")]
+    public Task<PagedReadResult<HallOfFameInducteeReadModel>> ListHallOfFameInducteesAsync(
+        [Description("Optional induction year filter.")] int? year = null,
+        [Description("Optional Hall of Fame category filter such as Player, Manager, or Pioneer/Executive.")] string? category = null,
+        [Description("1-based results page.")] int page = 1,
+        [Description("Page size from 1 up to the configured Hall of Fame max.")] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+        => hallOfFame.GetInducteesAsync(new HallOfFameInducteeRequest(year, category, page, pageSize), cancellationToken);
+
+    [McpServerTool(Name = "get_hall_of_fame_voting_history", ReadOnly = true, Title = "Get Hall of Fame Voting History"), Description("Get bounded Hall of Fame voting history for one player. Returned rows are Lahman HallOfFame ballot rows, not a prose biography.")]
+    public Task<HallOfFameVotingHistoryReadModel?> GetHallOfFameVotingHistoryAsync(
+        [Description("Lahman player id, for example ripkeca01.")] string playerId,
+        CancellationToken cancellationToken = default)
+        => hallOfFame.GetVotingHistoryAsync(playerId, cancellationToken);
+
+    [McpServerTool(Name = "get_player_salary_history", ReadOnly = true, Title = "Get Player Salary History"), Description("Get bounded salary history for one player. Returned rows are Lahman Salaries player-team-season records ordered from most recent to oldest.")]
+    public Task<PlayerSalaryHistoryReadModel?> GetPlayerSalaryHistoryAsync(
+        [Description("Lahman player id, for example aaronha01.")] string playerId,
+        CancellationToken cancellationToken = default)
+        => salaries.GetPlayerSalaryHistoryAsync(playerId, cancellationToken);
+
+    [McpServerTool(Name = "get_salary_leaders", ReadOnly = true, Title = "Get Salary Leaders"), Description("List highest salary rows with optional year filter and bounded paging.")]
+    public Task<PagedReadResult<SalaryLeaderEntry>> GetSalaryLeadersAsync(
+        [Description("Optional salary season year.")] int? year = null,
+        [Description("1-based results page.")] int page = 1,
+        [Description("Page size from 1 up to the configured salary leader max.")] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+        => salaries.GetSalaryLeadersAsync(new SalaryLeaderRequest(year, page, pageSize), cancellationToken);
 }

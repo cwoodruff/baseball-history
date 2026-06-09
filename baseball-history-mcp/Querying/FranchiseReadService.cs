@@ -13,6 +13,10 @@ public sealed class FranchiseReadService(
         FranchiseLookupRequest request,
         CancellationToken cancellationToken = default)
     {
+        var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
         var maxPageSize = options.Value.Limits.FranchiseListPageSizeMax;
         var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
@@ -37,10 +41,9 @@ public sealed class FranchiseReadService(
                 CurrentDivision = f.Teams.OrderByDescending(t => t.YearId).Select(t => t.DivId).FirstOrDefault()
             });
 
-        if (!string.IsNullOrWhiteSpace(request.League))
+        if (normalizedLeague is not null)
         {
-            var league = request.League.Trim();
-            query = query.Where(f => f.CurrentLeague != null && EF.Functions.ILike(f.CurrentLeague, league));
+            query = query.Where(f => f.CurrentLeague == normalizedLeague);
         }
 
         if (request.ActiveOnly)
@@ -100,18 +103,24 @@ public sealed class FranchiseReadService(
 
     public async Task<FranchiseReadModel?> GetFranchiseAsync(string franchiseId, CancellationToken cancellationToken = default)
     {
+        var normalizedFranchiseId = McpInputValidation.NormalizeRequiredCode(franchiseId, "franchiseId");
+
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var franchise = await context.TeamsFranchises
             .Include(f => f.Teams)
-            .FirstOrDefaultAsync(f => f.FranchId == franchiseId, cancellationToken);
+            .FirstOrDefaultAsync(f => f.FranchId == normalizedFranchiseId, cancellationToken);
 
         if (franchise is null)
         {
             return null;
         }
 
-        var teams = franchise.Teams.OrderByDescending(t => t.YearId).ToList();
+        var teams = franchise.Teams
+            .OrderByDescending(t => t.YearId)
+            .ThenBy(t => t.TeamId)
+            .ThenBy(t => t.LgId)
+            .ToList();
         var totalWins = teams.Sum(t => t.W ?? 0);
         var totalLosses = teams.Sum(t => t.L ?? 0);
         var totalGames = totalWins + totalLosses;

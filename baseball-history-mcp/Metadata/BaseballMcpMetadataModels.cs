@@ -28,7 +28,11 @@ public sealed record McpLimitSnapshot(
     int QueryTimeoutSeconds,
     int PlayerSearchPageSizeMax,
     int FranchiseListPageSizeMax,
-    int LeaderboardPageSizeMax);
+    int LeaderboardPageSizeMax,
+    int HallOfFamePageSizeMax,
+    int HallOfFameVotingHistoryYearsMax,
+    int SalaryHistorySeasonsMax,
+    int SalaryLeaderboardPageSizeMax);
 
 public sealed record ServerResourceLink(
     string Uri,
@@ -68,3 +72,36 @@ public sealed record ServerDiagnosticsDocument(
     SupportedYearSpan? SupportedYearSpan,
     int ToolCount,
     int ResourceCount);
+
+public sealed record HallOfFameGuideDocument(
+    SupportedYearSpan? SupportedYearSpan,
+    int InducteePageSizeMax,
+    int VotingHistoryYearsMax,
+    IReadOnlyList<string> ToolNames,
+    IReadOnlyList<string> Caveats);
+
+public sealed record SalaryGuideDocument(
+    SupportedYearSpan? SupportedYearSpan,
+    int SalaryHistorySeasonsMax,
+    int SalaryLeaderboardPageSizeMax,
+    IReadOnlyList<string> ToolNames,
+    IReadOnlyList<string> Caveats);
+
+public sealed record WorkflowResourceGuide(
+    string Uri,
+    string Purpose,
+    IReadOnlyList<string> BestFor);
+
+public sealed record WorkflowScenarioGuide(
+    string Name,
+    IReadOnlyList<string> CommonQuestions,
+    IReadOnlyList<string> RecommendedResources,
+    IReadOnlyList<string> RecommendedTools,
+    IReadOnlyList<string> SupportedQueryShapes,
+    IReadOnlyList<string> UnsupportedQueryShapes);
+
+public sealed record WorkflowGuideDocument(
+    string Summary,
+    IReadOnlyList<WorkflowResourceGuide> Resources,
+    IReadOnlyList<WorkflowScenarioGuide> Workflows,
+    IReadOnlyList<string> UnsupportedCapabilities);
