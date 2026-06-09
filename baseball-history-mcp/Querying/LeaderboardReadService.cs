@@ -15,6 +15,13 @@ public sealed class LeaderboardReadService(
         BattingLeaderboardQuery request,
         CancellationToken cancellationToken = default)
     {
+        var stat = LeaderboardStatCatalog.NormalizeBattingStat(request.Stat);
+        var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
+        McpInputValidation.ValidateYearRange(request.FromYear, request.ToYear);
+        McpInputValidation.ValidateNonNegative(request.MinAtBats, "minAtBats");
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
         var maxPageSize = options.Value.Limits.LeaderboardPageSizeMax;
         var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
@@ -25,7 +32,7 @@ public sealed class LeaderboardReadService(
         var query = context.Batting.AsQueryable();
         if (request.FromYear.HasValue) query = query.Where(b => b.YearId >= request.FromYear.Value);
         if (request.ToYear.HasValue) query = query.Where(b => b.YearId <= request.ToYear.Value);
-        if (!string.IsNullOrWhiteSpace(request.League)) query = query.Where(b => b.LgId == request.League);
+        if (normalizedLeague is not null) query = query.Where(b => b.LgId == normalizedLeague);
 
         if (request.SingleSeason)
         {
@@ -54,7 +61,7 @@ public sealed class LeaderboardReadService(
             var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
             var page = Math.Clamp(request.Page, 1, totalPages);
 
-            var data = await ApplyBattingOrder(seasonQuery, request.Stat)
+            var data = await ApplyBattingOrder(seasonQuery, stat)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -128,7 +135,7 @@ public sealed class LeaderboardReadService(
             var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
             var page = Math.Clamp(request.Page, 1, totalPages);
 
-            var data = await ApplyBattingOrder(careerQuery, request.Stat)
+            var data = await ApplyBattingOrder(careerQuery, stat)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -192,12 +199,17 @@ public sealed class LeaderboardReadService(
         PitchingLeaderboardQuery request,
         CancellationToken cancellationToken = default)
     {
+        var stat = LeaderboardStatCatalog.NormalizePitchingStat(request.Stat);
+        var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
+        McpInputValidation.ValidateYearRange(request.FromYear, request.ToYear);
+        McpInputValidation.ValidateNonNegative(request.MinInningsPitched, "minInningsPitched");
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
         var maxPageSize = options.Value.Limits.LeaderboardPageSizeMax;
         var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
         var minimumOuts = request.MinInningsPitched * 3;
-        var ascending = request.Stat.Equals("era", StringComparison.OrdinalIgnoreCase)
-            || request.Stat.Equals("whip", StringComparison.OrdinalIgnoreCase)
-            || request.Stat.Equals("bb9", StringComparison.OrdinalIgnoreCase);
+        var ascending = stat.SortDirection == "ascending";
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -206,7 +218,7 @@ public sealed class LeaderboardReadService(
         var query = context.Pitching.AsQueryable();
         if (request.FromYear.HasValue) query = query.Where(p => p.YearId >= request.FromYear.Value);
         if (request.ToYear.HasValue) query = query.Where(p => p.YearId <= request.ToYear.Value);
-        if (!string.IsNullOrWhiteSpace(request.League)) query = query.Where(p => p.LgId == request.League);
+        if (normalizedLeague is not null) query = query.Where(p => p.LgId == normalizedLeague);
 
         if (request.SingleSeason)
         {
@@ -238,7 +250,7 @@ public sealed class LeaderboardReadService(
             var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
             var page = Math.Clamp(request.Page, 1, totalPages);
 
-            var data = await ApplyPitchingOrder(seasonQuery, request.Stat, ascending)
+            var data = await ApplyPitchingOrder(seasonQuery, stat, ascending)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -313,7 +325,7 @@ public sealed class LeaderboardReadService(
             var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
             var page = Math.Clamp(request.Page, 1, totalPages);
 
-            var data = await ApplyPitchingOrder(careerQuery, request.Stat, ascending)
+            var data = await ApplyPitchingOrder(careerQuery, stat, ascending)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -371,10 +383,10 @@ public sealed class LeaderboardReadService(
         }
     }
 
-    private static IOrderedQueryable<T> ApplyBattingOrder<T>(IQueryable<T> query, string stat)
+    private static IOrderedQueryable<T> ApplyBattingOrder<T>(IQueryable<T> query, LeaderboardStatDefinition stat)
         where T : class
     {
-        return stat.ToLowerInvariant() switch
+        var ordered = stat.Key switch
         {
             "hr" or "homeruns" => query.OrderByDescending(DynExpr<T>("HomeRuns")),
             "h" or "hits" => query.OrderByDescending(DynExpr<T>("Hits")),
@@ -392,23 +404,38 @@ public sealed class LeaderboardReadService(
             "ops" => query.OrderByDescending(DynOpsExpr<T>()),
             _ => query.OrderByDescending(DynExpr<T>("Hits"))
         };
+
+        if (stat.UsesPlayingTimeTieBreaker)
+        {
+            ordered = ordered.ThenByDescending(DynExpr<T>("AtBats"));
+        }
+
+        return ApplyLeaderboardTieBreakers(ordered);
     }
 
-    private static IOrderedQueryable<T> ApplyPitchingOrder<T>(IQueryable<T> query, string stat, bool ascending)
+    private static IOrderedQueryable<T> ApplyPitchingOrder<T>(IQueryable<T> query, LeaderboardStatDefinition stat, bool ascending)
         where T : class
     {
+        IOrderedQueryable<T> ordered;
         if (ascending)
         {
-            return stat.ToLowerInvariant() switch
+            ordered = stat.Key switch
             {
                 "era" => query.OrderBy(DynEraExpr<T>()),
                 "whip" => query.OrderBy(DynWhipExpr<T>()),
                 "bb9" => query.OrderBy(DynBb9Expr<T>()),
                 _ => query.OrderBy(DynEraExpr<T>())
             };
+
+            if (stat.UsesPlayingTimeTieBreaker)
+            {
+                ordered = ordered.ThenByDescending(DynExpr<T>("InningsPitchedOuts"));
+            }
+
+            return ApplyLeaderboardTieBreakers(ordered);
         }
 
-        return stat.ToLowerInvariant() switch
+        ordered = stat.Key switch
         {
             "w" or "wins" => query.OrderByDescending(DynExpr<T>("Wins")),
             "l" or "losses" => query.OrderByDescending(DynExpr<T>("Losses")),
@@ -424,6 +451,29 @@ public sealed class LeaderboardReadService(
             "wpct" => query.OrderByDescending(DynWinningPctExpr<T>()),
             _ => query.OrderByDescending(DynExpr<T>("Wins"))
         };
+
+        if (stat.UsesPlayingTimeTieBreaker)
+        {
+            ordered = ordered.ThenByDescending(DynExpr<T>("InningsPitchedOuts"));
+        }
+
+        return ApplyLeaderboardTieBreakers(ordered);
+    }
+
+    private static IOrderedQueryable<T> ApplyLeaderboardTieBreakers<T>(IOrderedQueryable<T> query)
+        where T : class
+    {
+        if (HasProperty<T>("YearId"))
+        {
+            query = query.ThenByDescending(DynExpr<T>("YearId"));
+        }
+
+        if (HasProperty<T>("TeamId"))
+        {
+            query = query.ThenBy(DynStringExpr<T>("TeamId"));
+        }
+
+        return query.ThenBy(DynStringExpr<T>("PlayerId"));
     }
 
     private static Expression<Func<T, int>> DynExpr<T>(string propertyName)
@@ -432,6 +482,16 @@ public sealed class LeaderboardReadService(
         var property = Expression.Property(parameter, propertyName);
         var converted = Expression.Convert(property, typeof(int));
         return Expression.Lambda<Func<T, int>>(converted, parameter);
+    }
+
+    private static Expression<Func<T, string>> DynStringExpr<T>(string propertyName)
+    {
+        var parameter = Expression.Parameter(typeof(T), "x");
+        var property = Expression.Property(parameter, propertyName);
+        Expression body = property.Type == typeof(string)
+            ? Expression.Coalesce(property, Expression.Constant(string.Empty))
+            : Expression.Call(property, nameof(object.ToString), Type.EmptyTypes);
+        return Expression.Lambda<Func<T, string>>(body, parameter);
     }
 
     private static Expression<Func<T, double>> DynComputedExpr<T>(string numeratorProperty, string denominatorProperty)
@@ -544,4 +604,7 @@ public sealed class LeaderboardReadService(
         var body = Expression.Condition(Expression.Equal(decisions, zero), zero, Expression.Divide(wins, decisions));
         return Expression.Lambda<Func<T, double>>(body, parameter);
     }
+
+    private static bool HasProperty<T>(string propertyName) =>
+        typeof(T).GetProperty(propertyName) is not null;
 }

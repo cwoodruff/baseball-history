@@ -16,6 +16,14 @@ public sealed class BaseballMcpLimitOptions
     public int FranchiseListPageSizeMax { get; init; } = 50;
 
     public int LeaderboardPageSizeMax { get; init; } = 100;
+
+    public int HallOfFamePageSizeMax { get; init; } = 50;
+
+    public int HallOfFameVotingHistoryYearsMax { get; init; } = 25;
+
+    public int SalaryHistorySeasonsMax { get; init; } = 40;
+
+    public int SalaryLeaderboardPageSizeMax { get; init; } = 50;
 }
 
 internal static class BaseballMcpOptionsValidator
@@ -42,6 +50,26 @@ internal static class BaseballMcpOptionsValidator
         if (options.Limits.FranchiseListPageSizeMax <= 0)
         {
             throw new InvalidOperationException($"{BaseballMcpOptions.SectionName}:Limits:FranchiseListPageSizeMax must be greater than zero.");
+        }
+
+        if (options.Limits.HallOfFamePageSizeMax <= 0)
+        {
+            throw new InvalidOperationException($"{BaseballMcpOptions.SectionName}:Limits:HallOfFamePageSizeMax must be greater than zero.");
+        }
+
+        if (options.Limits.HallOfFameVotingHistoryYearsMax <= 0)
+        {
+            throw new InvalidOperationException($"{BaseballMcpOptions.SectionName}:Limits:HallOfFameVotingHistoryYearsMax must be greater than zero.");
+        }
+
+        if (options.Limits.SalaryHistorySeasonsMax <= 0)
+        {
+            throw new InvalidOperationException($"{BaseballMcpOptions.SectionName}:Limits:SalaryHistorySeasonsMax must be greater than zero.");
+        }
+
+        if (options.Limits.SalaryLeaderboardPageSizeMax <= 0)
+        {
+            throw new InvalidOperationException($"{BaseballMcpOptions.SectionName}:Limits:SalaryLeaderboardPageSizeMax must be greater than zero.");
         }
 
         return options;
