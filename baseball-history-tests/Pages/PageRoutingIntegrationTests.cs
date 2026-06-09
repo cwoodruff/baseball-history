@@ -379,6 +379,30 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         Assert.Contains("handler=Search&amp;side=2", html);
     }
 
+    [Fact]
+    public async Task Salaries_FullPage_RendersShellAndDollarFormattedAmounts()
+    {
+        var html = await GetStringAsync("/Salaries?year=2016&team=NYA");
+
+        AssertFullPageShell(html);
+        Assert.Contains(">Salary Explorer</h1>", html);
+        Assert.Contains("id=\"salary-list\"", html);
+        Assert.Contains("$222,997,792", html);
+        Assert.Contains("$25,000,000", html);
+    }
+
+    [Fact]
+    public async Task Salaries_NonBoostedHtmx_ReturnsSalaryListPartialWithDollarFormattedAmounts()
+    {
+        var html = await GetHtmxStringAsync("/Salaries?year=2016&team=NYA");
+
+        AssertPartialResponse(html);
+        Assert.DoesNotContain("id=\"filter-form\"", html);
+        Assert.Contains("Player Salaries", html);
+        Assert.Contains("$222,997,792", html);
+        Assert.Contains("$25,000,000", html);
+    }
+
     private static void AssertFullPageShell(string html)
     {
         Assert.Contains("<!DOCTYPE html>", html);

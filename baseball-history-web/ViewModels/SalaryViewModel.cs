@@ -17,6 +17,7 @@ public class SalaryViewModel
     // Team payroll summary (when filtering by team+year)
     public long? TeamPayroll { get; set; }
     public string? TeamName { get; set; }
+    public string? FormattedTeamPayroll => TeamPayroll.HasValue ? SalaryDisplayFormatter.ToUsd(TeamPayroll.Value) : null;
 }
 
 public class SalaryEntry
@@ -30,11 +31,16 @@ public class SalaryEntry
     public long Salary { get; set; }
     public bool IsInHallOfFame { get; set; }
 
-    public string FormattedSalary => Salary.ToString("C0");
+    public string FormattedSalary => SalaryDisplayFormatter.ToUsd(Salary);
 }
 
 public class TeamOption
 {
     public string TeamId { get; set; } = null!;
     public string? TeamName { get; set; }
+}
+
+internal static class SalaryDisplayFormatter
+{
+    public static string ToUsd(long amount) => $"${amount:N0}";
 }

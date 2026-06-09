@@ -108,3 +108,7 @@ Received assignment of GitHub issue #18 (Salaries page missing dollar sign on sa
 **Coordination:** Lambert available for regression verification post-fix.
 
 **Decision Reference:** `.squad/decisions/decisions.md` — Ripley: Issue #18 Triage & Routing
+
+## Learnings
+
+- Salary displays on the Salaries surface should use an explicit dollar-sign formatter (`$` + `N0`) instead of culture-sensitive `"C0"` so full-page and htmx partial responses render stable USD strings across environments.

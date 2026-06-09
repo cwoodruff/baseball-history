@@ -17,7 +17,7 @@ else
         <div class="card mt-3 mb-3">
             <div class="card-body text-center py-3" style="background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 100%);">
                 <div class="text-white-50 small">@(Model.TeamName ?? Model.SelectedTeam) &mdash; @Model.SelectedYear Total Payroll</div>
-                <div class="h2 mb-0 text-white">@Model.TeamPayroll.Value.ToString("C0")</div>
+                <div class="h2 mb-0 text-white">@Model.FormattedTeamPayroll</div>
             </div>
         </div>
     }
