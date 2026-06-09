@@ -44,3 +44,15 @@ Initial setup complete.
 - **Scope:** New Aspire AppHost project, service orchestration, configuration management
 - **Rationale:** Modernize local development experience, align with cloud-native .NET practices, prepare for potential future scaling
 - **Decision:** Labeled as "enhancement" to reflect roadmap planning status
+
+## 2026-06-08 Issue #18 Triage Orchestration
+
+2026-06-09T02:42:39Z — Scribe completed orchestration of Ripley's issue #18 triage:
+
+- Created orchestration log (`.squad/orchestration-log/2026-06-09T02:42:39Z-ripley.md`)
+- Created session log (`.squad/log/2026-06-09T02:42:39Z-issue-18-triage.md`)
+- Merged triage decision from `.squad/decisions/inbox/ripley-issue-18-triage.md` into `.squad/decisions/decisions.md`
+- Deleted inbox file
+- Updated Ripley's history with decision reference and artifact paths
+- Updated Dallas' history with incoming issue assignment and implementation guidance
+- Staged and committed `.squad/` changes to git

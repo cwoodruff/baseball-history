@@ -90,3 +90,17 @@ Resolved EF Core warning on Index page regarding `First()`/`FirstOrDefault()` wi
 
 - Orchestration log: `.squad/orchestration-log/2026-04-27T18:40:07Z-ripley.md`
 - Session log: `.squad/log/2026-04-27T18:40:07Z-index-warning.md`
+
+## 2026-06-08 Issue #18 Triage: Salaries Page Currency Formatting
+
+**Status:** ✅ TRIAGED & ROUTED TO DALLAS
+
+Triaged GitHub issue #18 (Salaries page missing dollar sign on salary amounts). Routed to Dallas as `squad:dallas` because this is a Razor UI formatting issue—display layer responsibility, not page logic or data retrieval. Issue has low risk and clear scope: add currency formatting across all salary display surfaces on Salaries page and related partials.
+
+**Routing Rationale:** Display formatting is Dallas's domain (page markup, component composition, UX polish). No architectural decisions or cross-page contracts affected.
+
+**Decision File:** `.squad/decisions/decisions.md` — Ripley: Issue #18 Triage & Routing
+
+**Artifacts:**
+- Orchestration log: `.squad/orchestration-log/2026-06-09T02:42:39Z-ripley.md`
+- Session log: `.squad/log/2026-06-09T02:42:39Z-issue-18-triage.md`

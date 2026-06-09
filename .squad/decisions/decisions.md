@@ -288,3 +288,30 @@ Approved.
 - Spot checks on People, Teams, Batting, HallOfFame, HomeGames, and TeamsHalf showed quoted identifiers, preserved keys, and sensible type mapping.
 - No material migration bug found.
 
+---
+
+## 2026-06-08 — Ripley: Issue #18 Triage & Routing (Salaries Page Currency Formatting)
+
+**Decision:** LOW-risk, straightforward Razor UI formatting fix routed to Dallas.
+
+**Issue Summary:** Salary amounts display as plain numbers (e.g., "5000000") instead of formatted currency (e.g., "$5,000,000") across:
+- Salaries page player salary displays
+- Player salary history views
+- Team payroll displays
+- Highest-paid leaders leaderboards
+
+**Routing Rationale:** Dallas owns Razor UI/component formatting and page markup rendering layer. Fix is display-layer formatting only: updating salary value rendering in Salaries.cshtml and related partials to use currency formatting (likely `@salary.ToString("C")` or similar).
+
+**Risk Assessment:** LOW
+- Isolated display formatting change
+- No data retrieval or page logic affected
+- No cross-page contract changes
+- Straightforward Razor display fix
+- No blocking dependencies; ready to pick up
+
+**Actions Taken:**
+- Applied label: `squad:dallas`
+- Left triage comment with routing rationale and coordination notes
+
+**Next Steps:** Dallas implements currency formatting across all salary displays; Lambert available for regression verification post-fix.
+

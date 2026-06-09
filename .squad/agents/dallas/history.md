@@ -90,3 +90,21 @@ Surgical markup repair on `ApiDocs.cshtml`: fixed unmatched closing tag. Page be
 **File:** `baseball-history-web/Pages/ApiDocs.cshtml`
 
 This was a post-sprint hygiene fix to ensure all page markup is well-formed.
+
+## 2026-06-08 Issue #18 Assignment: Salaries Page Currency Formatting
+
+**Status:** 🎯 READY TO PICKUP
+
+Received assignment of GitHub issue #18 (Salaries page missing dollar sign on salary amounts) from Ripley's triage. Issue classified as LOW-risk Razor UI/display-layer fix.
+
+**Scope:** Add currency formatting across all salary displays:
+- Salaries page player salary displays
+- Player salary history views
+- Team payroll displays
+- Highest-paid leaders leaderboards
+
+**Suggested Implementation:** `@salary.ToString("C")` in Salaries.cshtml and related partials.
+
+**Coordination:** Lambert available for regression verification post-fix.
+
+**Decision Reference:** `.squad/decisions/decisions.md` — Ripley: Issue #18 Triage & Routing
