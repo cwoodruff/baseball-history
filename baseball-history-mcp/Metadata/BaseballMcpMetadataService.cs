@@ -41,6 +41,9 @@ public sealed class BaseballMcpMetadataService(
         new("baseball-history://server/workflow-guide", "Workflow Guide", "Choose the right tool or guide resource for player, franchise, team-season, leaderboard, Hall of Fame, salary, and diagnostics questions."),
         new("baseball-history://server/stats-catalog", "Stats Catalog", "Discover supported batting and pitching stat categories plus the supported year span."),
         new("baseball-history://server/diagnostics", "Server Diagnostics", "Inspect safe runtime posture, configured limits, and connectivity without exposing secrets."),
+        new("baseball-history://server/transport-policy", "Transport Policy", "Read the v1 HTTP go/no-go recommendation and the MCP C# SDK guidance behind it."),
+        new("baseball-history://guides/getting-started", "Getting Started Guide", "Start with discoverability and choose the right domain tools for common baseball questions."),
+        new("baseball-history://guides/workflows", "Workflow Guide", "See representative multi-step MCP workflows that only reference shipped v1 tools and resources."),
         new("baseball-history://hall-of-fame/guide", "Hall of Fame Guide", "Review Hall of Fame tool limits, year coverage, and voting-history caveats."),
         new("baseball-history://salary/guide", "Salary Guide", "Review salary tool limits, year coverage, and how salary history rows are shaped.")
     ];
@@ -74,7 +77,7 @@ public sealed class BaseballMcpMetadataService(
     }
 
     public async Task<StatsCatalogDocument> GetStatsCatalogAsync(CancellationToken cancellationToken = default) =>
-        new(await GetSupportedYearSpanAsync(cancellationToken), LeaderboardStatCatalog.Categories);
+        new(await GetSupportedYearSpanAsync(cancellationToken), SupportedCategories);
 
     public Task<WorkflowGuideDocument> GetWorkflowGuideAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(
@@ -371,6 +374,8 @@ public sealed class BaseballMcpMetadataService(
             options.Value.Limits.FranchiseListPageSizeMax,
             options.Value.Limits.HallOfFamePageSizeMax,
             options.Value.Limits.LeaderboardPageSizeMax,
+            options.Value.Limits.SalaryHistorySeasonCountMax,
+            options.Value.Limits.TeamPayrollPlayerCountMax,
             options.Value.Limits.HallOfFameVotingHistoryYearsMax,
             options.Value.Limits.SalaryHistorySeasonsMax,
             options.Value.Limits.SalaryLeaderboardPageSizeMax);

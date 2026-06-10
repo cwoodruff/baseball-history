@@ -113,10 +113,10 @@ public sealed class LeaderboardReadService(
         var totalCareerCount = await careerQuery.CountAsync(cancellationToken);
         var careerWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCareerCount);
 
-        var careerData = await ApplyBattingOrder(careerQuery, normalizedRequest.Stat)
-            .Skip((careerWindow.Page - 1) * careerWindow.PageSize)
-            .Take(careerWindow.PageSize)
-            .ToListAsync(cancellationToken);
+            var data = await ApplyBattingOrder(careerQuery, normalizedRequest.Stat)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
+                .ToListAsync(cancellationToken);
 
         var playerIds = careerData.Select(entry => entry.PlayerId).ToList();
         var playerNames = await context.People
@@ -168,7 +168,9 @@ public sealed class LeaderboardReadService(
     {
         var normalizedRequest = requestPolicy.Normalize(request);
         var minimumOuts = normalizedRequest.MinInningsPitched * 3;
-        var ascending = normalizedRequest.Stat is "era" or "whip" or "bb9";
+        var ascending = normalizedRequest.Stat.Equals("era", StringComparison.OrdinalIgnoreCase)
+            || normalizedRequest.Stat.Equals("whip", StringComparison.OrdinalIgnoreCase)
+            || normalizedRequest.Stat.Equals("bb9", StringComparison.OrdinalIgnoreCase);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -268,8 +270,14 @@ public sealed class LeaderboardReadService(
             })
             .Where(x => x.InningsPitchedOuts >= minimumOuts);
 
-        var totalCareerCount = await careerQuery.CountAsync(cancellationToken);
-        var careerWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCareerCount);
+        {
+            var totalCount = await careerQuery.CountAsync(cancellationToken);
+            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
+
+            var data = await ApplyPitchingOrder(careerQuery, normalizedRequest.Stat, ascending)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
+                .ToListAsync(cancellationToken);
 
         var careerData = await ApplyPitchingOrder(careerQuery, normalizedRequest.Stat, ascending)
             .Skip((careerWindow.Page - 1) * careerWindow.PageSize)

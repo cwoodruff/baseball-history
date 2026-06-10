@@ -30,7 +30,7 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
         return request with
         {
-            Stat = MetadataLeaderboardStatCatalog.ResolveBatting(request.Stat).Key,
+            Stat = LeaderboardStatCatalog.NormalizeBattingStat(request.Stat).Key,
             League = NormalizeLeague(request.League)
         };
     }
@@ -46,7 +46,7 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
         return request with
         {
-            Stat = MetadataLeaderboardStatCatalog.ResolvePitching(request.Stat).Key,
+            Stat = LeaderboardStatCatalog.NormalizePitchingStat(request.Stat).Key,
             League = NormalizeLeague(request.League)
         };
     }

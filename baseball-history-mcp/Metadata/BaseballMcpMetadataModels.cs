@@ -30,6 +30,8 @@ public sealed record McpLimitSnapshot(
     int FranchiseListPageSizeMax,
     int HallOfFamePageSizeMax,
     int LeaderboardPageSizeMax,
+    int SalaryHistorySeasonCountMax,
+    int TeamPayrollPlayerCountMax,
     int HallOfFameVotingHistoryYearsMax,
     int SalaryHistorySeasonsMax,
     int SalaryLeaderboardPageSizeMax);

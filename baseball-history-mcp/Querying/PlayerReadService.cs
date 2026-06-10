@@ -20,15 +20,18 @@ public sealed class PlayerReadService(
             throw new BaseballMcpUsageException("Provide either query or lastNameStartsWith, not both.");
         }
 
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var query = context.People
             .Where(p => p.NameLast != null)
             .AsQueryable();
 
-        if (normalizedRequest.Query is not null)
+        if (normalizedQuery is not null)
         {
-            var terms = normalizedRequest.Query
+            var terms = normalizedQuery
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             foreach (var term in terms)

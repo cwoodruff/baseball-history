@@ -12,6 +12,9 @@ public sealed class FranchiseReadService(
         FranchiseLookupRequest request,
         CancellationToken cancellationToken = default)
     {
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
         var normalizedRequest = requestPolicy.Normalize(request);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -35,9 +38,9 @@ public sealed class FranchiseReadService(
                 CurrentDivision = f.Teams.OrderByDescending(t => t.YearId).Select(t => t.DivId).FirstOrDefault()
             });
 
-        if (normalizedRequest.League is not null)
+        if (!string.IsNullOrWhiteSpace(normalizedRequest.League))
         {
-            query = query.Where(f => f.CurrentLeague == normalizedRequest.League);
+            query = query.Where(f => f.CurrentLeague != null && EF.Functions.ILike(f.CurrentLeague, normalizedRequest.League));
         }
 
         if (normalizedRequest.ActiveOnly)
@@ -57,32 +60,34 @@ public sealed class FranchiseReadService(
             .Take(pageWindow.PageSize)
             .ToListAsync(cancellationToken);
 
-        var items = rows.Select(f =>
-        {
-            var totalGames = f.TotalWins + f.TotalLosses;
-            return new FranchiseLookupItem(
-                f.FranchId,
-                f.DisplayName,
-                f.IsActive,
-                f.FirstYear,
-                f.LastYear,
-                f.TotalSeasons,
-                f.TotalWins,
-                f.TotalLosses,
-                totalGames > 0 ? Math.Round((double)f.TotalWins / totalGames, 3) : 0,
-                f.WorldSeriesWins,
-                f.PennantWins,
-                f.CurrentTeamId,
-                f.CurrentLeague,
-                f.CurrentDivision);
-        }).ToList();
+        var items = rows
+            .Select(f =>
+            {
+                var totalGames = f.TotalWins + f.TotalLosses;
+                return new FranchiseLookupItem(
+                    f.FranchId,
+                    f.DisplayName,
+                    f.IsActive,
+                    f.FirstYear,
+                    f.LastYear,
+                    f.TotalSeasons,
+                    f.TotalWins,
+                    f.TotalLosses,
+                    totalGames > 0 ? Math.Round((double)f.TotalWins / totalGames, 3) : 0,
+                    f.WorldSeriesWins,
+                    f.PennantWins,
+                    f.CurrentTeamId,
+                    f.CurrentLeague,
+                    f.CurrentDivision);
+            })
+            .ToList();
 
         return pageWindow.CreateResult(items, totalCount);
     }
 
     public async Task<FranchiseReadModel?> GetFranchiseAsync(string franchiseId, CancellationToken cancellationToken = default)
     {
-        var normalizedFranchiseId = requestPolicy.NormalizeRequiredId(franchiseId, "franchiseId").ToUpperInvariant();
+        var normalizedFranchiseId = McpInputValidation.NormalizeRequiredCode(franchiseId, "franchiseId");
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -100,6 +105,7 @@ public sealed class FranchiseReadService(
             .ThenBy(t => t.TeamId)
             .ThenBy(t => t.LgId)
             .ToList();
+
         var totalWins = teams.Sum(t => t.W ?? 0);
         var totalLosses = teams.Sum(t => t.L ?? 0);
         var totalGames = totalWins + totalLosses;
