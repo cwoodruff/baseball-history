@@ -1,18 +1,17 @@
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-
 namespace baseball_history_mcp.Querying;
 
 public sealed class FranchiseReadService(
     IDbContextFactory<BaseballDbContext> contextFactory,
-    IOptions<BaseballMcpOptions> options) : IFranchiseReadService
+    BaseballMcpRequestPolicy requestPolicy) : IFranchiseReadService
 {
     public async Task<PagedReadResult<FranchiseLookupItem>> ListFranchisesAsync(
         FranchiseLookupRequest request,
         CancellationToken cancellationToken = default)
     {
+        var normalizedRequest = requestPolicy.Normalize(request);
         var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
         McpInputValidation.ValidatePage(request.Page);
         McpInputValidation.ValidatePageSize(request.PageSize);
@@ -41,12 +40,15 @@ public sealed class FranchiseReadService(
                 CurrentDivision = f.Teams.OrderByDescending(t => t.YearId).Select(t => t.DivId).FirstOrDefault()
             });
 
+        if (!string.IsNullOrWhiteSpace(normalizedRequest.League))
+        {
+            query = query.Where(f => f.CurrentLeague != null && EF.Functions.ILike(f.CurrentLeague, normalizedRequest.League));
         if (normalizedLeague is not null)
         {
             query = query.Where(f => f.CurrentLeague == normalizedLeague);
         }
 
-        if (request.ActiveOnly)
+        if (normalizedRequest.ActiveOnly)
         {
             query = query.Where(f => f.IsActive);
         }
@@ -54,14 +56,12 @@ public sealed class FranchiseReadService(
         query = query
             .OrderBy(f => f.DisplayName)
             .ThenBy(f => f.FranchId);
-
         var totalCount = await query.CountAsync(cancellationToken);
-        var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-        var page = Math.Clamp(request.Page, 1, totalPages);
+        var pageWindow = requestPolicy.CreateFranchiseLookupWindow(normalizedRequest, totalCount);
 
         var rows = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+            .Take(pageWindow.PageSize)
             .ToListAsync(cancellationToken);
 
         var items = rows
@@ -86,23 +86,14 @@ public sealed class FranchiseReadService(
             })
             .ToList();
 
-        return new PagedReadResult<FranchiseLookupItem>(
+        return pageWindow.CreateResult(
             items,
-            page,
-            pageSize,
-            totalCount,
-            totalPages)
-        {
-            RequestedPage = request.Page,
-            RequestedPageSize = request.PageSize,
-            MaxPageSize = maxPageSize,
-            WasPageAdjusted = page != request.Page,
-            WasPageSizeClamped = pageSize != request.PageSize
-        };
+            totalCount);
     }
 
     public async Task<FranchiseReadModel?> GetFranchiseAsync(string franchiseId, CancellationToken cancellationToken = default)
     {
+        franchiseId = requestPolicy.NormalizeRequiredId(franchiseId, "franchiseId");
         var normalizedFranchiseId = McpInputValidation.NormalizeRequiredCode(franchiseId, "franchiseId");
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);

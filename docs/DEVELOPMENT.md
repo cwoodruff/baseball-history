@@ -48,6 +48,24 @@ dotnet run --project baseball-history-web
 Issue #19 adds an orchestration layer; it does not replace the existing web
 project startup flow.
 
+### Optional: Run the MCP server locally
+
+The repository also ships a separate stdio-first MCP host in
+`baseball-history-mcp`.
+
+```bash
+# Configure the shared PostgreSQL connection string
+dotnet user-secrets set --project baseball-history-mcp \
+  "ConnectionStrings:Lahman" \
+  "Host=<server>;Port=5432;Database=lahman;Username=<user>;Password=<password>;SSL Mode=Require;Trust Server Certificate=true"
+
+# Run the MCP server over stdio
+dotnet run --project baseball-history-mcp --no-build
+```
+
+Use [MCP-SERVER-PLAN.md](./MCP-SERVER-PLAN.md) for the full v1 surface,
+sample client configuration, non-goals, and adoption guidance.
+
 ### Database Setup
 
 This repo now expects PostgreSQL at runtime. See [POSTGRES-MIGRATION.md](./POSTGRES-MIGRATION.md) for the full migration and Azure rollout guidance.

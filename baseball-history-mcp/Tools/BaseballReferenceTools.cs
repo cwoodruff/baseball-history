@@ -26,7 +26,7 @@ public sealed class BaseballReferenceTools(
     public Task<PlayerReadModel?> GetPlayerAsync(
         [Description("Lahman player id, for example ruthba01.")] string playerId,
         CancellationToken cancellationToken = default)
-        => players.GetPlayerAsync(playerId, cancellationToken);
+        => players.GetPlayerAsync(McpInputValidator.NormalizePlayerId(playerId), cancellationToken);
 
     [McpServerTool(Name = "list_franchises", ReadOnly = true, Title = "List Franchises"), Description("List franchise summaries with optional filters and bounded paging.")]
     public Task<PagedReadResult<FranchiseLookupItem>> ListFranchisesAsync(
@@ -41,7 +41,18 @@ public sealed class BaseballReferenceTools(
     public Task<FranchiseReadModel?> GetFranchiseAsync(
         [Description("Franchise id such as NYY.")] string franchiseId,
         CancellationToken cancellationToken = default)
-        => franchises.GetFranchiseAsync(franchiseId, cancellationToken);
+        => franchises.GetFranchiseAsync(McpInputValidator.NormalizeFranchiseId(franchiseId), cancellationToken);
+
+    [McpServerTool(Name = "get_team_season", ReadOnly = true, Title = "Get Team Season"), Description("Get one team season with franchise context, roster summaries, and club-level batting/pitching snapshots.")]
+    public Task<TeamSeasonReadModel?> GetTeamSeasonAsync(
+        [Description("Team id such as NYA or BOS.")] string teamId,
+        [Description("League id such as AL or NL.")] string league,
+        [Description("Season year within the Lahman dataset.")] int year,
+        CancellationToken cancellationToken = default)
+    {
+        var request = McpInputValidator.NormalizeTeamSeason(teamId, league, year);
+        return teamSeasons.GetTeamSeasonAsync(request.TeamId, request.League, request.Year, cancellationToken);
+    }
 
     [McpServerTool(Name = "get_team_season", ReadOnly = true, Title = "Get Team Season"), Description("Get one exact team-season by team id, league, and year so franchise-era lookups stay deterministic.")]
     public Task<TeamSeasonReadModel?> GetTeamSeasonAsync(
@@ -62,9 +73,20 @@ public sealed class BaseballReferenceTools(
         [Description("1-based results page.")] int page = 1,
         [Description("Page size from 1 up to the configured server max.")] int pageSize = 50,
         CancellationToken cancellationToken = default)
-        => leaderboards.GetBattingLeadersAsync(
-            new BattingLeaderboardQuery(stat, fromYear, toYear, league, minAtBats, singleSeason, page, pageSize),
+    {
+        McpInputValidator.ValidateYearRange(fromYear, toYear);
+        return leaderboards.GetBattingLeadersAsync(
+            new BattingLeaderboardQuery(
+                McpInputValidator.NormalizeBattingStat(stat),
+                fromYear,
+                toYear,
+                McpInputValidator.NormalizeLeague(league),
+                minAtBats,
+                singleSeason,
+                page,
+                pageSize),
             cancellationToken);
+    }
 
     [McpServerTool(Name = "get_pitching_leaders", ReadOnly = true, Title = "Get Pitching Leaders"), Description("Read pitching leaderboards in career or single-season form. Supported stats: w, l, so, sv, cg, sho, ip, g, gs, hr, k9, wpct, era, whip, bb9.")]
     public Task<PagedReadResult<PitchingLeaderboardEntry>> GetPitchingLeadersAsync(
@@ -77,8 +99,30 @@ public sealed class BaseballReferenceTools(
         [Description("1-based results page.")] int page = 1,
         [Description("Page size from 1 up to the configured server max.")] int pageSize = 50,
         CancellationToken cancellationToken = default)
-        => leaderboards.GetPitchingLeadersAsync(
-            new PitchingLeaderboardQuery(stat, fromYear, toYear, league, minInningsPitched, singleSeason, page, pageSize),
+    {
+        McpInputValidator.ValidateYearRange(fromYear, toYear);
+        return leaderboards.GetPitchingLeadersAsync(
+            new PitchingLeaderboardQuery(
+                McpInputValidator.NormalizePitchingStat(stat),
+                fromYear,
+                toYear,
+                McpInputValidator.NormalizeLeague(league),
+                minInningsPitched,
+                singleSeason,
+                page,
+                pageSize),
+            cancellationToken);
+    }
+
+    [McpServerTool(Name = "list_hall_of_fame_inductees", ReadOnly = true, Title = "List Hall of Fame Inductees"), Description("List Hall of Fame inductees with optional year/category filters and bounded paging.")]
+    public Task<PagedReadResult<HallOfFameInducteeReadModel>> ListHallOfFameInducteesAsync(
+        [Description("Optional Hall of Fame induction year filter.")] int? year = null,
+        [Description("Optional category filter such as Player, Manager, or Pioneer/Executive.")] string? category = null,
+        [Description("1-based results page.")] int page = 1,
+        [Description("Page size from 1 up to the configured server max.")] int pageSize = 50,
+        CancellationToken cancellationToken = default)
+        => hallOfFame.ListInducteesAsync(
+            new HallOfFameLookupRequest(year, category, page, pageSize),
             cancellationToken);
 
     [McpServerTool(Name = "list_hall_of_fame_inductees", ReadOnly = true, Title = "List Hall of Fame Inductees"), Description("List inducted Hall of Fame rows with optional year/category filters and bounded paging.")]

@@ -42,8 +42,8 @@ over 150 years of Major League Baseball statistics, including:
   configuration
 - [PostgreSQL Migration Guide](./docs/POSTGRES-MIGRATION.md) - Configuration for
   local development (User Secrets) and Azure deployment (Key Vault)
-- [MCP Server Plan](./docs/MCP-SERVER-PLAN.md) - Approved MCP M1 architecture,
-  scope, and review gates
+- [MCP Server Guide](./docs/MCP-SERVER-PLAN.md) - Shipped MCP v1 surface,
+  local setup, sample client config, and rollout boundaries
 - [Frontend Design](./docs/FRONTEND.md) - htmx patterns, Bootstrap theming, and CSS
   architecture
 - [Features](./docs/FEATURES.md) - Detailed feature documentation
@@ -68,6 +68,9 @@ dotnet user-secrets set --project baseball-history-web \
 ```
 
 See [POSTGRES-MIGRATION.md](./docs/POSTGRES-MIGRATION.md) for the full local and Azure setup story.
+
+For local MCP setup and client adoption guidance, see the
+[MCP Server Guide](./docs/MCP-SERVER-PLAN.md).
 
 #### Preferred: Aspire AppHost orchestration
 

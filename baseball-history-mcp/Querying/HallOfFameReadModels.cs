@@ -1,5 +1,10 @@
 namespace baseball_history_mcp.Querying;
 
+public sealed record HallOfFameLookupRequest(
+    int? Year = null,
+    string? Category = null,
+    int Page = 1,
+    int PageSize = 50);
 public sealed record HallOfFameInducteeRequest(
     int? Year = null,
     string? Category = null,
