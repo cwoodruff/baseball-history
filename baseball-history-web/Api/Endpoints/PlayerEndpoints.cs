@@ -268,21 +268,32 @@ public static class PlayerEndpoints
         if (!await context.People.AnyAsync(p => p.PlayerId == playerId))
             return Results.NotFound();
 
-        var seasons = await context.Fielding
+        var rows = await context.Fielding
             .Where(f => f.PlayerId == playerId)
             .OrderByDescending(f => f.YearId)
             .ThenBy(f => f.Pos)
+            .Select(f => new { f.YearId, f.TeamId, f.LgId, f.Pos, Games = f.G ?? 0, f.Po, f.A, f.E, f.Dp })
+            .ToListAsync();
+
+        // Po/A/E/Dp are stored as strings and can be empty (not just null) for older
+        // Lahman rows, so parse defensively in memory rather than int.Parse in the query.
+        var seasons = rows
             .Select(f => new SeasonFieldingDto(
                 f.YearId, f.TeamId, f.LgId, f.Pos,
-                f.G ?? 0,
-                int.Parse(f.Po ?? "0"),
-                int.Parse(f.A ?? "0"),
-                int.Parse(f.E ?? "0"),
-                int.Parse(f.Dp ?? "0")))
-            .ToListAsync();
+                f.Games,
+                ParseIntOrZero(f.Po),
+                ParseIntOrZero(f.A),
+                ParseIntOrZero(f.E),
+                ParseIntOrZero(f.Dp)))
+            .ToList();
 
         return Results.Ok(seasons);
     }
+
+    private static int ParseIntOrZero(string? value) =>
+        int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : 0;
 
     private static async Task<IResult> GetPlayerAwards(string playerId, BaseballDbContext context)
     {

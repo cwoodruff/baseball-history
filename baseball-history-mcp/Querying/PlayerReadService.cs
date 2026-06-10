@@ -14,11 +14,10 @@ public sealed class PlayerReadService(
         CancellationToken cancellationToken = default)
     {
         var normalizedRequest = requestPolicy.Normalize(request);
-        var normalizedQuery = McpInputValidation.NormalizeOptionalText(request.Query);
-        var normalizedPrefix = McpInputValidation.NormalizeOptionalText(request.LastNameStartsWith);
-        if (normalizedQuery is not null && normalizedPrefix is not null)
+
+        if (normalizedRequest.Query is not null && normalizedRequest.LastNameStartsWith is not null)
         {
-            McpInputValidation.ThrowInvalid("Provide either query or lastNameStartsWith, not both.");
+            throw new BaseballMcpUsageException("Provide either query or lastNameStartsWith, not both.");
         }
 
         McpInputValidation.ValidatePage(request.Page);
@@ -45,9 +44,9 @@ public sealed class PlayerReadService(
                     EF.Functions.ILike((p.NameFirst ?? string.Empty) + " " + (p.NameLast ?? string.Empty), pattern));
             }
         }
-        else if (normalizedPrefix is not null)
+        else if (normalizedRequest.LastNameStartsWith is not null)
         {
-            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedPrefix}%"));
+            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
         }
 
         query = query
@@ -57,7 +56,6 @@ public sealed class PlayerReadService(
 
         var totalCount = await query.CountAsync(cancellationToken);
         var pageWindow = requestPolicy.CreatePlayerLookupWindow(normalizedRequest, totalCount);
-
         var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
 
         var players = await query
@@ -95,7 +93,7 @@ public sealed class PlayerReadService(
 
     public async Task<PlayerReadModel?> GetPlayerAsync(string playerId, CancellationToken cancellationToken = default)
     {
-        var normalizedPlayerId = McpInputValidation.NormalizeRequiredPlayerId(playerId);
+        var normalizedPlayerId = requestPolicy.NormalizeRequiredId(playerId, "playerId").ToLowerInvariant();
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 

@@ -35,7 +35,6 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
             "list_hall_of_fame_inductees",
             "get_hall_of_fame_voting_history",
             "get_player_salary_history",
-            "get_team_payroll",
             "get_salary_leaders",
             "get_server_diagnostics"
         }, toolNames);
@@ -43,11 +42,11 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.Subset(new HashSet<string?>
         {
             "baseball-history://server/info",
+            "baseball-history://server/workflow-guide",
             "baseball-history://server/stats-catalog",
             "baseball-history://server/diagnostics",
-            "baseball-history://server/transport-policy",
-            "baseball-history://guides/getting-started",
-            "baseball-history://guides/workflows"
+            "baseball-history://hall-of-fame/guide",
+            "baseball-history://salary/guide"
         }, resourceUris);
 
         var teamSeasonTool = tools.Single(tool => tool.GetProperty("name").GetString() == "get_team_season");
@@ -61,32 +60,33 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
             teamSeasonTool.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()),
             value => value == "year");
 
-        var gettingStartedGuide = resources.Single(resource => resource.GetProperty("uri").GetString() == "baseball-history://guides/getting-started");
-        Assert.Equal("text/markdown", gettingStartedGuide.GetProperty("mimeType").GetString());
+        var workflowGuide = resources.Single(resource => resource.GetProperty("uri").GetString() == "baseball-history://server/workflow-guide");
+        Assert.Equal("application/json", workflowGuide.GetProperty("mimeType").GetString());
     }
 
     [Fact]
     public async Task Host_ReadsMetadataAndGuideResources()
     {
         using var infoResponse = await fixture.RequestAsync("resources/read", new { uri = "baseball-history://server/info" });
-        using var guideResponse = await fixture.RequestAsync("resources/read", new { uri = "baseball-history://guides/workflows" });
+        using var guideResponse = await fixture.RequestAsync("resources/read", new { uri = "baseball-history://server/workflow-guide" });
 
         using var infoPayload = JsonDocument.Parse(McpHostFixture.ReadResourceText(infoResponse));
-        var workflowGuide = McpHostFixture.ReadResourceText(guideResponse);
+        using var workflowGuide = JsonDocument.Parse(McpHostFixture.ReadResourceText(guideResponse));
 
         Assert.Equal("baseball-history-mcp", infoPayload.RootElement.GetProperty("name").GetString());
         Assert.False(infoPayload.RootElement.GetProperty("httpTransportEnabled").GetBoolean());
         Assert.Contains(
             infoPayload.RootElement.GetProperty("toolNames").EnumerateArray().Select(value => value.GetString()),
             value => value == "get_salary_leaders");
-        Assert.Equal(100, infoPayload.RootElement.GetProperty("limits").GetProperty("hallOfFamePageSizeMax").GetInt32());
-        Assert.Equal(20, infoPayload.RootElement.GetProperty("limits").GetProperty("salaryHistorySeasonCountMax").GetInt32());
-        Assert.Equal(25, infoPayload.RootElement.GetProperty("limits").GetProperty("teamPayrollPlayerCountMax").GetInt32());
+        Assert.Equal(50, infoPayload.RootElement.GetProperty("limits").GetProperty("hallOfFamePageSizeMax").GetInt32());
+        Assert.Equal(40, infoPayload.RootElement.GetProperty("limits").GetProperty("salaryHistorySeasonsMax").GetInt32());
+        Assert.Equal(50, infoPayload.RootElement.GetProperty("limits").GetProperty("salaryLeaderboardPageSizeMax").GetInt32());
         Assert.Contains(
             infoPayload.RootElement.GetProperty("resources").EnumerateArray().Select(value => value.GetProperty("uri").GetString()),
-            value => value == "baseball-history://guides/workflows");
-        Assert.Contains("get_team_season", workflowGuide);
-        Assert.Contains("get_player_salary_history", workflowGuide);
+            value => value == "baseball-history://server/workflow-guide");
+        Assert.Contains(
+            workflowGuide.RootElement.GetProperty("workflows").EnumerateArray().Select(value => value.GetProperty("name").GetString()),
+            value => value == "salary-history-and-leaders");
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.False(McpHostFixture.IsToolError(hallResponse), McpHostFixture.ReadToolMessage(hallResponse));
         using var hallPayload = McpHostFixture.ReadToolPayload(hallResponse);
         Assert.True(hallPayload.RootElement.GetProperty("wasPageSizeClamped").GetBoolean());
-        Assert.Equal(100, hallPayload.RootElement.GetProperty("maxPageSize").GetInt32());
+        Assert.Equal(50, hallPayload.RootElement.GetProperty("maxPageSize").GetInt32());
         var hallPlayerId = hallPayload.RootElement.GetProperty("items")[0].GetProperty("playerId").GetString();
         Assert.False(string.IsNullOrWhiteSpace(hallPlayerId));
 
@@ -176,30 +176,18 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.False(McpHostFixture.IsToolError(salaryLeadersResponse), McpHostFixture.ReadToolMessage(salaryLeadersResponse));
         using var salaryLeadersPayload = McpHostFixture.ReadToolPayload(salaryLeadersResponse);
         Assert.True(salaryLeadersPayload.RootElement.GetProperty("wasPageSizeClamped").GetBoolean());
-        Assert.Equal(100, salaryLeadersPayload.RootElement.GetProperty("maxPageSize").GetInt32());
+        Assert.Equal(50, salaryLeadersPayload.RootElement.GetProperty("maxPageSize").GetInt32());
         var salaryLeader = salaryLeadersPayload.RootElement.GetProperty("items")[0];
         var salaryPlayerId = salaryLeader.GetProperty("playerId").GetString();
-        var salaryTeamId = salaryLeader.GetProperty("teamId").GetString();
 
         using var playerSalaryResponse = await fixture.RequestAsync(
             "tools/call",
-            new { name = "get_player_salary_history", arguments = new { playerId = "bondsba01", itemCount = 999 } });
+            new { name = "get_player_salary_history", arguments = new { playerId = salaryPlayerId } });
         Assert.False(McpHostFixture.IsToolError(playerSalaryResponse), McpHostFixture.ReadToolMessage(playerSalaryResponse));
         using var playerSalaryPayload = McpHostFixture.ReadToolPayload(playerSalaryResponse);
-        Assert.Equal("bondsba01", playerSalaryPayload.RootElement.GetProperty("playerId").GetString());
-        Assert.True(playerSalaryPayload.RootElement.GetProperty("wasItemCountClamped").GetBoolean());
-        Assert.Equal(20, playerSalaryPayload.RootElement.GetProperty("maxItemCount").GetInt32());
+        Assert.Equal(salaryPlayerId, playerSalaryPayload.RootElement.GetProperty("playerId").GetString());
+        Assert.True(playerSalaryPayload.RootElement.GetProperty("returnedSeasonCount").GetInt32() <= 40);
         Assert.True(playerSalaryPayload.RootElement.GetProperty("careerTotal").GetInt64() > 0);
-
-        using var teamPayrollResponse = await fixture.RequestAsync(
-            "tools/call",
-            new { name = "get_team_payroll", arguments = new { teamId = salaryTeamId, year = 2016, itemCount = 999 } });
-        Assert.False(McpHostFixture.IsToolError(teamPayrollResponse), McpHostFixture.ReadToolMessage(teamPayrollResponse));
-        using var teamPayrollPayload = McpHostFixture.ReadToolPayload(teamPayrollResponse);
-        Assert.Equal(salaryTeamId, teamPayrollPayload.RootElement.GetProperty("teamId").GetString());
-        Assert.True(teamPayrollPayload.RootElement.GetProperty("wasItemCountClamped").GetBoolean());
-        Assert.Equal(25, teamPayrollPayload.RootElement.GetProperty("maxItemCount").GetInt32());
-        Assert.True(teamPayrollPayload.RootElement.GetProperty("totalPayroll").GetInt64() > 0);
 
         using var diagnosticsResponse = await fixture.RequestAsync(
             "tools/call",
@@ -207,7 +195,7 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.False(McpHostFixture.IsToolError(diagnosticsResponse), McpHostFixture.ReadToolMessage(diagnosticsResponse));
         using var diagnosticsPayload = McpHostFixture.ReadToolPayload(diagnosticsResponse);
         Assert.True(diagnosticsPayload.RootElement.GetProperty("databaseReachable").GetBoolean());
-        Assert.True(diagnosticsPayload.RootElement.GetProperty("toolCount").GetInt32() >= 13);
+        Assert.True(diagnosticsPayload.RootElement.GetProperty("toolCount").GetInt32() >= 12);
     }
 
     [Fact]
@@ -222,11 +210,11 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.DoesNotContain("Password=", battingMessage, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Host=", battingMessage, StringComparison.OrdinalIgnoreCase);
 
-        using var invalidPayrollResponse = await fixture.RequestAsync(
+        using var invalidPitchingResponse = await fixture.RequestAsync(
             "tools/call",
-            new { name = "get_team_payroll", arguments = new { teamId = "NYA", year = 1970 } });
-        Assert.True(McpHostFixture.IsToolError(invalidPayrollResponse));
-        Assert.Contains("1985 forward", McpHostFixture.ReadToolMessage(invalidPayrollResponse));
+            new { name = "get_pitching_leaders", arguments = new { fromYear = 2001, toYear = 1999 } });
+        Assert.True(McpHostFixture.IsToolError(invalidPitchingResponse));
+        Assert.Contains("fromYear must be less than or equal to toYear", McpHostFixture.ReadToolMessage(invalidPitchingResponse));
     }
 
     [Fact]
@@ -234,7 +222,17 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
     {
         using var process = McpHostFixture.StartHostProcess("Host=<server>;Database=<db>;", isolateUserSecrets: true);
 
-        var exited = await process.WaitForExitAsync(TimeSpan.FromSeconds(15));
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var exited = true;
+        try
+        {
+            await process.WaitForExitAsync(timeout.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            exited = false;
+        }
+
         if (!exited)
         {
             try
@@ -323,7 +321,7 @@ public sealed class McpHostFixture : IAsyncLifetime
         {
             await _stderrPump;
         }
-        _process?.Dispose();
+
         _process?.Dispose();
         _process = null;
     }
@@ -421,7 +419,15 @@ public sealed class McpHostFixture : IAsyncLifetime
         await _process.StandardInput.FlushAsync();
     }
 
-    private async Task PumpAsync(StreamReader reader, Func<string, Task> onLine)
+    private string GetDiagnostics()
+    {
+        var stderr = string.Join(Environment.NewLine, _stderrLines.Reverse().Take(25).Reverse());
+        return string.IsNullOrWhiteSpace(stderr)
+            ? "No stderr output captured."
+            : $"Recent stderr:{Environment.NewLine}{stderr}";
+    }
+
+    private static async Task PumpAsync(StreamReader reader, Func<string, Task> onLine)
     {
         while (await reader.ReadLineAsync() is { } line)
         {
@@ -429,35 +435,9 @@ public sealed class McpHostFixture : IAsyncLifetime
         }
     }
 
-    private string GetDiagnostics() =>
-        _stderrLines.IsEmpty
-            ? string.Empty
-            : $"{Environment.NewLine}stderr:{Environment.NewLine}{string.Join(Environment.NewLine, _stderrLines)}";
+    private static string GetSolutionDirectory() =>
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
 
-    private static string GetSolutionDirectory()
-    {
-        var testDir = AppContext.BaseDirectory;
-        return Path.GetFullPath(Path.Combine(testDir, "..", "..", "..", ".."));
-    }
-
-    private static string GetProjectPath(string projectName, string projectFileName) =>
-        Path.Combine(GetSolutionDirectory(), projectName, projectFileName);
-}
-
-internal static class ProcessExtensions
-{
-    public static async Task<bool> WaitForExitAsync(this Process process, TimeSpan timeout)
-    {
-        using var cts = new CancellationTokenSource(timeout);
-
-        try
-        {
-            await process.WaitForExitAsync(cts.Token);
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            return false;
-        }
-    }
+    private static string GetProjectPath(string projectDirectory, string projectFileName) =>
+        Path.Combine(GetSolutionDirectory(), projectDirectory, projectFileName);
 }

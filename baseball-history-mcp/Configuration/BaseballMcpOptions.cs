@@ -66,7 +66,7 @@ internal static class BaseballMcpOptionsValidator
                 $"{BaseballMcpOptions.SectionName}:Limits:FranchiseListPageSizeMax must be greater than zero.");
         }
 
-        if (options.Limits.SalaryHistorySeasonCountMax <= 0)
+        if (options.Limits.HallOfFamePageSizeMax <= 0)
         {
             throw new InvalidOperationException(
                 $"{BaseballMcpOptions.SectionName}:Limits:SalaryHistorySeasonCountMax must be greater than zero.");

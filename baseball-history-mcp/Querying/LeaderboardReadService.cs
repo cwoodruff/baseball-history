@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace baseball_history_mcp.Querying;
 
 public sealed class LeaderboardReadService(
@@ -46,6 +47,7 @@ public sealed class LeaderboardReadService(
                     StolenBases = b.Sb ?? 0,
                     Walks = b.Bb ?? 0
                 });
+
             var totalCount = await seasonQuery.CountAsync(cancellationToken);
             var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
@@ -108,58 +110,56 @@ public sealed class LeaderboardReadService(
             })
             .Where(x => x.AtBats >= normalizedRequest.MinAtBats);
 
-        {
-            var totalCount = await careerQuery.CountAsync(cancellationToken);
-            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
+        var totalCareerCount = await careerQuery.CountAsync(cancellationToken);
+        var careerWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCareerCount);
 
             var data = await ApplyBattingOrder(careerQuery, normalizedRequest.Stat)
                 .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
                 .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
-            var playerIds = data.Select(entry => entry.PlayerId).ToList();
-            var playerNames = await context.People
-                .Where(p => playerIds.Contains(p.PlayerId))
-                .ToDictionaryAsync(
-                    p => p.PlayerId,
-                    p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
-                    cancellationToken);
+        var playerIds = careerData.Select(entry => entry.PlayerId).ToList();
+        var playerNames = await context.People
+            .Where(p => playerIds.Contains(p.PlayerId))
+            .ToDictionaryAsync(
+                p => p.PlayerId,
+                p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
+                cancellationToken);
 
-            return pageWindow.CreateResult(
-                data.Select((entry, index) =>
-                {
-                    var avg = entry.AtBats > 0 ? (double)entry.Hits / entry.AtBats : 0;
-                    var obp = (entry.AtBats + entry.Walks) > 0
-                        ? (double)(entry.Hits + entry.Walks) / (entry.AtBats + entry.Walks)
-                        : 0;
-                    var totalBases = entry.Hits + entry.Doubles + (2 * entry.Triples) + (3 * entry.HomeRuns);
-                    var slg = entry.AtBats > 0 ? (double)totalBases / entry.AtBats : 0;
+        return careerWindow.CreateResult(
+            careerData.Select((entry, index) =>
+            {
+                var avg = entry.AtBats > 0 ? (double)entry.Hits / entry.AtBats : 0;
+                var obp = (entry.AtBats + entry.Walks) > 0
+                    ? (double)(entry.Hits + entry.Walks) / (entry.AtBats + entry.Walks)
+                    : 0;
+                var totalBases = entry.Hits + entry.Doubles + (2 * entry.Triples) + (3 * entry.HomeRuns);
+                var slg = entry.AtBats > 0 ? (double)totalBases / entry.AtBats : 0;
 
-                    return new BattingLeaderboardEntry(
-                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
-                        entry.PlayerId,
-                        playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
-                        null,
-                        null,
-                        null,
-                        hallOfFamers.Contains(entry.PlayerId),
-                        entry.Games,
-                        entry.AtBats,
-                        entry.Runs,
-                        entry.Hits,
-                        entry.Doubles,
-                        entry.Triples,
-                        entry.HomeRuns,
-                        entry.Rbi,
-                        entry.StolenBases,
-                        entry.Walks,
-                        Math.Round(avg, 3),
-                        Math.Round(obp, 3),
-                        Math.Round(slg, 3),
-                        Math.Round(obp + slg, 3));
-                }).ToList(),
-                totalCount);
-        }
+                return new BattingLeaderboardEntry(
+                    ((careerWindow.Page - 1) * careerWindow.PageSize) + index + 1,
+                    entry.PlayerId,
+                    playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
+                    null,
+                    null,
+                    null,
+                    hallOfFamers.Contains(entry.PlayerId),
+                    entry.Games,
+                    entry.AtBats,
+                    entry.Runs,
+                    entry.Hits,
+                    entry.Doubles,
+                    entry.Triples,
+                    entry.HomeRuns,
+                    entry.Rbi,
+                    entry.StolenBases,
+                    entry.Walks,
+                    Math.Round(avg, 3),
+                    Math.Round(obp, 3),
+                    Math.Round(slg, 3),
+                    Math.Round(obp + slg, 3));
+            }).ToList(),
+            totalCareerCount);
     }
 
     public async Task<PagedReadResult<PitchingLeaderboardEntry>> GetPitchingLeadersAsync(
@@ -279,47 +279,51 @@ public sealed class LeaderboardReadService(
                 .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
-            var playerIds = data.Select(entry => entry.PlayerId).ToList();
-            var playerNames = await context.People
-                .Where(p => playerIds.Contains(p.PlayerId))
-                .ToDictionaryAsync(
-                    p => p.PlayerId,
-                    p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
-                    cancellationToken);
+        var careerData = await ApplyPitchingOrder(careerQuery, normalizedRequest.Stat, ascending)
+            .Skip((careerWindow.Page - 1) * careerWindow.PageSize)
+            .Take(careerWindow.PageSize)
+            .ToListAsync(cancellationToken);
 
-            return pageWindow.CreateResult(
-                data.Select((entry, index) =>
-                {
-                    var inningsPitched = entry.InningsPitchedOuts / 3.0;
-                    var era = inningsPitched > 0 ? entry.EarnedRuns * 9.0 / inningsPitched : 0;
-                    var whip = inningsPitched > 0 ? (entry.Walks + entry.Hits) / inningsPitched : 0;
+        var playerIds = careerData.Select(entry => entry.PlayerId).ToList();
+        var playerNames = await context.People
+            .Where(p => playerIds.Contains(p.PlayerId))
+            .ToDictionaryAsync(
+                p => p.PlayerId,
+                p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
+                cancellationToken);
 
-                    return new PitchingLeaderboardEntry(
-                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
-                        entry.PlayerId,
-                        playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
-                        null,
-                        null,
-                        null,
-                        hallOfFamers.Contains(entry.PlayerId),
-                        entry.Games,
-                        entry.GamesStarted,
-                        entry.Wins,
-                        entry.Losses,
-                        entry.Saves,
-                        entry.CompleteGames,
-                        entry.Shutouts,
-                        Math.Round(inningsPitched, 1),
-                        entry.Hits,
-                        entry.EarnedRuns,
-                        entry.HomeRuns,
-                        entry.Walks,
-                        entry.Strikeouts,
-                        Math.Round(era, 2),
-                        Math.Round(whip, 3));
-                }).ToList(),
-                totalCount);
-        }
+        return careerWindow.CreateResult(
+            careerData.Select((entry, index) =>
+            {
+                var inningsPitched = entry.InningsPitchedOuts / 3.0;
+                var era = inningsPitched > 0 ? entry.EarnedRuns * 9.0 / inningsPitched : 0;
+                var whip = inningsPitched > 0 ? (entry.Walks + entry.Hits) / inningsPitched : 0;
+
+                return new PitchingLeaderboardEntry(
+                    ((careerWindow.Page - 1) * careerWindow.PageSize) + index + 1,
+                    entry.PlayerId,
+                    playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
+                    null,
+                    null,
+                    null,
+                    hallOfFamers.Contains(entry.PlayerId),
+                    entry.Games,
+                    entry.GamesStarted,
+                    entry.Wins,
+                    entry.Losses,
+                    entry.Saves,
+                    entry.CompleteGames,
+                    entry.Shutouts,
+                    Math.Round(inningsPitched, 1),
+                    entry.Hits,
+                    entry.EarnedRuns,
+                    entry.HomeRuns,
+                    entry.Walks,
+                    entry.Strikeouts,
+                    Math.Round(era, 2),
+                    Math.Round(whip, 3));
+            }).ToList(),
+            totalCareerCount);
     }
 
     private static IOrderedQueryable<T> ApplyBattingOrder<T>(IQueryable<T> query, string stat)
@@ -440,9 +444,8 @@ public sealed class LeaderboardReadService(
         var parameter = Expression.Parameter(typeof(T), "x");
         var earnedRuns = Expression.Convert(Expression.Property(parameter, "EarnedRuns"), typeof(double));
         var inningsPitchedOuts = Expression.Convert(Expression.Property(parameter, "InningsPitchedOuts"), typeof(double));
-        var zero = Expression.Constant(0.0);
         var body = Expression.Condition(
-            Expression.Equal(inningsPitchedOuts, zero),
+            Expression.Equal(inningsPitchedOuts, Expression.Constant(0.0)),
             Expression.Constant(double.MaxValue),
             Expression.Divide(Expression.Multiply(earnedRuns, Expression.Constant(27.0)), inningsPitchedOuts));
         return Expression.Lambda<Func<T, double>>(body, parameter);

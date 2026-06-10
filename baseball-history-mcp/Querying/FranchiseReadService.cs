@@ -134,7 +134,7 @@ public sealed class FranchiseReadService(
                     t.LgId,
                     t.DivId,
                     wins,
-                    (short)losses,
+                    losses,
                     games > 0 ? Math.Round((double)wins / games, 3) : 0,
                     t.Rank,
                     t.DivWin == "Y",

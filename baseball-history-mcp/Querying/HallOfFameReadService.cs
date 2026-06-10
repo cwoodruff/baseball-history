@@ -10,7 +10,6 @@ public interface IHallOfFameReadService
 {
     Task<HashSet<string>> GetInductedPlayerIdsAsync(CancellationToken cancellationToken = default);
     Task<PagedReadResult<HallOfFameInducteeReadModel>> ListInducteesAsync(HallOfFameLookupRequest request, CancellationToken cancellationToken = default);
-    Task<PagedReadResult<HallOfFameInducteeReadModel>> GetInducteesAsync(HallOfFameInducteeRequest request, CancellationToken cancellationToken = default);
     Task<HallOfFameVotingHistoryReadModel?> GetVotingHistoryAsync(string playerId, CancellationToken cancellationToken = default);
 }
 
@@ -70,7 +69,7 @@ public sealed class HallOfFameReadService(
             query = query.Where(h => h.Yearid == normalizedRequest.Year.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(normalizedRequest.Category))
+        if (normalizedRequest.Category is not null)
         {
             query = query.Where(h => h.Category != null && EF.Functions.ILike(h.Category, normalizedRequest.Category));
         }

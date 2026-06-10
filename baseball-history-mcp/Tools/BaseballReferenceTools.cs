@@ -110,7 +110,7 @@ public sealed class BaseballReferenceTools(
         [Description("1-based results page.")] int page = 1,
         [Description("Page size from 1 up to the configured Hall of Fame max.")] int pageSize = 25,
         CancellationToken cancellationToken = default)
-        => hallOfFame.GetInducteesAsync(new HallOfFameInducteeRequest(year, category, page, pageSize), cancellationToken);
+        => hallOfFame.ListInducteesAsync(new HallOfFameLookupRequest(year, category, page, pageSize), cancellationToken);
 
     [McpServerTool(Name = "get_hall_of_fame_voting_history", ReadOnly = true, Title = "Get Hall of Fame Voting History"), Description("Get bounded Hall of Fame voting history for one player. Returned rows are Lahman HallOfFame ballot rows, not a prose biography.")]
     public Task<HallOfFameVotingHistoryReadModel?> GetHallOfFameVotingHistoryAsync(

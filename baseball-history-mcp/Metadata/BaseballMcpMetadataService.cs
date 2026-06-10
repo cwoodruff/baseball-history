@@ -1,6 +1,5 @@
 using System.Text.Json;
 using baseball_history_mcp.Configuration;
-using baseball_history_mcp.Querying;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -32,7 +31,6 @@ public sealed class BaseballMcpMetadataService(
         "list_hall_of_fame_inductees",
         "get_hall_of_fame_voting_history",
         "get_player_salary_history",
-        "get_team_payroll",
         "get_salary_leaders",
         "get_server_diagnostics"
     ];
@@ -48,20 +46,6 @@ public sealed class BaseballMcpMetadataService(
         new("baseball-history://guides/workflows", "Workflow Guide", "See representative multi-step MCP workflows that only reference shipped v1 tools and resources."),
         new("baseball-history://hall-of-fame/guide", "Hall of Fame Guide", "Review Hall of Fame tool limits, year coverage, and voting-history caveats."),
         new("baseball-history://salary/guide", "Salary Guide", "Review salary tool limits, year coverage, and how salary history rows are shaped.")
-    ];
-
-    private static readonly IReadOnlyList<SupportedStatCategory> SupportedCategories =
-    [
-        new(
-            "batting",
-            true,
-            true,
-            LeaderboardStatCatalog.GetBattingMetadata()),
-        new(
-            "pitching",
-            true,
-            true,
-            LeaderboardStatCatalog.GetPitchingMetadata())
     ];
 
     public async Task<ServerInfoDocument> GetServerInfoAsync(CancellationToken cancellationToken = default)
@@ -85,40 +69,15 @@ public sealed class BaseballMcpMetadataService(
             [
                 "ConnectionStrings:Lahman must be configured before the stdio server starts.",
                 "Placeholder connection strings containing '<' are rejected at startup.",
-                $"Player search page size is capped at {options.Value.Limits.PlayerSearchPageSizeMax} rows, franchise listing page size is capped at {options.Value.Limits.FranchiseListPageSizeMax} rows, Hall of Fame page size is capped at {options.Value.Limits.HallOfFamePageSizeMax} rows, batting/pitching/salary leaderboard page size is capped at {options.Value.Limits.LeaderboardPageSizeMax} rows, player salary history is capped at {options.Value.Limits.SalaryHistorySeasonCountMax} seasons, and team payroll is capped at {options.Value.Limits.TeamPayrollPlayerCountMax} player rows.",
+                $"Player search page size is capped at {options.Value.Limits.PlayerSearchPageSizeMax} rows, franchise listing page size is capped at {options.Value.Limits.FranchiseListPageSizeMax} rows, Hall of Fame page size is capped at {options.Value.Limits.HallOfFamePageSizeMax} rows, batting and pitching leaderboard page size is capped at {options.Value.Limits.LeaderboardPageSizeMax} rows, salary history is capped at {options.Value.Limits.SalaryHistorySeasonsMax} seasons, and salary leaderboard page size is capped at {options.Value.Limits.SalaryLeaderboardPageSizeMax} rows.",
                 $"Database commands use a configured timeout of {options.Value.QueryTimeoutSeconds} seconds.",
-                "HTTP transport is intentionally out of v1. The MCP C# SDK guidance requires explicit AllowedHosts host validation and restrictive CORS if browser access is intentionally enabled; see baseball-history://server/transport-policy.",
-                "Client workflows should start with baseball-history://server/info plus the guide resources before calling domain tools."
+                "Client workflows should start with baseball-history://server/info and baseball-history://server/workflow-guide before calling domain tools."
             ],
             supportedYearSpan);
     }
 
     public async Task<StatsCatalogDocument> GetStatsCatalogAsync(CancellationToken cancellationToken = default) =>
         new(await GetSupportedYearSpanAsync(cancellationToken), SupportedCategories);
-
-    public TransportPolicyDocument GetTransportPolicy() =>
-        new(
-            CurrentTransport: "stdio",
-            HttpEnabled: false,
-            V1Recommendation: "No-go for v1. Keep baseball-history-mcp stdio-only.",
-            DecisionDrivers:
-            [
-                "The shipped MCP surface is local, read-only, and stdio-first today.",
-                "Issue #30 is a hardening milestone, not an HTTP expansion milestone.",
-                "Partially enabling HTTP would add rollout and support burden without a committed browser or remote-hosting use case."
-            ],
-            SdkGuidance:
-            [
-                "The MCP C# SDK transport guidance says local HTTP servers should restrict AllowedHosts to loopback values instead of '*', because Kestrel does not validate Host headers by default.",
-                "The SDK guidance also says CORS should only be enabled when browser-based cross-origin access is intentional, and that CORS is not a substitute for host validation.",
-                "If sessions or resumability are enabled over HTTP, the SDK guidance requires additional CORS headers such as Mcp-Session-Id to be allowed and exposed."
-            ],
-            RevisitCriteria:
-            [
-                "A real remote-hosting requirement exists for the MCP server.",
-                "The deployment shape owns explicit AllowedHosts configuration at every ingress layer.",
-                "A narrowly scoped CORS allowlist and test coverage are ready for the intended browser clients."
-            ]);
 
     public Task<WorkflowGuideDocument> GetWorkflowGuideAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(
@@ -335,7 +294,7 @@ public sealed class BaseballMcpMetadataService(
                         ],
                         UnsupportedQueryShapes:
                         [
-                            "Database writes, cache mutation, or administrative actions.",
+                            "Database writes or runtime configuration changes.",
                             "Secret retrieval or raw connection-string inspection."
                         ])
                 ],
