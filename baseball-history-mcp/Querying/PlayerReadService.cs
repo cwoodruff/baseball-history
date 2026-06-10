@@ -1,6 +1,7 @@
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace baseball_history_mcp.Querying;
 
 public sealed class PlayerReadService(
@@ -23,27 +24,12 @@ public sealed class PlayerReadService(
         McpInputValidation.ValidatePage(request.Page);
         McpInputValidation.ValidatePageSize(request.PageSize);
 
-        var maxPageSize = options.Value.Limits.PlayerSearchPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
-
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var query = context.People
             .Where(p => p.NameLast != null)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(normalizedRequest.Query))
-        {
-            var term = normalizedRequest.Query;
-            var pattern = $"%{term}%";
-            query = query.Where(p =>
-                EF.Functions.ILike(p.PlayerId, pattern) ||
-                (p.NameFirst != null && EF.Functions.ILike(p.NameFirst, pattern)) ||
-                (p.NameLast != null && EF.Functions.ILike(p.NameLast, pattern)));
-        }
-        else if (!string.IsNullOrWhiteSpace(normalizedRequest.LastNameStartsWith))
-        {
-            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
         if (normalizedQuery is not null)
         {
             var terms = normalizedQuery
@@ -68,6 +54,7 @@ public sealed class PlayerReadService(
             .OrderBy(p => p.NameLast)
             .ThenBy(p => p.NameFirst)
             .ThenBy(p => p.PlayerId);
+
         var totalCount = await query.CountAsync(cancellationToken);
         var pageWindow = requestPolicy.CreatePlayerLookupWindow(normalizedRequest, totalCount);
 

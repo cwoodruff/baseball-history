@@ -1,4 +1,3 @@
-using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Querying;
 using Microsoft.Extensions.Options;
 
@@ -30,7 +29,7 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
         return request with
         {
-            Stat = LeaderboardStatCatalog.ResolveBatting(request.Stat).Key,
+            Stat = LeaderboardStatCatalog.NormalizeBattingStat(request.Stat).Key,
             League = NormalizeLeague(request.League)
         };
     }
@@ -46,7 +45,7 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
         return request with
         {
-            Stat = LeaderboardStatCatalog.ResolvePitching(request.Stat).Key,
+            Stat = LeaderboardStatCatalog.NormalizePitchingStat(request.Stat).Key,
             League = NormalizeLeague(request.League)
         };
     }

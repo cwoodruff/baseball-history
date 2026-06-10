@@ -257,26 +257,25 @@ public class BaseballReadServiceTests
     {
         var factory = new TestDbContextFactory();
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var hallOfFame = new HallOfFameReadService(factory, cache, CreateOptions(playerSearchPageSizeMax: playerSearchPageSizeMax));
-        return new PlayerReadService(factory, hallOfFame, CreateOptions(playerSearchPageSizeMax: playerSearchPageSizeMax));
+        var options = CreateOptions(playerSearchPageSizeMax: playerSearchPageSizeMax);
+        var requestPolicy = CreateRequestPolicy(options);
+        var hallOfFame = new HallOfFameReadService(factory, cache, requestPolicy, options);
+        return new PlayerReadService(factory, hallOfFame, requestPolicy);
     }
 
     private static IFranchiseReadService CreateFranchiseReadService(int franchiseListPageSizeMax = 50) =>
-        new FranchiseReadService(new TestDbContextFactory(), CreateRequestPolicy(franchiseListPageSizeMax: franchiseListPageSizeMax));
-
-    private static IHallOfFameReadService CreateHallOfFameReadService(int hallOfFamePageSizeMax = 100)
-    {
-        var factory = new TestDbContextFactory();
-        var cache = new MemoryCache(new MemoryCacheOptions());
-        return new HallOfFameReadService(factory, cache, CreateRequestPolicy(hallOfFamePageSizeMax: hallOfFamePageSizeMax));
-    }
+        new FranchiseReadService(
+            new TestDbContextFactory(),
+            CreateRequestPolicy(CreateOptions(franchiseListPageSizeMax: franchiseListPageSizeMax)));
 
     private static ILeaderboardReadService CreateLeaderboardReadService(int leaderboardPageSizeMax = 100)
     {
         var factory = new TestDbContextFactory();
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var hallOfFame = new HallOfFameReadService(factory, cache, CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax));
-        return new LeaderboardReadService(factory, hallOfFame, CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax));
+        var options = CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax);
+        var requestPolicy = CreateRequestPolicy(options);
+        var hallOfFame = new HallOfFameReadService(factory, cache, requestPolicy, options);
+        return new LeaderboardReadService(factory, hallOfFame, requestPolicy);
     }
 
     private static IHallOfFameReadService CreateHallOfFameReadService(
@@ -287,6 +286,9 @@ public class BaseballReadServiceTests
         return new HallOfFameReadService(
             factory,
             new MemoryCache(new MemoryCacheOptions()),
+            CreateRequestPolicy(CreateOptions(
+                hallOfFamePageSizeMax: hallOfFamePageSizeMax,
+                hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax)),
             CreateOptions(
                 hallOfFamePageSizeMax: hallOfFamePageSizeMax,
                 hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax));
@@ -295,7 +297,12 @@ public class BaseballReadServiceTests
     private static ITeamReadService CreateTeamReadService()
     {
         var factory = new TestDbContextFactory();
-        var hallOfFame = new HallOfFameReadService(factory, new MemoryCache(new MemoryCacheOptions()), CreateOptions());
+        var options = CreateOptions();
+        var hallOfFame = new HallOfFameReadService(
+            factory,
+            new MemoryCache(new MemoryCacheOptions()),
+            CreateRequestPolicy(options),
+            options);
         return new TeamReadService(factory, hallOfFame);
     }
 
@@ -331,6 +338,9 @@ public class BaseballReadServiceTests
                 SalaryLeaderboardPageSizeMax = salaryLeaderboardPageSizeMax
             }
         });
+
+    private static BaseballMcpRequestPolicy CreateRequestPolicy(IOptions<BaseballMcpOptions> options) =>
+        new(options);
 
     private sealed class TestDbContextFactory : IDbContextFactory<BaseballDbContext>
     {
