@@ -28,7 +28,10 @@ public sealed record McpLimitSnapshot(
     int QueryTimeoutSeconds,
     int PlayerSearchPageSizeMax,
     int FranchiseListPageSizeMax,
-    int LeaderboardPageSizeMax);
+    int HallOfFamePageSizeMax,
+    int LeaderboardPageSizeMax,
+    int SalaryHistorySeasonCountMax,
+    int TeamPayrollPlayerCountMax);
 
 public sealed record ServerResourceLink(
     string Uri,
@@ -41,6 +44,8 @@ public sealed record ServerInfoDocument(
     string Version,
     string Description,
     string Transport,
+    bool HttpTransportEnabled,
+    string HttpTransportRecommendation,
     bool ReadOnly,
     string ConnectionStringKey,
     McpLimitSnapshot Limits,

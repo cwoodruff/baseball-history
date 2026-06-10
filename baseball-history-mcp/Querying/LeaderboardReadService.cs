@@ -2,35 +2,32 @@ using System.Linq.Expressions;
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-
 namespace baseball_history_mcp.Querying;
 
 public sealed class LeaderboardReadService(
     IDbContextFactory<BaseballDbContext> contextFactory,
     IHallOfFameReadService hallOfFameReadService,
-    IOptions<BaseballMcpOptions> options) : ILeaderboardReadService
+    BaseballMcpRequestPolicy requestPolicy) : ILeaderboardReadService
 {
     public async Task<PagedReadResult<BattingLeaderboardEntry>> GetBattingLeadersAsync(
         BattingLeaderboardQuery request,
         CancellationToken cancellationToken = default)
     {
-        var maxPageSize = options.Value.Limits.LeaderboardPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
+        var normalizedRequest = requestPolicy.Normalize(request);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
 
         var query = context.Batting.AsQueryable();
-        if (request.FromYear.HasValue) query = query.Where(b => b.YearId >= request.FromYear.Value);
-        if (request.ToYear.HasValue) query = query.Where(b => b.YearId <= request.ToYear.Value);
-        if (!string.IsNullOrWhiteSpace(request.League)) query = query.Where(b => b.LgId == request.League);
+        if (normalizedRequest.FromYear.HasValue) query = query.Where(b => b.YearId >= normalizedRequest.FromYear.Value);
+        if (normalizedRequest.ToYear.HasValue) query = query.Where(b => b.YearId <= normalizedRequest.ToYear.Value);
+        if (!string.IsNullOrWhiteSpace(normalizedRequest.League)) query = query.Where(b => b.LgId == normalizedRequest.League);
 
-        if (request.SingleSeason)
+        if (normalizedRequest.SingleSeason)
         {
             var seasonQuery = query
-                .Where(b => b.Ab >= request.MinAtBats)
+                .Where(b => b.Ab >= normalizedRequest.MinAtBats)
                 .Select(b => new
                 {
                     b.PlayerId,
@@ -49,17 +46,15 @@ public sealed class LeaderboardReadService(
                     StolenBases = b.Sb ?? 0,
                     Walks = b.Bb ?? 0
                 });
-
             var totalCount = await seasonQuery.CountAsync(cancellationToken);
-            var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-            var page = Math.Clamp(request.Page, 1, totalPages);
+            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
-            var data = await ApplyBattingOrder(seasonQuery, request.Stat)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var data = await ApplyBattingOrder(seasonQuery, normalizedRequest.Stat)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return new PagedReadResult<BattingLeaderboardEntry>(
+            return pageWindow.CreateResult(
                 data.Select((entry, index) =>
                 {
                     var avg = entry.AtBats > 0 ? (double)entry.Hits / entry.AtBats : 0;
@@ -70,7 +65,7 @@ public sealed class LeaderboardReadService(
                     var slg = entry.AtBats > 0 ? (double)totalBases / entry.AtBats : 0;
 
                     return new BattingLeaderboardEntry(
-                        ((page - 1) * pageSize) + index + 1,
+                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
                         entry.PlayerId,
                         entry.PlayerName.Trim(),
                         entry.YearId,
@@ -92,17 +87,7 @@ public sealed class LeaderboardReadService(
                         Math.Round(slg, 3),
                         Math.Round(obp + slg, 3));
                 }).ToList(),
-                page,
-                pageSize,
-                totalCount,
-                totalPages)
-            {
-                RequestedPage = request.Page,
-                RequestedPageSize = request.PageSize,
-                MaxPageSize = maxPageSize,
-                WasPageAdjusted = page != request.Page,
-                WasPageSizeClamped = pageSize != request.PageSize
-            };
+                totalCount);
         }
 
         var careerQuery = query
@@ -121,16 +106,15 @@ public sealed class LeaderboardReadService(
                 StolenBases = g.Sum(b => b.Sb ?? 0),
                 Walks = g.Sum(b => b.Bb ?? 0)
             })
-            .Where(x => x.AtBats >= request.MinAtBats);
+            .Where(x => x.AtBats >= normalizedRequest.MinAtBats);
 
         {
             var totalCount = await careerQuery.CountAsync(cancellationToken);
-            var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-            var page = Math.Clamp(request.Page, 1, totalPages);
+            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
-            var data = await ApplyBattingOrder(careerQuery, request.Stat)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var data = await ApplyBattingOrder(careerQuery, normalizedRequest.Stat)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
             var playerIds = data.Select(entry => entry.PlayerId).ToList();
@@ -141,7 +125,7 @@ public sealed class LeaderboardReadService(
                     p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
                     cancellationToken);
 
-            return new PagedReadResult<BattingLeaderboardEntry>(
+            return pageWindow.CreateResult(
                 data.Select((entry, index) =>
                 {
                     var avg = entry.AtBats > 0 ? (double)entry.Hits / entry.AtBats : 0;
@@ -152,7 +136,7 @@ public sealed class LeaderboardReadService(
                     var slg = entry.AtBats > 0 ? (double)totalBases / entry.AtBats : 0;
 
                     return new BattingLeaderboardEntry(
-                        ((page - 1) * pageSize) + index + 1,
+                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
                         entry.PlayerId,
                         playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
                         null,
@@ -174,17 +158,7 @@ public sealed class LeaderboardReadService(
                         Math.Round(slg, 3),
                         Math.Round(obp + slg, 3));
                 }).ToList(),
-                page,
-                pageSize,
-                totalCount,
-                totalPages)
-            {
-                RequestedPage = request.Page,
-                RequestedPageSize = request.PageSize,
-                MaxPageSize = maxPageSize,
-                WasPageAdjusted = page != request.Page,
-                WasPageSizeClamped = pageSize != request.PageSize
-            };
+                totalCount);
         }
     }
 
@@ -192,23 +166,22 @@ public sealed class LeaderboardReadService(
         PitchingLeaderboardQuery request,
         CancellationToken cancellationToken = default)
     {
-        var maxPageSize = options.Value.Limits.LeaderboardPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
-        var minimumOuts = request.MinInningsPitched * 3;
-        var ascending = request.Stat.Equals("era", StringComparison.OrdinalIgnoreCase)
-            || request.Stat.Equals("whip", StringComparison.OrdinalIgnoreCase)
-            || request.Stat.Equals("bb9", StringComparison.OrdinalIgnoreCase);
+        var normalizedRequest = requestPolicy.Normalize(request);
+        var minimumOuts = normalizedRequest.MinInningsPitched * 3;
+        var ascending = normalizedRequest.Stat.Equals("era", StringComparison.OrdinalIgnoreCase)
+            || normalizedRequest.Stat.Equals("whip", StringComparison.OrdinalIgnoreCase)
+            || normalizedRequest.Stat.Equals("bb9", StringComparison.OrdinalIgnoreCase);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
 
         var query = context.Pitching.AsQueryable();
-        if (request.FromYear.HasValue) query = query.Where(p => p.YearId >= request.FromYear.Value);
-        if (request.ToYear.HasValue) query = query.Where(p => p.YearId <= request.ToYear.Value);
-        if (!string.IsNullOrWhiteSpace(request.League)) query = query.Where(p => p.LgId == request.League);
+        if (normalizedRequest.FromYear.HasValue) query = query.Where(p => p.YearId >= normalizedRequest.FromYear.Value);
+        if (normalizedRequest.ToYear.HasValue) query = query.Where(p => p.YearId <= normalizedRequest.ToYear.Value);
+        if (!string.IsNullOrWhiteSpace(normalizedRequest.League)) query = query.Where(p => p.LgId == normalizedRequest.League);
 
-        if (request.SingleSeason)
+        if (normalizedRequest.SingleSeason)
         {
             var seasonQuery = query
                 .Where(p => (p.Ipouts ?? 0) >= minimumOuts)
@@ -235,15 +208,14 @@ public sealed class LeaderboardReadService(
                 });
 
             var totalCount = await seasonQuery.CountAsync(cancellationToken);
-            var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-            var page = Math.Clamp(request.Page, 1, totalPages);
+            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
-            var data = await ApplyPitchingOrder(seasonQuery, request.Stat, ascending)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var data = await ApplyPitchingOrder(seasonQuery, normalizedRequest.Stat, ascending)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
-            return new PagedReadResult<PitchingLeaderboardEntry>(
+            return pageWindow.CreateResult(
                 data.Select((entry, index) =>
                 {
                     var inningsPitched = entry.InningsPitchedOuts / 3.0;
@@ -251,7 +223,7 @@ public sealed class LeaderboardReadService(
                     var whip = inningsPitched > 0 ? (entry.Walks + entry.Hits) / inningsPitched : 0;
 
                     return new PitchingLeaderboardEntry(
-                        ((page - 1) * pageSize) + index + 1,
+                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
                         entry.PlayerId,
                         entry.PlayerName.Trim(),
                         entry.YearId,
@@ -274,17 +246,7 @@ public sealed class LeaderboardReadService(
                         Math.Round(era, 2),
                         Math.Round(whip, 3));
                 }).ToList(),
-                page,
-                pageSize,
-                totalCount,
-                totalPages)
-            {
-                RequestedPage = request.Page,
-                RequestedPageSize = request.PageSize,
-                MaxPageSize = maxPageSize,
-                WasPageAdjusted = page != request.Page,
-                WasPageSizeClamped = pageSize != request.PageSize
-            };
+                totalCount);
         }
 
         var careerQuery = query
@@ -310,12 +272,11 @@ public sealed class LeaderboardReadService(
 
         {
             var totalCount = await careerQuery.CountAsync(cancellationToken);
-            var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-            var page = Math.Clamp(request.Page, 1, totalPages);
+            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
-            var data = await ApplyPitchingOrder(careerQuery, request.Stat, ascending)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var data = await ApplyPitchingOrder(careerQuery, normalizedRequest.Stat, ascending)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
             var playerIds = data.Select(entry => entry.PlayerId).ToList();
@@ -326,7 +287,7 @@ public sealed class LeaderboardReadService(
                     p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
                     cancellationToken);
 
-            return new PagedReadResult<PitchingLeaderboardEntry>(
+            return pageWindow.CreateResult(
                 data.Select((entry, index) =>
                 {
                     var inningsPitched = entry.InningsPitchedOuts / 3.0;
@@ -334,7 +295,7 @@ public sealed class LeaderboardReadService(
                     var whip = inningsPitched > 0 ? (entry.Walks + entry.Hits) / inningsPitched : 0;
 
                     return new PitchingLeaderboardEntry(
-                        ((page - 1) * pageSize) + index + 1,
+                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
                         entry.PlayerId,
                         playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
                         null,
@@ -357,17 +318,7 @@ public sealed class LeaderboardReadService(
                         Math.Round(era, 2),
                         Math.Round(whip, 3));
                 }).ToList(),
-                page,
-                pageSize,
-                totalCount,
-                totalPages)
-            {
-                RequestedPage = request.Page,
-                RequestedPageSize = request.PageSize,
-                MaxPageSize = maxPageSize,
-                WasPageAdjusted = page != request.Page,
-                WasPageSizeClamped = pageSize != request.PageSize
-            };
+                totalCount);
         }
     }
 
@@ -390,7 +341,7 @@ public sealed class LeaderboardReadService(
             "obp" => query.OrderByDescending(DynComputedExpr<T>("Hits", "Walks", "AtBats", "Walks")),
             "slg" => query.OrderByDescending(DynSluggingExpr<T>()),
             "ops" => query.OrderByDescending(DynOpsExpr<T>()),
-            _ => query.OrderByDescending(DynExpr<T>("Hits"))
+            _ => throw new BaseballMcpUsageException($"Unsupported batting stat '{stat}'.")
         };
     }
 
@@ -404,7 +355,7 @@ public sealed class LeaderboardReadService(
                 "era" => query.OrderBy(DynEraExpr<T>()),
                 "whip" => query.OrderBy(DynWhipExpr<T>()),
                 "bb9" => query.OrderBy(DynBb9Expr<T>()),
-                _ => query.OrderBy(DynEraExpr<T>())
+                _ => throw new BaseballMcpUsageException($"Unsupported pitching stat '{stat}'.")
             };
         }
 
@@ -422,7 +373,7 @@ public sealed class LeaderboardReadService(
             "hr" => query.OrderByDescending(DynExpr<T>("HomeRuns")),
             "k9" => query.OrderByDescending(DynK9Expr<T>()),
             "wpct" => query.OrderByDescending(DynWinningPctExpr<T>()),
-            _ => query.OrderByDescending(DynExpr<T>("Wins"))
+            _ => throw new BaseballMcpUsageException($"Unsupported pitching stat '{stat}'.")
         };
     }
 

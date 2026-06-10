@@ -1,21 +1,18 @@
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-
 namespace baseball_history_mcp.Querying;
 
 public sealed class PlayerReadService(
     IDbContextFactory<BaseballDbContext> contextFactory,
     IHallOfFameReadService hallOfFameReadService,
-    IOptions<BaseballMcpOptions> options) : IPlayerReadService
+    BaseballMcpRequestPolicy requestPolicy) : IPlayerReadService
 {
     public async Task<PagedReadResult<PlayerLookupItem>> SearchPlayersAsync(
         PlayerLookupRequest request,
         CancellationToken cancellationToken = default)
     {
-        var maxPageSize = options.Value.Limits.PlayerSearchPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
+        var normalizedRequest = requestPolicy.Normalize(request);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -23,35 +20,32 @@ public sealed class PlayerReadService(
             .Where(p => p.NameLast != null)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(request.Query))
+        if (!string.IsNullOrWhiteSpace(normalizedRequest.Query))
         {
-            var term = request.Query.Trim();
+            var term = normalizedRequest.Query;
             var pattern = $"%{term}%";
             query = query.Where(p =>
                 EF.Functions.ILike(p.PlayerId, pattern) ||
                 (p.NameFirst != null && EF.Functions.ILike(p.NameFirst, pattern)) ||
                 (p.NameLast != null && EF.Functions.ILike(p.NameLast, pattern)));
         }
-        else if (!string.IsNullOrWhiteSpace(request.LastNameStartsWith))
+        else if (!string.IsNullOrWhiteSpace(normalizedRequest.LastNameStartsWith))
         {
-            var prefix = request.LastNameStartsWith.Trim()[0].ToString();
-            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{prefix}%"));
+            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
         }
 
         query = query
             .OrderBy(p => p.NameLast)
             .ThenBy(p => p.NameFirst)
             .ThenBy(p => p.PlayerId);
-
         var totalCount = await query.CountAsync(cancellationToken);
-        var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-        var page = Math.Clamp(request.Page, 1, totalPages);
+        var pageWindow = requestPolicy.CreatePlayerLookupWindow(normalizedRequest, totalCount);
 
         var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
 
         var players = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+            .Take(pageWindow.PageSize)
             .Select(p => new
             {
                 p.PlayerId,
@@ -67,7 +61,7 @@ public sealed class PlayerReadService(
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedReadResult<PlayerLookupItem>(
+        return pageWindow.CreateResult(
             players.Select(p => new PlayerLookupItem(
                 p.PlayerId,
                 FormatName(p.NameFirst, p.NameLast, p.PlayerId),
@@ -79,21 +73,12 @@ public sealed class PlayerReadService(
                 p.TotalHomeRuns > 0 ? p.TotalHomeRuns : null,
                 p.LastTeam))
             .ToList(),
-            page,
-            pageSize,
-            totalCount,
-            totalPages)
-        {
-            RequestedPage = request.Page,
-            RequestedPageSize = request.PageSize,
-            MaxPageSize = maxPageSize,
-            WasPageAdjusted = page != request.Page,
-            WasPageSizeClamped = pageSize != request.PageSize
-        };
+            totalCount);
     }
 
     public async Task<PlayerReadModel?> GetPlayerAsync(string playerId, CancellationToken cancellationToken = default)
     {
+        playerId = requestPolicy.NormalizeRequiredId(playerId, "playerId");
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var person = await context.People

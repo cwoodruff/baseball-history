@@ -39,6 +39,7 @@ internal static class McpHostProgram
 
         builder.Services.AddMemoryCache();
         builder.Services.AddSingleton(Options.Create(mcpOptions));
+        builder.Services.AddSingleton<BaseballMcpRequestPolicy>();
         builder.Services.AddPooledDbContextFactory<BaseballDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
                 npgsqlOptions.CommandTimeout(mcpOptions.QueryTimeoutSeconds).EnableRetryOnFailure())
@@ -48,13 +49,15 @@ internal static class McpHostProgram
             Name: "baseball-history-mcp",
             Title: "Baseball History MCP",
             Version: version,
-            Description: "Read-only Lahman data access for players, franchises, leaderboards, and safe server diagnostics."));
+            Description: "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."));
         builder.Services.AddSingleton<BaseballMcpMetadataService>();
 
         builder.Services.AddSingleton<IHallOfFameReadService, HallOfFameReadService>();
         builder.Services.AddSingleton<IPlayerReadService, PlayerReadService>();
         builder.Services.AddSingleton<IFranchiseReadService, FranchiseReadService>();
+        builder.Services.AddSingleton<ITeamSeasonReadService, TeamSeasonReadService>();
         builder.Services.AddSingleton<ILeaderboardReadService, LeaderboardReadService>();
+        builder.Services.AddSingleton<ISalaryReadService, SalaryReadService>();
 
         builder.Services
             .AddMcpServer(options =>
@@ -64,11 +67,12 @@ internal static class McpHostProgram
                     Name = "baseball-history-mcp",
                     Version = version,
                     Title = "Baseball History MCP",
-                    Description = "Read-only Lahman data access for players, franchises, leaderboards, and safe server diagnostics."
+                    Description = "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."
                 };
                 options.ServerInstructions =
-                    "Use these read-only baseball history tools for player lookup, franchise lookup, leaderboard reads, and runtime diagnostics. Discover metadata via baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://server/diagnostics, or the get_server_diagnostics tool. This server never mutates data.";
+                    "Use these read-only baseball history tools for player, franchise, and team-season discovery; validated batting and pitching leaderboards; Hall of Fame and salary reads; and safe runtime diagnostics. Discover the shipped surface first via baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://guides/getting-started, baseball-history://guides/workflows, baseball-history://server/diagnostics, and baseball-history://server/transport-policy. This server never mutates data and keeps HTTP transport out of v1.";
             })
+            .WithRequestFilters(filters => filters.AddCallToolFilter(BaseballMcpToolErrorHandling.NormalizeToolFailures))
             .WithStdioServerTransport()
             .WithResourcesFromAssembly()
             .WithToolsFromAssembly();
