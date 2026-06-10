@@ -30,8 +30,10 @@ public class BaseballMcpMetadataTests
         Assert.Equal(50, options.Limits.FranchiseListPageSizeMax);
         Assert.Equal(100, options.Limits.HallOfFamePageSizeMax);
         Assert.Equal(100, options.Limits.LeaderboardPageSizeMax);
-        Assert.Equal(20, options.Limits.SalaryHistorySeasonCountMax);
-        Assert.Equal(25, options.Limits.TeamPayrollPlayerCountMax);
+        Assert.Equal(50, options.Limits.HallOfFamePageSizeMax);
+        Assert.Equal(25, options.Limits.HallOfFameVotingHistoryYearsMax);
+        Assert.Equal(40, options.Limits.SalaryHistorySeasonsMax);
+        Assert.Equal(50, options.Limits.SalaryLeaderboardPageSizeMax);
     }
 
     [Fact]
@@ -47,10 +49,9 @@ public class BaseballMcpMetadataTests
         Assert.Equal("ConnectionStrings:Lahman", diagnostics.ConnectionStringKey);
         Assert.Equal(30, diagnostics.Limits.QueryTimeoutSeconds);
         Assert.Equal(50, diagnostics.Limits.FranchiseListPageSizeMax);
-        Assert.Equal(100, diagnostics.Limits.HallOfFamePageSizeMax);
-        Assert.Equal(20, diagnostics.Limits.SalaryHistorySeasonCountMax);
-        Assert.Equal(25, diagnostics.Limits.TeamPayrollPlayerCountMax);
-        Assert.True(diagnostics.ToolCount >= 13);
+        Assert.Equal(50, diagnostics.Limits.HallOfFamePageSizeMax);
+        Assert.Equal(40, diagnostics.Limits.SalaryHistorySeasonsMax);
+        Assert.True(diagnostics.ToolCount >= 12);
         Assert.True(diagnostics.ResourceCount >= 6);
         Assert.DoesNotContain("Password=", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Host=", json, StringComparison.OrdinalIgnoreCase);
@@ -81,9 +82,10 @@ public class BaseballMcpMetadataTests
         var diagnosticsTool = new BaseballServerDiagnosticsTools(metadataService);
 
         using var infoDocument = JsonDocument.Parse(await resources.GetServerInfoAsync());
+        using var workflowGuide = JsonDocument.Parse(await resources.GetWorkflowGuideAsync());
         using var catalogDocument = JsonDocument.Parse(await resources.GetStatsCatalogAsync());
-        using var transportPolicyDocument = JsonDocument.Parse(await resources.GetTransportPolicyAsync());
-        var workflowGuide = await resources.GetWorkflowGuideAsync();
+        using var hallOfFameGuide = JsonDocument.Parse(await resources.GetHallOfFameGuideAsync());
+        using var salaryGuide = JsonDocument.Parse(await resources.GetSalaryGuideAsync());
         var diagnostics = await diagnosticsTool.GetServerDiagnosticsAsync();
 
         Assert.Equal("baseball-history-mcp", infoDocument.RootElement.GetProperty("name").GetString());
@@ -96,25 +98,31 @@ public class BaseballMcpMetadataTests
         Assert.Equal(25, infoDocument.RootElement.GetProperty("limits").GetProperty("teamPayrollPlayerCountMax").GetInt32());
         Assert.Contains(
             infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
+            uri => uri == "baseball-history://server/workflow-guide");
+        Assert.Contains(
+            infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
             uri => uri == "baseball-history://server/diagnostics");
         Assert.Contains(
             infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
-            uri => uri == "baseball-history://server/transport-policy");
+            uri => uri == "baseball-history://hall-of-fame/guide");
+        var workflows = workflowGuide.RootElement.GetProperty("workflows").EnumerateArray().ToList();
+        var playerWorkflow = Assert.Single(workflows, workflow => workflow.GetProperty("name").GetString() == "player-search-and-detail");
         Assert.Contains(
-            infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
-            uri => uri == "baseball-history://guides/workflows");
+            playerWorkflow.GetProperty("recommendedTools").EnumerateArray().Select(item => item.GetString()),
+            tool => tool == "search_players");
         Assert.Contains(
-            infoDocument.RootElement.GetProperty("toolNames").EnumerateArray().Select(tool => tool.GetString()),
-            tool => tool == "get_salary_leaders");
+            playerWorkflow.GetProperty("supportedQueryShapes").EnumerateArray().Select(item => item.GetString()),
+            shape => shape is not null && shape.Contains("get_player(playerId)", StringComparison.Ordinal));
+        var leaderboardWorkflow = Assert.Single(workflows, workflow => workflow.GetProperty("name").GetString() == "curated-leaderboards");
+        Assert.Contains(
+            leaderboardWorkflow.GetProperty("recommendedResources").EnumerateArray().Select(item => item.GetString()),
+            resource => resource == "baseball-history://server/stats-catalog");
+        Assert.Contains(
+            workflowGuide.RootElement.GetProperty("unsupportedCapabilities").EnumerateArray().Select(item => item.GetString()),
+            item => item is not null && item.Contains("does not mutate", StringComparison.OrdinalIgnoreCase));
         Assert.Equal("Teams.yearID", catalogDocument.RootElement.GetProperty("supportedYearSpan").GetProperty("source").GetString());
-        Assert.False(transportPolicyDocument.RootElement.GetProperty("httpEnabled").GetBoolean());
-        Assert.Contains(
-            transportPolicyDocument.RootElement.GetProperty("sdkGuidance").EnumerateArray().Select(entry => entry.GetString()),
-            entry => entry!.Contains("AllowedHosts", StringComparison.Ordinal));
-        Assert.Contains(
-            transportPolicyDocument.RootElement.GetProperty("sdkGuidance").EnumerateArray().Select(entry => entry.GetString()),
-            entry => entry!.Contains("CORS", StringComparison.Ordinal));
-        Assert.Contains("get_team_season", workflowGuide);
+        Assert.Equal(25, hallOfFameGuide.RootElement.GetProperty("votingHistoryYearsMax").GetInt32());
+        Assert.Equal(40, salaryGuide.RootElement.GetProperty("salaryHistorySeasonsMax").GetInt32());
         Assert.True(diagnostics.DatabaseReachable);
     }
 

@@ -1,122 +1,94 @@
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace baseball_history_mcp.Querying;
 
 public sealed class SalaryReadService(
     IDbContextFactory<BaseballDbContext> contextFactory,
-    BaseballMcpRequestPolicy requestPolicy) : ISalaryReadService
+    IOptions<BaseballMcpOptions> options) : ISalaryReadService
 {
     public async Task<PlayerSalaryHistoryReadModel?> GetPlayerSalaryHistoryAsync(
         string playerId,
-        int? itemCount = null,
         CancellationToken cancellationToken = default)
     {
-        playerId = requestPolicy.NormalizeRequiredId(playerId, "playerId");
+        var normalizedPlayerId = McpInputValidation.NormalizeRequiredPlayerId(playerId);
+        var maxSeasonCount = options.Value.Limits.SalaryHistorySeasonsMax;
+
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var person = await context.People
-            .FirstOrDefaultAsync(p => p.PlayerId == playerId, cancellationToken);
+            .Where(p => p.PlayerId == normalizedPlayerId)
+            .Select(p => new { p.PlayerId, p.NameFirst, p.NameLast })
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (person is null)
         {
             return null;
         }
 
-        var seasons = await context.Salaries
-            .Where(s => s.PlayerId == playerId)
+        var salaryQuery = context.Salaries
+            .Where(s => s.PlayerId == normalizedPlayerId)
             .OrderByDescending(s => s.YearId)
             .ThenBy(s => s.TeamId)
+            .ThenBy(s => s.LgId);
+
+        var totalSeasonCount = await salaryQuery.CountAsync(cancellationToken);
+        var careerTotal = await context.Salaries
+            .Where(s => s.PlayerId == normalizedPlayerId)
+            .SumAsync(s => s.Salary ?? 0, cancellationToken);
+        var seasons = await salaryQuery
+            .Take(maxSeasonCount)
             .Select(s => new SalarySeasonReadModel(s.YearId, s.TeamId, s.LgId, s.Salary))
             .ToListAsync(cancellationToken);
 
-        if (seasons.Count == 0)
-        {
-            return null;
-        }
-
-        var itemWindow = requestPolicy.CreateSalaryHistoryWindow(itemCount);
-
         return new PlayerSalaryHistoryReadModel(
-            playerId,
+            person.PlayerId,
             FormatName(person.NameFirst, person.NameLast, person.PlayerId),
-            seasons.Take(itemWindow.ItemCount).ToList(),
-            seasons.Sum(s => s.Salary ?? 0))
-        {
-            RequestedItemCount = itemWindow.RequestedItemCount,
-            MaxItemCount = itemWindow.MaxItemCount,
-            WasItemCountClamped = itemWindow.WasItemCountClamped
-        };
+            careerTotal,
+            totalSeasonCount,
+            seasons.Count,
+            maxSeasonCount,
+            totalSeasonCount > maxSeasonCount,
+            seasons);
     }
 
-    public async Task<TeamPayrollReadModel?> GetTeamPayrollAsync(
-        string teamId,
-        int year,
-        int? itemCount = null,
+    public async Task<PagedReadResult<SalaryLeaderEntry>> GetSalaryLeadersAsync(
+        SalaryLeaderRequest request,
         CancellationToken cancellationToken = default)
     {
-        teamId = requestPolicy.NormalizeRequiredId(teamId, "teamId");
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        McpInputValidation.ValidateOptionalYear(request.Year, "year");
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
 
-        var players = await context.Salaries
-            .Where(s => s.TeamId == teamId && s.YearId == year)
-            .OrderByDescending(s => s.Salary)
-            .ThenBy(s => s.Player.NameLast)
-            .ThenBy(s => s.Player.NameFirst)
-            .ThenBy(s => s.PlayerId)
-            .Select(s => new SalaryEntryReadModel(
-                s.YearId,
-                s.TeamId,
-                s.LgId,
-                s.PlayerId,
-                FormatName(s.Player.NameFirst, s.Player.NameLast, s.PlayerId),
-                s.Salary))
-            .ToListAsync(cancellationToken);
+        var maxPageSize = options.Value.Limits.SalaryLeaderboardPageSizeMax;
+        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
-        if (players.Count == 0)
-        {
-            return null;
-        }
-
-        var itemWindow = requestPolicy.CreateTeamPayrollWindow(itemCount);
-
-        return new TeamPayrollReadModel(
-            (short)year,
-            teamId,
-            players.Sum(p => p.Salary ?? 0),
-            players.Count,
-            players.Take(itemWindow.ItemCount).ToList())
-        {
-            RequestedItemCount = itemWindow.RequestedItemCount,
-            MaxItemCount = itemWindow.MaxItemCount,
-            WasItemCountClamped = itemWindow.WasItemCountClamped
-        };
-    }
-
-    public async Task<PagedReadResult<SalaryEntryReadModel>> GetSalaryLeadersAsync(
-        SalaryLeaderQuery request,
-        CancellationToken cancellationToken = default)
-    {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var query = context.Salaries.AsQueryable();
         if (request.Year.HasValue)
         {
-            query = query.Where(s => s.YearId == request.Year.Value);
+            var normalizedYear = McpInputValidation.ValidateYear(request.Year.Value, "year");
+            query = query.Where(s => s.YearId == normalizedYear);
         }
+
+        query = query
+            .OrderByDescending(s => s.Salary ?? 0)
+            .ThenByDescending(s => s.YearId)
+            .ThenBy(s => s.PlayerId)
+            .ThenBy(s => s.TeamId)
+            .ThenBy(s => s.LgId);
+
         var totalCount = await query.CountAsync(cancellationToken);
-        var pageWindow = requestPolicy.CreateLeaderboardWindow(request.Page, request.PageSize, totalCount);
+        var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
+        var page = Math.Clamp(request.Page, 1, totalPages);
 
         var items = await query
-            .OrderByDescending(s => s.Salary)
-            .ThenByDescending(s => s.YearId)
-            .ThenBy(s => s.Player.NameLast)
-            .ThenBy(s => s.Player.NameFirst)
-            .ThenBy(s => s.PlayerId)
-            .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
-            .Take(pageWindow.PageSize)
-            .Select(s => new SalaryEntryReadModel(
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => new SalaryLeaderEntry(
                 s.YearId,
                 s.TeamId,
                 s.LgId,
@@ -125,7 +97,19 @@ public sealed class SalaryReadService(
                 s.Salary))
             .ToListAsync(cancellationToken);
 
-        return pageWindow.CreateResult(items, totalCount);
+        return new PagedReadResult<SalaryLeaderEntry>(
+            items,
+            page,
+            pageSize,
+            totalCount,
+            totalPages)
+        {
+            RequestedPage = request.Page,
+            RequestedPageSize = request.PageSize,
+            MaxPageSize = maxPageSize,
+            WasPageAdjusted = page != request.Page,
+            WasPageSizeClamped = pageSize != request.PageSize
+        };
     }
 
     private static string FormatName(string? firstName, string? lastName, string fallback) =>

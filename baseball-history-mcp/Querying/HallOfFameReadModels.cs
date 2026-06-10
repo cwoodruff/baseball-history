@@ -5,6 +5,11 @@ public sealed record HallOfFameLookupRequest(
     string? Category = null,
     int Page = 1,
     int PageSize = 50);
+public sealed record HallOfFameInducteeRequest(
+    int? Year = null,
+    string? Category = null,
+    int Page = 1,
+    int PageSize = 25);
 
 public sealed record HallOfFameInducteeReadModel(
     string PlayerId,
@@ -18,6 +23,7 @@ public sealed record HallOfFameInducteeReadModel(
 
 public sealed record HallOfFameVotingYearReadModel(
     int Year,
+    string? Category,
     string? VotedBy,
     string? Votes,
     string? Ballots,
@@ -27,4 +33,8 @@ public sealed record HallOfFameVotingYearReadModel(
 public sealed record HallOfFameVotingHistoryReadModel(
     string PlayerId,
     string FullName,
+    int TotalYearCount,
+    int ReturnedYearCount,
+    int MaxYearCount,
+    bool WasHistoryCapped,
     IReadOnlyList<HallOfFameVotingYearReadModel> VotingHistory);

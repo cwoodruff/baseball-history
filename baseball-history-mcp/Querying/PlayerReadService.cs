@@ -13,6 +13,18 @@ public sealed class PlayerReadService(
         CancellationToken cancellationToken = default)
     {
         var normalizedRequest = requestPolicy.Normalize(request);
+        var normalizedQuery = McpInputValidation.NormalizeOptionalText(request.Query);
+        var normalizedPrefix = McpInputValidation.NormalizeOptionalText(request.LastNameStartsWith);
+        if (normalizedQuery is not null && normalizedPrefix is not null)
+        {
+            McpInputValidation.ThrowInvalid("Provide either query or lastNameStartsWith, not both.");
+        }
+
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
+        var maxPageSize = options.Value.Limits.PlayerSearchPageSizeMax;
+        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -32,6 +44,24 @@ public sealed class PlayerReadService(
         else if (!string.IsNullOrWhiteSpace(normalizedRequest.LastNameStartsWith))
         {
             query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
+        if (normalizedQuery is not null)
+        {
+            var terms = normalizedQuery
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            foreach (var term in terms)
+            {
+                var pattern = $"%{term}%";
+                query = query.Where(p =>
+                    EF.Functions.ILike(p.PlayerId, pattern) ||
+                    (p.NameFirst != null && EF.Functions.ILike(p.NameFirst, pattern)) ||
+                    (p.NameLast != null && EF.Functions.ILike(p.NameLast, pattern)) ||
+                    EF.Functions.ILike((p.NameFirst ?? string.Empty) + " " + (p.NameLast ?? string.Empty), pattern));
+            }
+        }
+        else if (normalizedPrefix is not null)
+        {
+            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedPrefix}%"));
         }
 
         query = query
@@ -78,11 +108,12 @@ public sealed class PlayerReadService(
 
     public async Task<PlayerReadModel?> GetPlayerAsync(string playerId, CancellationToken cancellationToken = default)
     {
-        playerId = requestPolicy.NormalizeRequiredId(playerId, "playerId");
+        var normalizedPlayerId = McpInputValidation.NormalizeRequiredPlayerId(playerId);
+
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var person = await context.People
-            .FirstOrDefaultAsync(p => p.PlayerId == playerId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.PlayerId == normalizedPlayerId, cancellationToken);
 
         if (person is null)
         {
@@ -90,20 +121,20 @@ public sealed class PlayerReadService(
         }
 
         var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
-        var isHallOfFamer = hallOfFamers.Contains(playerId);
+        var isHallOfFamer = hallOfFamers.Contains(normalizedPlayerId);
 
         int? hallOfFameInductionYear = null;
         if (isHallOfFamer)
         {
             hallOfFameInductionYear = await context.HallOfFame
-                .Where(h => h.PlayerId == playerId && h.Inducted == "Y")
+                .Where(h => h.PlayerId == normalizedPlayerId && h.Inducted == "Y")
                 .OrderBy(h => h.Yearid)
                 .Select(h => (int?)h.Yearid)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         var battingAggregate = await context.Batting
-            .Where(b => b.PlayerId == playerId)
+            .Where(b => b.PlayerId == normalizedPlayerId)
             .GroupBy(b => b.PlayerId)
             .Select(g => new
             {
@@ -150,7 +181,7 @@ public sealed class PlayerReadService(
         }
 
         var pitchingAggregate = await context.Pitching
-            .Where(p => p.PlayerId == playerId)
+            .Where(p => p.PlayerId == normalizedPlayerId)
             .GroupBy(p => p.PlayerId)
             .Select(g => new
             {
@@ -196,7 +227,7 @@ public sealed class PlayerReadService(
         }
 
         var battingTeams = await context.Batting
-            .Where(b => b.PlayerId == playerId)
+            .Where(b => b.PlayerId == normalizedPlayerId)
             .GroupBy(b => b.TeamId)
             .Select(g => new
             {
@@ -209,7 +240,7 @@ public sealed class PlayerReadService(
 
         var existingTeamIds = battingTeams.Select(t => t.TeamId).ToHashSet();
         var pitchingTeams = await context.Pitching
-            .Where(p => p.PlayerId == playerId && p.TeamId != null && !existingTeamIds.Contains(p.TeamId))
+            .Where(p => p.PlayerId == normalizedPlayerId && p.TeamId != null && !existingTeamIds.Contains(p.TeamId))
             .GroupBy(p => p.TeamId!)
             .Select(g => new
             {
