@@ -118,3 +118,4 @@ Successfully migrated baseball-history from SQLite to PostgreSQL using Npgsql. D
 ### Handoff Status
 Ready for merge. Requires operator configuration of real `ConnectionStrings:Lahman` at runtime.
 
+- 2026-06-10: MCP compile failures clustered around partially merged files; the safe repair was to restore one authoritative implementation per service/catalog and remove the unused duplicate team-season MCP read path so the solution could build again.

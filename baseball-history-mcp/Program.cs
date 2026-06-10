@@ -55,7 +55,6 @@ internal static class McpHostProgram
         builder.Services.AddSingleton<IHallOfFameReadService, HallOfFameReadService>();
         builder.Services.AddSingleton<IPlayerReadService, PlayerReadService>();
         builder.Services.AddSingleton<IFranchiseReadService, FranchiseReadService>();
-        builder.Services.AddSingleton<ITeamSeasonReadService, TeamSeasonReadService>();
         builder.Services.AddSingleton<ITeamReadService, TeamReadService>();
         builder.Services.AddSingleton<ILeaderboardReadService, LeaderboardReadService>();
         builder.Services.AddSingleton<ISalaryReadService, SalaryReadService>();
@@ -71,7 +70,6 @@ internal static class McpHostProgram
                     Description = "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."
                 };
                 options.ServerInstructions =
-                    "Use these read-only baseball history tools for player, franchise, and team-season discovery; validated batting and pitching leaderboards; Hall of Fame and salary reads; and safe runtime diagnostics. Discover the shipped surface first via baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://guides/getting-started, baseball-history://guides/workflows, baseball-history://server/diagnostics, and baseball-history://server/transport-policy. This server never mutates data and keeps HTTP transport out of v1.";
                     "Use these read-only baseball history tools for player lookup, franchise lookup, deterministic team-season reads, curated leaderboards, Hall of Fame history, salary history, workflow guidance, and runtime diagnostics. Start with baseball-history://server/workflow-guide for question routing, then use baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://server/diagnostics, baseball-history://hall-of-fame/guide, baseball-history://salary/guide, or the get_server_diagnostics tool as needed. This server never mutates data.";
             })
             .WithRequestFilters(filters => filters.AddCallToolFilter(BaseballMcpToolErrorHandling.NormalizeToolFailures))
