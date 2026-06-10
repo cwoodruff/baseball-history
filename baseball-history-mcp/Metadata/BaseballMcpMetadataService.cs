@@ -1,5 +1,6 @@
 using System.Text.Json;
 using baseball_history_mcp.Configuration;
+using baseball_history_mcp.Querying;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -35,15 +36,18 @@ public sealed class BaseballMcpMetadataService(
         "get_server_diagnostics"
     ];
 
+    private static readonly IReadOnlyList<SupportedStatCategory> SupportedCategories =
+    [
+        new("batting", SupportsCareer: true, SupportsSingleSeason: true, LeaderboardStatCatalog.GetBattingMetadata()),
+        new("pitching", SupportsCareer: true, SupportsSingleSeason: true, LeaderboardStatCatalog.GetPitchingMetadata())
+    ];
+
     private static readonly IReadOnlyList<ServerResourceLink> ResourceLinks =
     [
         new("baseball-history://server/info", "Server Info", "Read server identity, startup requirements, and configured limits."),
         new("baseball-history://server/workflow-guide", "Workflow Guide", "Choose the right tool or guide resource for player, franchise, team-season, leaderboard, Hall of Fame, salary, and diagnostics questions."),
         new("baseball-history://server/stats-catalog", "Stats Catalog", "Discover supported batting and pitching stat categories plus the supported year span."),
         new("baseball-history://server/diagnostics", "Server Diagnostics", "Inspect safe runtime posture, configured limits, and connectivity without exposing secrets."),
-        new("baseball-history://server/transport-policy", "Transport Policy", "Read the v1 HTTP go/no-go recommendation and the MCP C# SDK guidance behind it."),
-        new("baseball-history://guides/getting-started", "Getting Started Guide", "Start with discoverability and choose the right domain tools for common baseball questions."),
-        new("baseball-history://guides/workflows", "Workflow Guide", "See representative multi-step MCP workflows that only reference shipped v1 tools and resources."),
         new("baseball-history://hall-of-fame/guide", "Hall of Fame Guide", "Review Hall of Fame tool limits, year coverage, and voting-history caveats."),
         new("baseball-history://salary/guide", "Salary Guide", "Review salary tool limits, year coverage, and how salary history rows are shaped.")
     ];

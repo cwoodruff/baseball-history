@@ -42,13 +42,6 @@ public sealed class HallOfFameReadService(
         CancellationToken cancellationToken = default) =>
         ListInducteesCoreAsync(request, cancellationToken);
 
-    public Task<PagedReadResult<HallOfFameInducteeReadModel>> GetInducteesAsync(
-        HallOfFameInducteeRequest request,
-        CancellationToken cancellationToken = default) =>
-        ListInducteesCoreAsync(
-            new HallOfFameLookupRequest(request.Year, request.Category, request.Page, request.PageSize),
-            cancellationToken);
-
     private async Task<PagedReadResult<HallOfFameInducteeReadModel>> ListInducteesCoreAsync(
         HallOfFameLookupRequest request,
         CancellationToken cancellationToken)

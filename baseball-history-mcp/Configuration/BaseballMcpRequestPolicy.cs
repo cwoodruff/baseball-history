@@ -1,6 +1,5 @@
 using baseball_history_mcp.Querying;
 using Microsoft.Extensions.Options;
-using MetadataLeaderboardStatCatalog = baseball_history_mcp.Metadata.LeaderboardStatCatalog;
 
 namespace baseball_history_mcp.Configuration;
 

@@ -29,9 +29,9 @@ public sealed class PlayerReadService(
             .Where(p => p.NameLast != null)
             .AsQueryable();
 
-        if (normalizedQuery is not null)
+        if (normalizedRequest.Query is not null)
         {
-            var terms = normalizedQuery
+            var terms = normalizedRequest.Query
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             foreach (var term in terms)

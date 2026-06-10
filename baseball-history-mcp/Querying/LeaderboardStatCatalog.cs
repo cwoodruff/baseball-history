@@ -78,9 +78,8 @@ internal static class LeaderboardStatCatalog
             return definition;
         }
 
-        McpInputValidation.ThrowInvalid(
-            $"stat must be one of: {string.Join(", ", BattingDefinitions.Select(definition => definition.Key))}.");
-        return null!;
+        throw new BaseballMcpUsageException(
+            $"Unsupported batting stat '{stat}'. Use one of: {string.Join(", ", BattingDefinitions.Select(definition => definition.Key))}.");
     }
 
     public static LeaderboardStatDefinition NormalizePitchingStat(string? stat)
@@ -91,9 +90,8 @@ internal static class LeaderboardStatCatalog
             return definition;
         }
 
-        McpInputValidation.ThrowInvalid(
-            $"stat must be one of: {string.Join(", ", PitchingDefinitions.Select(definition => definition.Key))}.");
-        return null!;
+        throw new BaseballMcpUsageException(
+            $"Unsupported pitching stat '{stat}'. Use one of: {string.Join(", ", PitchingDefinitions.Select(definition => definition.Key))}.");
     }
 
     private static Dictionary<string, LeaderboardStatDefinition> CreateLookup(IEnumerable<LeaderboardStatDefinition> definitions)

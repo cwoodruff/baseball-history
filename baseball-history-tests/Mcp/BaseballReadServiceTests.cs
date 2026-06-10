@@ -314,19 +314,22 @@ public class BaseballReadServiceTests
         return new LeaderboardReadService(factory, hallOfFame, requestPolicy);
     }
 
-    private static ILeaderboardReadService CreateLeaderboardReadService(int leaderboardPageSizeMax = 100)
+    private static IHallOfFameReadService CreateHallOfFameReadService(
+        int hallOfFamePageSizeMax = 50,
+        int hallOfFameVotingHistoryYearsMax = 25,
+        int playerSearchPageSizeMax = 100)
     {
         var factory = new TestDbContextFactory();
-        var options = CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax);
-        var hallOfFame = new HallOfFameReadService(
+        var options = CreateOptions(
+            playerSearchPageSizeMax: playerSearchPageSizeMax,
+            hallOfFamePageSizeMax: hallOfFamePageSizeMax,
+            hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax);
+
+        return new HallOfFameReadService(
             factory,
             new MemoryCache(new MemoryCacheOptions()),
-            CreateRequestPolicy(CreateOptions(
-                hallOfFamePageSizeMax: hallOfFamePageSizeMax,
-                hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax)),
-            CreateOptions(
-                hallOfFamePageSizeMax: hallOfFamePageSizeMax,
-                hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax));
+            CreateRequestPolicy(options),
+            options);
     }
 
     private static ITeamReadService CreateTeamReadService()
@@ -376,9 +379,6 @@ public class BaseballReadServiceTests
                 SalaryLeaderboardPageSizeMax = salaryLeaderboardPageSizeMax
             }
         });
-
-    private static BaseballMcpRequestPolicy CreateRequestPolicy(IOptions<BaseballMcpOptions> options) =>
-        new(options);
 
     private sealed class TestDbContextFactory : IDbContextFactory<BaseballDbContext>
     {
