@@ -50,6 +50,31 @@ public class ApiSmokeTests(WebApplicationFactory<Program> factory) : Integration
     }
 
     [Fact]
+    public async Task PlayerFielding_WithValidPlayerId_ReturnsParsedSeasonStats()
+    {
+        // Po/A/E/Dp are stored as strings and parsed in memory; this exercises that path
+        // end-to-end and guards the GetPlayerFielding projection from regressing.
+        using var document = await GetJsonAsync("/api/players/ruthba01/fielding");
+        var seasons = document.RootElement;
+
+        Assert.Equal(JsonValueKind.Array, seasons.ValueKind);
+        Assert.True(seasons.GetArrayLength() > 0);
+
+        var first = seasons[0];
+        Assert.False(string.IsNullOrWhiteSpace(first.GetProperty("position").GetString()));
+        Assert.True(first.GetProperty("year").GetInt32() >= seasons[seasons.GetArrayLength() - 1].GetProperty("year").GetInt32());
+        Assert.All(
+            seasons.EnumerateArray(),
+            season =>
+            {
+                Assert.True(season.GetProperty("putOuts").GetInt32() >= 0);
+                Assert.True(season.GetProperty("assists").GetInt32() >= 0);
+                Assert.True(season.GetProperty("errors").GetInt32() >= 0);
+                Assert.True(season.GetProperty("doublePlays").GetInt32() >= 0);
+            });
+    }
+
+    [Fact]
     public async Task TeamSeason_WithValidIdentifiers_ReturnsRosterData()
     {
         using var document = await GetJsonAsync("/api/teams/seasons/NYA/AL/2020");

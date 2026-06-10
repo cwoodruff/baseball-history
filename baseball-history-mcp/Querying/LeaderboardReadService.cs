@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace baseball_history_mcp.Querying;
 
 public sealed class LeaderboardReadService(
@@ -14,15 +15,6 @@ public sealed class LeaderboardReadService(
         CancellationToken cancellationToken = default)
     {
         var normalizedRequest = requestPolicy.Normalize(request);
-        var stat = LeaderboardStatCatalog.NormalizeBattingStat(request.Stat);
-        var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
-        McpInputValidation.ValidateYearRange(request.FromYear, request.ToYear);
-        McpInputValidation.ValidateNonNegative(request.MinAtBats, "minAtBats");
-        McpInputValidation.ValidatePage(request.Page);
-        McpInputValidation.ValidatePageSize(request.PageSize);
-
-        var maxPageSize = options.Value.Limits.LeaderboardPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -32,9 +24,6 @@ public sealed class LeaderboardReadService(
         if (normalizedRequest.FromYear.HasValue) query = query.Where(b => b.YearId >= normalizedRequest.FromYear.Value);
         if (normalizedRequest.ToYear.HasValue) query = query.Where(b => b.YearId <= normalizedRequest.ToYear.Value);
         if (!string.IsNullOrWhiteSpace(normalizedRequest.League)) query = query.Where(b => b.LgId == normalizedRequest.League);
-        if (request.FromYear.HasValue) query = query.Where(b => b.YearId >= request.FromYear.Value);
-        if (request.ToYear.HasValue) query = query.Where(b => b.YearId <= request.ToYear.Value);
-        if (normalizedLeague is not null) query = query.Where(b => b.LgId == normalizedLeague);
 
         if (normalizedRequest.SingleSeason)
         {
@@ -58,12 +47,13 @@ public sealed class LeaderboardReadService(
                     StolenBases = b.Sb ?? 0,
                     Walks = b.Bb ?? 0
                 });
+
             var totalCount = await seasonQuery.CountAsync(cancellationToken);
             var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
-            var data = await ApplyBattingOrder(seasonQuery, stat)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var data = await ApplyBattingOrder(seasonQuery, normalizedRequest.Stat)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
             return pageWindow.CreateResult(
@@ -120,58 +110,56 @@ public sealed class LeaderboardReadService(
             })
             .Where(x => x.AtBats >= normalizedRequest.MinAtBats);
 
-        {
-            var totalCount = await careerQuery.CountAsync(cancellationToken);
-            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
+        var totalCareerCount = await careerQuery.CountAsync(cancellationToken);
+        var careerWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCareerCount);
 
-            var data = await ApplyBattingOrder(careerQuery, stat)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync(cancellationToken);
+        var careerData = await ApplyBattingOrder(careerQuery, normalizedRequest.Stat)
+            .Skip((careerWindow.Page - 1) * careerWindow.PageSize)
+            .Take(careerWindow.PageSize)
+            .ToListAsync(cancellationToken);
 
-            var playerIds = data.Select(entry => entry.PlayerId).ToList();
-            var playerNames = await context.People
-                .Where(p => playerIds.Contains(p.PlayerId))
-                .ToDictionaryAsync(
-                    p => p.PlayerId,
-                    p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
-                    cancellationToken);
+        var playerIds = careerData.Select(entry => entry.PlayerId).ToList();
+        var playerNames = await context.People
+            .Where(p => playerIds.Contains(p.PlayerId))
+            .ToDictionaryAsync(
+                p => p.PlayerId,
+                p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
+                cancellationToken);
 
-            return pageWindow.CreateResult(
-                data.Select((entry, index) =>
-                {
-                    var avg = entry.AtBats > 0 ? (double)entry.Hits / entry.AtBats : 0;
-                    var obp = (entry.AtBats + entry.Walks) > 0
-                        ? (double)(entry.Hits + entry.Walks) / (entry.AtBats + entry.Walks)
-                        : 0;
-                    var totalBases = entry.Hits + entry.Doubles + (2 * entry.Triples) + (3 * entry.HomeRuns);
-                    var slg = entry.AtBats > 0 ? (double)totalBases / entry.AtBats : 0;
+        return careerWindow.CreateResult(
+            careerData.Select((entry, index) =>
+            {
+                var avg = entry.AtBats > 0 ? (double)entry.Hits / entry.AtBats : 0;
+                var obp = (entry.AtBats + entry.Walks) > 0
+                    ? (double)(entry.Hits + entry.Walks) / (entry.AtBats + entry.Walks)
+                    : 0;
+                var totalBases = entry.Hits + entry.Doubles + (2 * entry.Triples) + (3 * entry.HomeRuns);
+                var slg = entry.AtBats > 0 ? (double)totalBases / entry.AtBats : 0;
 
-                    return new BattingLeaderboardEntry(
-                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
-                        entry.PlayerId,
-                        playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
-                        null,
-                        null,
-                        null,
-                        hallOfFamers.Contains(entry.PlayerId),
-                        entry.Games,
-                        entry.AtBats,
-                        entry.Runs,
-                        entry.Hits,
-                        entry.Doubles,
-                        entry.Triples,
-                        entry.HomeRuns,
-                        entry.Rbi,
-                        entry.StolenBases,
-                        entry.Walks,
-                        Math.Round(avg, 3),
-                        Math.Round(obp, 3),
-                        Math.Round(slg, 3),
-                        Math.Round(obp + slg, 3));
-                }).ToList(),
-                totalCount);
-        }
+                return new BattingLeaderboardEntry(
+                    ((careerWindow.Page - 1) * careerWindow.PageSize) + index + 1,
+                    entry.PlayerId,
+                    playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
+                    null,
+                    null,
+                    null,
+                    hallOfFamers.Contains(entry.PlayerId),
+                    entry.Games,
+                    entry.AtBats,
+                    entry.Runs,
+                    entry.Hits,
+                    entry.Doubles,
+                    entry.Triples,
+                    entry.HomeRuns,
+                    entry.Rbi,
+                    entry.StolenBases,
+                    entry.Walks,
+                    Math.Round(avg, 3),
+                    Math.Round(obp, 3),
+                    Math.Round(slg, 3),
+                    Math.Round(obp + slg, 3));
+            }).ToList(),
+            totalCareerCount);
     }
 
     public async Task<PagedReadResult<PitchingLeaderboardEntry>> GetPitchingLeadersAsync(
@@ -180,20 +168,7 @@ public sealed class LeaderboardReadService(
     {
         var normalizedRequest = requestPolicy.Normalize(request);
         var minimumOuts = normalizedRequest.MinInningsPitched * 3;
-        var ascending = normalizedRequest.Stat.Equals("era", StringComparison.OrdinalIgnoreCase)
-            || normalizedRequest.Stat.Equals("whip", StringComparison.OrdinalIgnoreCase)
-            || normalizedRequest.Stat.Equals("bb9", StringComparison.OrdinalIgnoreCase);
-        var stat = LeaderboardStatCatalog.NormalizePitchingStat(request.Stat);
-        var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
-        McpInputValidation.ValidateYearRange(request.FromYear, request.ToYear);
-        McpInputValidation.ValidateNonNegative(request.MinInningsPitched, "minInningsPitched");
-        McpInputValidation.ValidatePage(request.Page);
-        McpInputValidation.ValidatePageSize(request.PageSize);
-
-        var maxPageSize = options.Value.Limits.LeaderboardPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
-        var minimumOuts = request.MinInningsPitched * 3;
-        var ascending = stat.SortDirection == "ascending";
+        var ascending = normalizedRequest.Stat is "era" or "whip" or "bb9";
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -203,9 +178,6 @@ public sealed class LeaderboardReadService(
         if (normalizedRequest.FromYear.HasValue) query = query.Where(p => p.YearId >= normalizedRequest.FromYear.Value);
         if (normalizedRequest.ToYear.HasValue) query = query.Where(p => p.YearId <= normalizedRequest.ToYear.Value);
         if (!string.IsNullOrWhiteSpace(normalizedRequest.League)) query = query.Where(p => p.LgId == normalizedRequest.League);
-        if (request.FromYear.HasValue) query = query.Where(p => p.YearId >= request.FromYear.Value);
-        if (request.ToYear.HasValue) query = query.Where(p => p.YearId <= request.ToYear.Value);
-        if (normalizedLeague is not null) query = query.Where(p => p.LgId == normalizedLeague);
 
         if (normalizedRequest.SingleSeason)
         {
@@ -236,9 +208,9 @@ public sealed class LeaderboardReadService(
             var totalCount = await seasonQuery.CountAsync(cancellationToken);
             var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
 
-            var data = await ApplyPitchingOrder(seasonQuery, stat, ascending)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            var data = await ApplyPitchingOrder(seasonQuery, normalizedRequest.Stat, ascending)
+                .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+                .Take(pageWindow.PageSize)
                 .ToListAsync(cancellationToken);
 
             return pageWindow.CreateResult(
@@ -296,62 +268,60 @@ public sealed class LeaderboardReadService(
             })
             .Where(x => x.InningsPitchedOuts >= minimumOuts);
 
-        {
-            var totalCount = await careerQuery.CountAsync(cancellationToken);
-            var pageWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCount);
+        var totalCareerCount = await careerQuery.CountAsync(cancellationToken);
+        var careerWindow = requestPolicy.CreateLeaderboardWindow(normalizedRequest.Page, normalizedRequest.PageSize, totalCareerCount);
 
-            var data = await ApplyPitchingOrder(careerQuery, stat, ascending)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync(cancellationToken);
+        var careerData = await ApplyPitchingOrder(careerQuery, normalizedRequest.Stat, ascending)
+            .Skip((careerWindow.Page - 1) * careerWindow.PageSize)
+            .Take(careerWindow.PageSize)
+            .ToListAsync(cancellationToken);
 
-            var playerIds = data.Select(entry => entry.PlayerId).ToList();
-            var playerNames = await context.People
-                .Where(p => playerIds.Contains(p.PlayerId))
-                .ToDictionaryAsync(
-                    p => p.PlayerId,
-                    p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
-                    cancellationToken);
+        var playerIds = careerData.Select(entry => entry.PlayerId).ToList();
+        var playerNames = await context.People
+            .Where(p => playerIds.Contains(p.PlayerId))
+            .ToDictionaryAsync(
+                p => p.PlayerId,
+                p => string.Join(' ', new[] { p.NameFirst, p.NameLast }.Where(value => !string.IsNullOrWhiteSpace(value))).Trim(),
+                cancellationToken);
 
-            return pageWindow.CreateResult(
-                data.Select((entry, index) =>
-                {
-                    var inningsPitched = entry.InningsPitchedOuts / 3.0;
-                    var era = inningsPitched > 0 ? entry.EarnedRuns * 9.0 / inningsPitched : 0;
-                    var whip = inningsPitched > 0 ? (entry.Walks + entry.Hits) / inningsPitched : 0;
+        return careerWindow.CreateResult(
+            careerData.Select((entry, index) =>
+            {
+                var inningsPitched = entry.InningsPitchedOuts / 3.0;
+                var era = inningsPitched > 0 ? entry.EarnedRuns * 9.0 / inningsPitched : 0;
+                var whip = inningsPitched > 0 ? (entry.Walks + entry.Hits) / inningsPitched : 0;
 
-                    return new PitchingLeaderboardEntry(
-                        ((pageWindow.Page - 1) * pageWindow.PageSize) + index + 1,
-                        entry.PlayerId,
-                        playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
-                        null,
-                        null,
-                        null,
-                        hallOfFamers.Contains(entry.PlayerId),
-                        entry.Games,
-                        entry.GamesStarted,
-                        entry.Wins,
-                        entry.Losses,
-                        entry.Saves,
-                        entry.CompleteGames,
-                        entry.Shutouts,
-                        Math.Round(inningsPitched, 1),
-                        entry.Hits,
-                        entry.EarnedRuns,
-                        entry.HomeRuns,
-                        entry.Walks,
-                        entry.Strikeouts,
-                        Math.Round(era, 2),
-                        Math.Round(whip, 3));
-                }).ToList(),
-                totalCount);
-        }
+                return new PitchingLeaderboardEntry(
+                    ((careerWindow.Page - 1) * careerWindow.PageSize) + index + 1,
+                    entry.PlayerId,
+                    playerNames.GetValueOrDefault(entry.PlayerId, entry.PlayerId),
+                    null,
+                    null,
+                    null,
+                    hallOfFamers.Contains(entry.PlayerId),
+                    entry.Games,
+                    entry.GamesStarted,
+                    entry.Wins,
+                    entry.Losses,
+                    entry.Saves,
+                    entry.CompleteGames,
+                    entry.Shutouts,
+                    Math.Round(inningsPitched, 1),
+                    entry.Hits,
+                    entry.EarnedRuns,
+                    entry.HomeRuns,
+                    entry.Walks,
+                    entry.Strikeouts,
+                    Math.Round(era, 2),
+                    Math.Round(whip, 3));
+            }).ToList(),
+            totalCareerCount);
     }
 
-    private static IOrderedQueryable<T> ApplyBattingOrder<T>(IQueryable<T> query, LeaderboardStatDefinition stat)
+    private static IOrderedQueryable<T> ApplyBattingOrder<T>(IQueryable<T> query, string stat)
         where T : class
     {
-        var ordered = stat.Key switch
+        return stat.ToLowerInvariant() switch
         {
             "hr" or "homeruns" => query.OrderByDescending(DynExpr<T>("HomeRuns")),
             "h" or "hits" => query.OrderByDescending(DynExpr<T>("Hits")),
@@ -369,38 +339,23 @@ public sealed class LeaderboardReadService(
             "ops" => query.OrderByDescending(DynOpsExpr<T>()),
             _ => throw new BaseballMcpUsageException($"Unsupported batting stat '{stat}'.")
         };
-
-        if (stat.UsesPlayingTimeTieBreaker)
-        {
-            ordered = ordered.ThenByDescending(DynExpr<T>("AtBats"));
-        }
-
-        return ApplyLeaderboardTieBreakers(ordered);
     }
 
-    private static IOrderedQueryable<T> ApplyPitchingOrder<T>(IQueryable<T> query, LeaderboardStatDefinition stat, bool ascending)
+    private static IOrderedQueryable<T> ApplyPitchingOrder<T>(IQueryable<T> query, string stat, bool ascending)
         where T : class
     {
-        IOrderedQueryable<T> ordered;
         if (ascending)
         {
-            ordered = stat.Key switch
+            return stat.ToLowerInvariant() switch
             {
                 "era" => query.OrderBy(DynEraExpr<T>()),
                 "whip" => query.OrderBy(DynWhipExpr<T>()),
                 "bb9" => query.OrderBy(DynBb9Expr<T>()),
                 _ => throw new BaseballMcpUsageException($"Unsupported pitching stat '{stat}'.")
             };
-
-            if (stat.UsesPlayingTimeTieBreaker)
-            {
-                ordered = ordered.ThenByDescending(DynExpr<T>("InningsPitchedOuts"));
-            }
-
-            return ApplyLeaderboardTieBreakers(ordered);
         }
 
-        ordered = stat.Key switch
+        return stat.ToLowerInvariant() switch
         {
             "w" or "wins" => query.OrderByDescending(DynExpr<T>("Wins")),
             "l" or "losses" => query.OrderByDescending(DynExpr<T>("Losses")),
@@ -416,29 +371,6 @@ public sealed class LeaderboardReadService(
             "wpct" => query.OrderByDescending(DynWinningPctExpr<T>()),
             _ => throw new BaseballMcpUsageException($"Unsupported pitching stat '{stat}'.")
         };
-
-        if (stat.UsesPlayingTimeTieBreaker)
-        {
-            ordered = ordered.ThenByDescending(DynExpr<T>("InningsPitchedOuts"));
-        }
-
-        return ApplyLeaderboardTieBreakers(ordered);
-    }
-
-    private static IOrderedQueryable<T> ApplyLeaderboardTieBreakers<T>(IOrderedQueryable<T> query)
-        where T : class
-    {
-        if (HasProperty<T>("YearId"))
-        {
-            query = query.ThenByDescending(DynExpr<T>("YearId"));
-        }
-
-        if (HasProperty<T>("TeamId"))
-        {
-            query = query.ThenBy(DynStringExpr<T>("TeamId"));
-        }
-
-        return query.ThenBy(DynStringExpr<T>("PlayerId"));
     }
 
     private static Expression<Func<T, int>> DynExpr<T>(string propertyName)
@@ -447,16 +379,6 @@ public sealed class LeaderboardReadService(
         var property = Expression.Property(parameter, propertyName);
         var converted = Expression.Convert(property, typeof(int));
         return Expression.Lambda<Func<T, int>>(converted, parameter);
-    }
-
-    private static Expression<Func<T, string>> DynStringExpr<T>(string propertyName)
-    {
-        var parameter = Expression.Parameter(typeof(T), "x");
-        var property = Expression.Property(parameter, propertyName);
-        Expression body = property.Type == typeof(string)
-            ? Expression.Coalesce(property, Expression.Constant(string.Empty))
-            : Expression.Call(property, nameof(object.ToString), Type.EmptyTypes);
-        return Expression.Lambda<Func<T, string>>(body, parameter);
     }
 
     private static Expression<Func<T, double>> DynComputedExpr<T>(string numeratorProperty, string denominatorProperty)
@@ -514,9 +436,8 @@ public sealed class LeaderboardReadService(
         var parameter = Expression.Parameter(typeof(T), "x");
         var earnedRuns = Expression.Convert(Expression.Property(parameter, "EarnedRuns"), typeof(double));
         var inningsPitchedOuts = Expression.Convert(Expression.Property(parameter, "InningsPitchedOuts"), typeof(double));
-        var zero = Expression.Constant(0.0);
         var body = Expression.Condition(
-            Expression.Equal(inningsPitchedOuts, zero),
+            Expression.Equal(inningsPitchedOuts, Expression.Constant(0.0)),
             Expression.Constant(double.MaxValue),
             Expression.Divide(Expression.Multiply(earnedRuns, Expression.Constant(27.0)), inningsPitchedOuts));
         return Expression.Lambda<Func<T, double>>(body, parameter);
@@ -569,7 +490,4 @@ public sealed class LeaderboardReadService(
         var body = Expression.Condition(Expression.Equal(decisions, zero), zero, Expression.Divide(wins, decisions));
         return Expression.Lambda<Func<T, double>>(body, parameter);
     }
-
-    private static bool HasProperty<T>(string propertyName) =>
-        typeof(T).GetProperty(propertyName) is not null;
 }

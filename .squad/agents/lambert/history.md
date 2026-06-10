@@ -122,6 +122,7 @@ Sprint 5 regression gate confirms all deliverables met and quality gates passed.
 ## Learnings
 
 - For bulk schema exports, verify both coverage and fidelity: count matching files first, then spot-check composite keys, foreign keys, and awkward identifiers against the live source DB.
+- When an MCP slice reports contract-drift assertions, verify the tree still compiles before trusting the failures; in this repo, duplicated option/model/service blocks turned a 7-assertion story into a broader merge-damage review, and the right move was to diff against the last green MCP milestone commit first.
 
 ## 2026-06-09 — PostgreSQL migration review gate
 
@@ -193,4 +194,3 @@ Completed final acceptance review of PostgreSQL migration and health route fix. 
 **Rationale:** Documentation matches runtime behavior; configuration contract is consistent; quality gates all passing; no security risks identified.
 
 **Consequences:** Engineering can merge; Azure deployment still requires operator to configure real `ConnectionStrings:Lahman` before app startup.
-

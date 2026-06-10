@@ -1,12 +1,11 @@
-using baseball_history_mcp.Configuration;
 using baseball_history_mcp;
+using baseball_history_mcp.Configuration;
 using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Querying;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using ModelContextProtocol;
 
 namespace baseball_history_tests.Mcp;
 
@@ -49,14 +48,14 @@ public class BaseballReadServiceTests
     }
 
     [Fact]
-    public async Task SearchPlayersAsync_WithConflictingFilters_ThrowsInvalidParams()
+    public async Task SearchPlayersAsync_WithConflictingFilters_ThrowsUsageError()
     {
         var service = CreatePlayerReadService();
 
-        var exception = await Assert.ThrowsAsync<McpProtocolException>(() =>
+        var exception = await Assert.ThrowsAsync<BaseballMcpUsageException>(() =>
             service.SearchPlayersAsync(new PlayerLookupRequest(Query: "Ruth", LastNameStartsWith: "R")));
 
-        Assert.Equal(McpErrorCode.InvalidParams, exception.ErrorCode);
+        Assert.Contains("either query or lastNameStartsWith", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -130,6 +129,41 @@ public class BaseballReadServiceTests
         Assert.True(result.Items[0].HomeRuns >= result.Items[1].HomeRuns);
     }
 
+    [Theory]
+    [InlineData("avg")]
+    [InlineData("obp")]
+    [InlineData("slg")]
+    [InlineData("ops")]
+    public async Task GetBattingLeadersAsync_WithRateStat_ReturnsResults(string stat)
+    {
+        var service = CreateLeaderboardReadService();
+
+        var result = await service.GetBattingLeadersAsync(new BattingLeaderboardQuery(Stat: stat, MinAtBats: 1000, PageSize: 5));
+
+        Assert.Equal(5, result.Items.Count);
+    }
+
+    [Fact]
+    public async Task GetBattingLeadersAsync_WithOps_ReturnsDescendingResults()
+    {
+        var service = CreateLeaderboardReadService();
+
+        var result = await service.GetBattingLeadersAsync(new BattingLeaderboardQuery(Stat: "ops", MinAtBats: 1000, PageSize: 5));
+
+        Assert.Equal(5, result.Items.Count);
+        Assert.True(result.Items[0].Ops >= result.Items[4].Ops);
+    }
+
+    [Fact]
+    public async Task GetPitchingLeadersAsync_WithWinningPercentage_ReturnsDescendingResults()
+    {
+        var service = CreateLeaderboardReadService();
+
+        var result = await service.GetPitchingLeadersAsync(new PitchingLeaderboardQuery(Stat: "wpct", MinInningsPitched: 100, PageSize: 5));
+
+        Assert.Equal(5, result.Items.Count);
+    }
+
     [Fact]
     public async Task GetBattingLeadersAsync_WhenPageSizeExceedsConfiguredCap_ReportsAppliedLimit()
     {
@@ -145,14 +179,14 @@ public class BaseballReadServiceTests
     }
 
     [Fact]
-    public async Task GetBattingLeadersAsync_WithInvalidStat_ThrowsInvalidParams()
+    public async Task GetBattingLeadersAsync_WithInvalidStat_ThrowsUsageError()
     {
         var service = CreateLeaderboardReadService();
 
-        var exception = await Assert.ThrowsAsync<McpProtocolException>(() =>
+        var exception = await Assert.ThrowsAsync<BaseballMcpUsageException>(() =>
             service.GetBattingLeadersAsync(new BattingLeaderboardQuery(Stat: "totally-not-a-stat")));
 
-        Assert.Equal(McpErrorCode.InvalidParams, exception.ErrorCode);
+        Assert.Contains("Unsupported batting stat", exception.Message);
     }
 
     [Fact]
@@ -167,14 +201,14 @@ public class BaseballReadServiceTests
     }
 
     [Fact]
-    public async Task GetPitchingLeadersAsync_WithInvalidYearRange_ThrowsInvalidParams()
+    public async Task GetPitchingLeadersAsync_WithInvalidYearRange_ThrowsUsageError()
     {
         var service = CreateLeaderboardReadService();
 
-        var exception = await Assert.ThrowsAsync<McpProtocolException>(() =>
+        var exception = await Assert.ThrowsAsync<BaseballMcpUsageException>(() =>
             service.GetPitchingLeadersAsync(new PitchingLeaderboardQuery(FromYear: 2001, ToYear: 1999)));
 
-        Assert.Equal(McpErrorCode.InvalidParams, exception.ErrorCode);
+        Assert.Equal("fromYear must be less than or equal to toYear.", exception.Message);
     }
 
     [Fact]
@@ -201,10 +235,11 @@ public class BaseballReadServiceTests
     {
         var service = CreateHallOfFameReadService(hallOfFamePageSizeMax: 2);
 
-        var result = await service.GetInducteesAsync(new HallOfFameInducteeRequest(PageSize: 10));
+        var result = await service.ListInducteesAsync(new HallOfFameLookupRequest(PageSize: 10));
 
         Assert.Equal(2, result.PageSize);
         Assert.Equal(10, result.RequestedPageSize);
+        Assert.Equal(2, result.MaxPageSize);
         Assert.True(result.WasPageSizeClamped);
         Assert.NotEmpty(result.Items);
     }
@@ -249,6 +284,7 @@ public class BaseballReadServiceTests
 
         Assert.Equal(3, result.PageSize);
         Assert.Equal(10, result.RequestedPageSize);
+        Assert.Equal(3, result.MaxPageSize);
         Assert.True(result.WasPageSizeClamped);
         Assert.Equal(3, result.Items.Count);
     }
@@ -256,46 +292,52 @@ public class BaseballReadServiceTests
     private static IPlayerReadService CreatePlayerReadService(int playerSearchPageSizeMax = 100)
     {
         var factory = new TestDbContextFactory();
-        var cache = new MemoryCache(new MemoryCacheOptions());
-        var hallOfFame = new HallOfFameReadService(factory, cache, CreateOptions(playerSearchPageSizeMax: playerSearchPageSizeMax));
-        return new PlayerReadService(factory, hallOfFame, CreateOptions(playerSearchPageSizeMax: playerSearchPageSizeMax));
+        var hallOfFame = CreateHallOfFameReadService(playerSearchPageSizeMax: playerSearchPageSizeMax);
+        return new PlayerReadService(factory, hallOfFame, CreateRequestPolicy(CreateOptions(playerSearchPageSizeMax: playerSearchPageSizeMax)));
     }
 
     private static IFranchiseReadService CreateFranchiseReadService(int franchiseListPageSizeMax = 50) =>
-        new FranchiseReadService(new TestDbContextFactory(), CreateRequestPolicy(franchiseListPageSizeMax: franchiseListPageSizeMax));
+        new FranchiseReadService(new TestDbContextFactory(), CreateRequestPolicy(CreateOptions(franchiseListPageSizeMax: franchiseListPageSizeMax)));
 
-    private static IHallOfFameReadService CreateHallOfFameReadService(int hallOfFamePageSizeMax = 100)
+    private static IHallOfFameReadService CreateHallOfFameReadService(
+        int hallOfFamePageSizeMax = 50,
+        int hallOfFameVotingHistoryYearsMax = 25,
+        int playerSearchPageSizeMax = 100)
     {
         var factory = new TestDbContextFactory();
-        var cache = new MemoryCache(new MemoryCacheOptions());
-        return new HallOfFameReadService(factory, cache, CreateRequestPolicy(hallOfFamePageSizeMax: hallOfFamePageSizeMax));
+        var options = CreateOptions(
+            playerSearchPageSizeMax: playerSearchPageSizeMax,
+            hallOfFamePageSizeMax: hallOfFamePageSizeMax,
+            hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax);
+
+        return new HallOfFameReadService(
+            factory,
+            new MemoryCache(new MemoryCacheOptions()),
+            CreateRequestPolicy(options),
+            options);
     }
 
     private static ILeaderboardReadService CreateLeaderboardReadService(int leaderboardPageSizeMax = 100)
     {
         var factory = new TestDbContextFactory();
-        var cache = new MemoryCache(new MemoryCacheOptions());
-        var hallOfFame = new HallOfFameReadService(factory, cache, CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax));
-        return new LeaderboardReadService(factory, hallOfFame, CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax));
-    }
-
-    private static IHallOfFameReadService CreateHallOfFameReadService(
-        int hallOfFamePageSizeMax = 50,
-        int hallOfFameVotingHistoryYearsMax = 25)
-    {
-        var factory = new TestDbContextFactory();
-        return new HallOfFameReadService(
+        var options = CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax);
+        var hallOfFame = new HallOfFameReadService(
             factory,
             new MemoryCache(new MemoryCacheOptions()),
-            CreateOptions(
-                hallOfFamePageSizeMax: hallOfFamePageSizeMax,
-                hallOfFameVotingHistoryYearsMax: hallOfFameVotingHistoryYearsMax));
+            CreateRequestPolicy(options),
+            options);
+        return new LeaderboardReadService(factory, hallOfFame, CreateRequestPolicy(options));
     }
 
     private static ITeamReadService CreateTeamReadService()
     {
         var factory = new TestDbContextFactory();
-        var hallOfFame = new HallOfFameReadService(factory, new MemoryCache(new MemoryCacheOptions()), CreateOptions());
+        var options = CreateOptions();
+        var hallOfFame = new HallOfFameReadService(
+            factory,
+            new MemoryCache(new MemoryCacheOptions()),
+            CreateRequestPolicy(options),
+            options);
         return new TeamReadService(factory, hallOfFame);
     }
 
@@ -307,6 +349,9 @@ public class BaseballReadServiceTests
             CreateOptions(
                 salaryHistorySeasonsMax: salaryHistorySeasonsMax,
                 salaryLeaderboardPageSizeMax: salaryLeaderboardPageSizeMax));
+
+    private static BaseballMcpRequestPolicy CreateRequestPolicy(IOptions<BaseballMcpOptions>? options = null) =>
+        new(options ?? CreateOptions());
 
     private static IOptions<BaseballMcpOptions> CreateOptions(
         int playerSearchPageSizeMax = 100,

@@ -1,6 +1,6 @@
-using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Querying;
 using Microsoft.Extensions.Options;
+using MetadataLeaderboardStatCatalog = baseball_history_mcp.Metadata.LeaderboardStatCatalog;
 
 namespace baseball_history_mcp.Configuration;
 
@@ -30,7 +30,7 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
         return request with
         {
-            Stat = LeaderboardStatCatalog.ResolveBatting(request.Stat).Key,
+            Stat = MetadataLeaderboardStatCatalog.ResolveBatting(request.Stat).Key,
             League = NormalizeLeague(request.League)
         };
     }
@@ -46,7 +46,7 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
         return request with
         {
-            Stat = LeaderboardStatCatalog.ResolvePitching(request.Stat).Key,
+            Stat = MetadataLeaderboardStatCatalog.ResolvePitching(request.Stat).Key,
             League = NormalizeLeague(request.League)
         };
     }
@@ -79,16 +79,6 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
     public PageWindow CreateLeaderboardWindow(int requestedPage, int requestedPageSize, int totalCount) =>
         PageWindow.Create(requestedPage, requestedPageSize, options.Value.Limits.LeaderboardPageSizeMax, totalCount);
-
-    public ItemWindow CreateSalaryHistoryWindow(int? requestedItemCount) =>
-        ItemWindow.Create(
-            requestedItemCount ?? options.Value.Limits.SalaryHistorySeasonCountMax,
-            options.Value.Limits.SalaryHistorySeasonCountMax);
-
-    public ItemWindow CreateTeamPayrollWindow(int? requestedItemCount) =>
-        ItemWindow.Create(
-            requestedItemCount ?? options.Value.Limits.TeamPayrollPlayerCountMax,
-            options.Value.Limits.TeamPayrollPlayerCountMax);
 
     private static void ValidateYearRange(int? fromYear, int? toYear)
     {
@@ -139,19 +129,5 @@ public sealed record PageWindow(
         var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
         var page = Math.Clamp(requestedPage, 1, totalPages);
         return new PageWindow(requestedPage, requestedPageSize, page, pageSize, totalPages, maxPageSize);
-    }
-}
-
-public sealed record ItemWindow(
-    int RequestedItemCount,
-    int ItemCount,
-    int MaxItemCount)
-{
-    public bool WasItemCountClamped => ItemCount != RequestedItemCount;
-
-    public static ItemWindow Create(int requestedItemCount, int maxItemCount)
-    {
-        var itemCount = Math.Clamp(requestedItemCount, 1, maxItemCount);
-        return new ItemWindow(requestedItemCount, itemCount, maxItemCount);
     }
 }

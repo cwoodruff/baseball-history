@@ -1,6 +1,7 @@
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace baseball_history_mcp.Querying;
 
 public sealed class PlayerReadService(
@@ -13,18 +14,11 @@ public sealed class PlayerReadService(
         CancellationToken cancellationToken = default)
     {
         var normalizedRequest = requestPolicy.Normalize(request);
-        var normalizedQuery = McpInputValidation.NormalizeOptionalText(request.Query);
-        var normalizedPrefix = McpInputValidation.NormalizeOptionalText(request.LastNameStartsWith);
-        if (normalizedQuery is not null && normalizedPrefix is not null)
+
+        if (normalizedRequest.Query is not null && normalizedRequest.LastNameStartsWith is not null)
         {
-            McpInputValidation.ThrowInvalid("Provide either query or lastNameStartsWith, not both.");
+            throw new BaseballMcpUsageException("Provide either query or lastNameStartsWith, not both.");
         }
-
-        McpInputValidation.ValidatePage(request.Page);
-        McpInputValidation.ValidatePageSize(request.PageSize);
-
-        var maxPageSize = options.Value.Limits.PlayerSearchPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -32,21 +26,9 @@ public sealed class PlayerReadService(
             .Where(p => p.NameLast != null)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(normalizedRequest.Query))
+        if (normalizedRequest.Query is not null)
         {
-            var term = normalizedRequest.Query;
-            var pattern = $"%{term}%";
-            query = query.Where(p =>
-                EF.Functions.ILike(p.PlayerId, pattern) ||
-                (p.NameFirst != null && EF.Functions.ILike(p.NameFirst, pattern)) ||
-                (p.NameLast != null && EF.Functions.ILike(p.NameLast, pattern)));
-        }
-        else if (!string.IsNullOrWhiteSpace(normalizedRequest.LastNameStartsWith))
-        {
-            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
-        if (normalizedQuery is not null)
-        {
-            var terms = normalizedQuery
+            var terms = normalizedRequest.Query
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             foreach (var term in terms)
@@ -59,18 +41,18 @@ public sealed class PlayerReadService(
                     EF.Functions.ILike((p.NameFirst ?? string.Empty) + " " + (p.NameLast ?? string.Empty), pattern));
             }
         }
-        else if (normalizedPrefix is not null)
+        else if (normalizedRequest.LastNameStartsWith is not null)
         {
-            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedPrefix}%"));
+            query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
         }
 
         query = query
             .OrderBy(p => p.NameLast)
             .ThenBy(p => p.NameFirst)
             .ThenBy(p => p.PlayerId);
+
         var totalCount = await query.CountAsync(cancellationToken);
         var pageWindow = requestPolicy.CreatePlayerLookupWindow(normalizedRequest, totalCount);
-
         var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
 
         var players = await query
@@ -108,7 +90,7 @@ public sealed class PlayerReadService(
 
     public async Task<PlayerReadModel?> GetPlayerAsync(string playerId, CancellationToken cancellationToken = default)
     {
-        var normalizedPlayerId = McpInputValidation.NormalizeRequiredPlayerId(playerId);
+        var normalizedPlayerId = requestPolicy.NormalizeRequiredId(playerId, "playerId").ToLowerInvariant();
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 

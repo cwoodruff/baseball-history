@@ -28,9 +28,8 @@ public class BaseballMcpMetadataTests
         Assert.Equal(30, options.QueryTimeoutSeconds);
         Assert.Equal(100, options.Limits.PlayerSearchPageSizeMax);
         Assert.Equal(50, options.Limits.FranchiseListPageSizeMax);
-        Assert.Equal(100, options.Limits.HallOfFamePageSizeMax);
-        Assert.Equal(100, options.Limits.LeaderboardPageSizeMax);
         Assert.Equal(50, options.Limits.HallOfFamePageSizeMax);
+        Assert.Equal(100, options.Limits.LeaderboardPageSizeMax);
         Assert.Equal(25, options.Limits.HallOfFameVotingHistoryYearsMax);
         Assert.Equal(40, options.Limits.SalaryHistorySeasonsMax);
         Assert.Equal(50, options.Limits.SalaryLeaderboardPageSizeMax);
@@ -52,7 +51,7 @@ public class BaseballMcpMetadataTests
         Assert.Equal(50, diagnostics.Limits.HallOfFamePageSizeMax);
         Assert.Equal(40, diagnostics.Limits.SalaryHistorySeasonsMax);
         Assert.True(diagnostics.ToolCount >= 12);
-        Assert.True(diagnostics.ResourceCount >= 6);
+        Assert.Equal(6, diagnostics.ResourceCount);
         Assert.DoesNotContain("Password=", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Host=", json, StringComparison.OrdinalIgnoreCase);
     }
@@ -93,18 +92,19 @@ public class BaseballMcpMetadataTests
         Assert.Contains("No-go for v1", infoDocument.RootElement.GetProperty("httpTransportRecommendation").GetString());
         Assert.Equal("ConnectionStrings:Lahman", infoDocument.RootElement.GetProperty("connectionStringKey").GetString());
         Assert.Equal(50, infoDocument.RootElement.GetProperty("limits").GetProperty("franchiseListPageSizeMax").GetInt32());
-        Assert.Equal(100, infoDocument.RootElement.GetProperty("limits").GetProperty("hallOfFamePageSizeMax").GetInt32());
-        Assert.Equal(20, infoDocument.RootElement.GetProperty("limits").GetProperty("salaryHistorySeasonCountMax").GetInt32());
-        Assert.Equal(25, infoDocument.RootElement.GetProperty("limits").GetProperty("teamPayrollPlayerCountMax").GetInt32());
+        Assert.Equal(50, infoDocument.RootElement.GetProperty("limits").GetProperty("hallOfFamePageSizeMax").GetInt32());
+        Assert.Equal(40, infoDocument.RootElement.GetProperty("limits").GetProperty("salaryHistorySeasonsMax").GetInt32());
+        Assert.Equal(50, infoDocument.RootElement.GetProperty("limits").GetProperty("salaryLeaderboardPageSizeMax").GetInt32());
         Assert.Contains(
             infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
             uri => uri == "baseball-history://server/workflow-guide");
         Assert.Contains(
             infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
-            uri => uri == "baseball-history://server/diagnostics");
+            uri => uri == "baseball-history://hall-of-fame/guide");
         Assert.Contains(
             infoDocument.RootElement.GetProperty("resources").EnumerateArray().Select(resource => resource.GetProperty("uri").GetString()),
-            uri => uri == "baseball-history://hall-of-fame/guide");
+            uri => uri == "baseball-history://salary/guide");
+
         var workflows = workflowGuide.RootElement.GetProperty("workflows").EnumerateArray().ToList();
         var playerWorkflow = Assert.Single(workflows, workflow => workflow.GetProperty("name").GetString() == "player-search-and-detail");
         Assert.Contains(
@@ -113,6 +113,7 @@ public class BaseballMcpMetadataTests
         Assert.Contains(
             playerWorkflow.GetProperty("supportedQueryShapes").EnumerateArray().Select(item => item.GetString()),
             shape => shape is not null && shape.Contains("get_player(playerId)", StringComparison.Ordinal));
+
         var leaderboardWorkflow = Assert.Single(workflows, workflow => workflow.GetProperty("name").GetString() == "curated-leaderboards");
         Assert.Contains(
             leaderboardWorkflow.GetProperty("recommendedResources").EnumerateArray().Select(item => item.GetString()),

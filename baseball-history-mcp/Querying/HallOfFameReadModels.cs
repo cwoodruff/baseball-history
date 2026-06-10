@@ -5,11 +5,6 @@ public sealed record HallOfFameLookupRequest(
     string? Category = null,
     int Page = 1,
     int PageSize = 50);
-public sealed record HallOfFameInducteeRequest(
-    int? Year = null,
-    string? Category = null,
-    int Page = 1,
-    int PageSize = 25);
 
 public sealed record HallOfFameInducteeReadModel(
     string PlayerId,

@@ -1,6 +1,7 @@
 using baseball_history_mcp.Configuration;
 using baseball_history_web.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace baseball_history_mcp.Querying;
 
 public sealed class FranchiseReadService(
@@ -12,12 +13,6 @@ public sealed class FranchiseReadService(
         CancellationToken cancellationToken = default)
     {
         var normalizedRequest = requestPolicy.Normalize(request);
-        var normalizedLeague = McpInputValidation.NormalizeOptionalLeague(request.League);
-        McpInputValidation.ValidatePage(request.Page);
-        McpInputValidation.ValidatePageSize(request.PageSize);
-
-        var maxPageSize = options.Value.Limits.FranchiseListPageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -40,12 +35,9 @@ public sealed class FranchiseReadService(
                 CurrentDivision = f.Teams.OrderByDescending(t => t.YearId).Select(t => t.DivId).FirstOrDefault()
             });
 
-        if (!string.IsNullOrWhiteSpace(normalizedRequest.League))
+        if (normalizedRequest.League is not null)
         {
-            query = query.Where(f => f.CurrentLeague != null && EF.Functions.ILike(f.CurrentLeague, normalizedRequest.League));
-        if (normalizedLeague is not null)
-        {
-            query = query.Where(f => f.CurrentLeague == normalizedLeague);
+            query = query.Where(f => f.CurrentLeague == normalizedRequest.League);
         }
 
         if (normalizedRequest.ActiveOnly)
@@ -56,6 +48,7 @@ public sealed class FranchiseReadService(
         query = query
             .OrderBy(f => f.DisplayName)
             .ThenBy(f => f.FranchId);
+
         var totalCount = await query.CountAsync(cancellationToken);
         var pageWindow = requestPolicy.CreateFranchiseLookupWindow(normalizedRequest, totalCount);
 
@@ -64,37 +57,32 @@ public sealed class FranchiseReadService(
             .Take(pageWindow.PageSize)
             .ToListAsync(cancellationToken);
 
-        var items = rows
-            .Select(f =>
-            {
-                var totalGames = f.TotalWins + f.TotalLosses;
-                return new FranchiseLookupItem(
-                    f.FranchId,
-                    f.DisplayName,
-                    f.IsActive,
-                    f.FirstYear,
-                    f.LastYear,
-                    f.TotalSeasons,
-                    f.TotalWins,
-                    f.TotalLosses,
-                    totalGames > 0 ? Math.Round((double)f.TotalWins / totalGames, 3) : 0,
-                    f.WorldSeriesWins,
-                    f.PennantWins,
-                    f.CurrentTeamId,
-                    f.CurrentLeague,
-                    f.CurrentDivision);
-            })
-            .ToList();
+        var items = rows.Select(f =>
+        {
+            var totalGames = f.TotalWins + f.TotalLosses;
+            return new FranchiseLookupItem(
+                f.FranchId,
+                f.DisplayName,
+                f.IsActive,
+                f.FirstYear,
+                f.LastYear,
+                f.TotalSeasons,
+                f.TotalWins,
+                f.TotalLosses,
+                totalGames > 0 ? Math.Round((double)f.TotalWins / totalGames, 3) : 0,
+                f.WorldSeriesWins,
+                f.PennantWins,
+                f.CurrentTeamId,
+                f.CurrentLeague,
+                f.CurrentDivision);
+        }).ToList();
 
-        return pageWindow.CreateResult(
-            items,
-            totalCount);
+        return pageWindow.CreateResult(items, totalCount);
     }
 
     public async Task<FranchiseReadModel?> GetFranchiseAsync(string franchiseId, CancellationToken cancellationToken = default)
     {
-        franchiseId = requestPolicy.NormalizeRequiredId(franchiseId, "franchiseId");
-        var normalizedFranchiseId = McpInputValidation.NormalizeRequiredCode(franchiseId, "franchiseId");
+        var normalizedFranchiseId = requestPolicy.NormalizeRequiredId(franchiseId, "franchiseId").ToUpperInvariant();
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -140,7 +128,7 @@ public sealed class FranchiseReadService(
                     t.LgId,
                     t.DivId,
                     wins,
-                    (short)losses,
+                    losses,
                     games > 0 ? Math.Round((double)wins / games, 3) : 0,
                     t.Rank,
                     t.DivWin == "Y",

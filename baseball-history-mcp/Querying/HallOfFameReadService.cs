@@ -10,14 +10,13 @@ public interface IHallOfFameReadService
 {
     Task<HashSet<string>> GetInductedPlayerIdsAsync(CancellationToken cancellationToken = default);
     Task<PagedReadResult<HallOfFameInducteeReadModel>> ListInducteesAsync(HallOfFameLookupRequest request, CancellationToken cancellationToken = default);
-    Task<PagedReadResult<HallOfFameInducteeReadModel>> GetInducteesAsync(HallOfFameInducteeRequest request, CancellationToken cancellationToken = default);
     Task<HallOfFameVotingHistoryReadModel?> GetVotingHistoryAsync(string playerId, CancellationToken cancellationToken = default);
 }
 
 public sealed class HallOfFameReadService(
     IDbContextFactory<BaseballDbContext> contextFactory,
     IMemoryCache cache,
-    BaseballMcpRequestPolicy requestPolicy) : IHallOfFameReadService
+    BaseballMcpRequestPolicy requestPolicy,
     IOptions<BaseballMcpOptions> options) : IHallOfFameReadService
 {
     private const string CacheKey = "mcp_hof_player_ids";
@@ -43,17 +42,6 @@ public sealed class HallOfFameReadService(
         CancellationToken cancellationToken = default)
     {
         var normalizedRequest = requestPolicy.Normalize(request);
-    public async Task<PagedReadResult<HallOfFameInducteeReadModel>> GetInducteesAsync(
-        HallOfFameInducteeRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        McpInputValidation.ValidateOptionalYear(request.Year, "year");
-        McpInputValidation.ValidatePage(request.Page);
-        McpInputValidation.ValidatePageSize(request.PageSize);
-
-        var normalizedCategory = McpInputValidation.NormalizeOptionalText(request.Category);
-        var maxPageSize = options.Value.Limits.HallOfFamePageSizeMax;
-        var pageSize = Math.Clamp(request.PageSize, 1, maxPageSize);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -65,27 +53,13 @@ public sealed class HallOfFameReadService(
             query = query.Where(h => h.Yearid == normalizedRequest.Year.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(normalizedRequest.Category))
+        if (normalizedRequest.Category is not null)
         {
             query = query.Where(h => h.Category != null && EF.Functions.ILike(h.Category, normalizedRequest.Category));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
         var pageWindow = requestPolicy.CreateHallOfFameLookupWindow(normalizedRequest, totalCount);
-        if (request.Year.HasValue)
-        {
-            var normalizedYear = McpInputValidation.ValidateYear(request.Year.Value, "year");
-            query = query.Where(h => h.Yearid == normalizedYear);
-        }
-
-        if (normalizedCategory is not null)
-        {
-            query = query.Where(h => h.Category != null && EF.Functions.ILike(h.Category, normalizedCategory));
-        }
-
-        var totalCount = await query.CountAsync(cancellationToken);
-        var totalPages = Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize));
-        var page = Math.Clamp(request.Page, 1, totalPages);
 
         var rows = await query
             .OrderByDescending(h => h.Yearid)
@@ -94,9 +68,6 @@ public sealed class HallOfFameReadService(
             .ThenBy(h => h.PlayerId)
             .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
             .Take(pageWindow.PageSize)
-            .ThenBy(h => h.Category)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .Select(h => new
             {
                 h.PlayerId,
@@ -132,30 +103,13 @@ public sealed class HallOfFameReadService(
         }).ToList();
 
         return pageWindow.CreateResult(items, totalCount);
-        return new PagedReadResult<HallOfFameInducteeReadModel>(
-            items,
-            page,
-            pageSize,
-            totalCount,
-            totalPages)
-        {
-            RequestedPage = request.Page,
-            RequestedPageSize = request.PageSize,
-            MaxPageSize = maxPageSize,
-            WasPageAdjusted = page != request.Page,
-            WasPageSizeClamped = pageSize != request.PageSize
-        };
     }
 
     public async Task<HallOfFameVotingHistoryReadModel?> GetVotingHistoryAsync(
         string playerId,
         CancellationToken cancellationToken = default)
     {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var person = await context.People
-            .FirstOrDefaultAsync(p => p.PlayerId == playerId, cancellationToken);
-        var normalizedPlayerId = McpInputValidation.NormalizeRequiredPlayerId(playerId);
+        var normalizedPlayerId = requestPolicy.NormalizeRequiredId(playerId, "playerId").ToLowerInvariant();
         var maxYearCount = options.Value.Limits.HallOfFameVotingHistoryYearsMax;
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -170,14 +124,6 @@ public sealed class HallOfFameReadService(
             return null;
         }
 
-        var history = await context.HallOfFame
-            .Where(h => h.PlayerId == playerId)
-            .OrderBy(h => h.Yearid)
-            .ThenBy(h => h.VotedBy)
-            .Select(h => new { h.Yearid, h.VotedBy, h.Votes, h.Ballots, h.Inducted })
-            .ToListAsync(cancellationToken);
-
-        if (history.Count == 0)
         var totalYearCount = await context.HallOfFame
             .Where(h => h.PlayerId == normalizedPlayerId)
             .CountAsync(cancellationToken);
@@ -187,10 +133,6 @@ public sealed class HallOfFameReadService(
             return null;
         }
 
-        return new HallOfFameVotingHistoryReadModel(
-            playerId,
-            FormatName(person.NameFirst, person.NameLast, person.PlayerId),
-            history.Select(row =>
         var history = await context.HallOfFame
             .Where(h => h.PlayerId == normalizedPlayerId)
             .OrderByDescending(h => h.Yearid)
@@ -220,7 +162,8 @@ public sealed class HallOfFameReadService(
                     row.Ballots,
                     votePercentage,
                     row.Inducted == "Y");
-            }).ToList());
+            })
+            .ToList();
 
         return new HallOfFameVotingHistoryReadModel(
             person.PlayerId,
