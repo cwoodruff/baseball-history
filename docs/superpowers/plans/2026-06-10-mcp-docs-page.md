@@ -229,7 +229,7 @@ Create `baseball-history-web/Pages/McpDocs.cshtml`. Note: angle brackets and amp
                         <tr><td><code>minAtBats</code></td><td>int</td><td>0</td><td>Minimum at-bats threshold</td></tr>
                         <tr><td><code>singleSeason</code></td><td>bool</td><td>false</td><td>Single-season vs. career totals</td></tr>
                         <tr><td><code>page</code></td><td>int</td><td>1</td><td>1-based page</td></tr>
-                        <tr><td><code>pageSize</code></td><td>int</td><td>25</td><td>Page size (max 100)</td></tr>
+                        <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Page size (max 100)</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -247,7 +247,7 @@ Create `baseball-history-web/Pages/McpDocs.cshtml`. Note: angle brackets and amp
                         <tr><td><code>minInningsPitched</code></td><td>int</td><td>0</td><td>Minimum innings-pitched threshold</td></tr>
                         <tr><td><code>singleSeason</code></td><td>bool</td><td>false</td><td>Single-season vs. career totals</td></tr>
                         <tr><td><code>page</code></td><td>int</td><td>1</td><td>1-based page</td></tr>
-                        <tr><td><code>pageSize</code></td><td>int</td><td>25</td><td>Page size (max 100)</td></tr>
+                        <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Page size (max 100)</td></tr>
                     </tbody>
                 </table>
             </div>
