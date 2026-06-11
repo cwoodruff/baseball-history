@@ -171,6 +171,7 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
     [Theory]
     [InlineData("/About", ">About</h1>", "View Source on GitHub")]
     [InlineData("/ApiDocs", ">REST API</h1>", "/openapi/v1.json")]
+    [InlineData("/McpDocs", ">MCP Server</h1>", "search_players")]
     [InlineData("/Privacy", ">Privacy Policy</h1>", "Use this page to detail your site's privacy policy.")]
     [InlineData("/Health", ">Health Check</h1>", "Database Status")]
     [InlineData("/Error", ">Error</h1>", "Development Mode")]
