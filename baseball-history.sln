@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{03C0A8B8-3
 		docs\FRONTEND.md = docs\FRONTEND.md
 		docs\DATABASE.md = docs\DATABASE.md
 		docs\ARCHITECTURE.md = docs\ARCHITECTURE.md
+		docs\MCP-SERVER-PLAN.md = docs\MCP-SERVER-PLAN.md
+		docs\POSTGRES-MIGRATION.md = docs\POSTGRES-MIGRATION.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "baseball-history-aspire", "baseball-history-aspire\baseball-history-aspire.csproj", "{B278CBDC-6E33-45BF-AF5F-C9F7C91809BE}"

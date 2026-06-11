@@ -20,7 +20,9 @@ public class McpDocsPageTests(WebApplicationFactory<Program> factory) : Integrat
     [Fact]
     public async Task ShellHeader_IncludesMcpNavLink()
     {
-        var html = await GetStringAsync("/ApiDocs");
+        // The shell header renders on every page; fetch the MCP page itself so the
+        // test's intent (the nav contains an MCP link) is self-evident.
+        var html = await GetStringAsync("/McpDocs");
 
         Assert.Contains("href=\"/McpDocs\"", html);
         Assert.Contains(">MCP</a>", html);
