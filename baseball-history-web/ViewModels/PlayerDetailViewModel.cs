@@ -43,6 +43,9 @@ public class PlayerDetailViewModel
     // A player is primarily a pitcher if they have significant pitching innings
     public bool IsPitcher => PitchingStats != null && PitchingStats.InningsPitched > 0;
 
+    // A two-way player has both pitching and batting season data (e.g. Babe Ruth)
+    public bool IsTwoWayPlayer => IsPitcher && BattingSeasons.Count > 0;
+
     // Season-by-season records
     public List<SeasonBattingRecord> BattingSeasons { get; set; } = new();
     public List<SeasonPitchingRecord> PitchingSeasons { get; set; } = new();

@@ -26,7 +26,36 @@
                     <div class="col-lg-8">
                         @await Html.PartialAsync("_PlayerCareerSummary", Model)
 
-                        @if (Model.IsPitcher && Model.PitchingSeasons.Any())
+                        @if (Model.IsTwoWayPlayer)
+                        {
+                            <ul class="nav nav-tabs mb-2" id="seasonsTabs-@Model.PlayerId" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="batting-tab-@Model.PlayerId" data-bs-toggle="tab"
+                                            data-bs-target="#batting-@Model.PlayerId" type="button" role="tab"
+                                            aria-controls="batting-@Model.PlayerId" aria-selected="true">
+                                        Batting
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="pitching-tab-@Model.PlayerId" data-bs-toggle="tab"
+                                            data-bs-target="#pitching-@Model.PlayerId" type="button" role="tab"
+                                            aria-controls="pitching-@Model.PlayerId" aria-selected="false">
+                                        Pitching
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="seasonsTabContent-@Model.PlayerId">
+                                <div class="tab-pane fade show active" id="batting-@Model.PlayerId" role="tabpanel"
+                                     aria-labelledby="batting-tab-@Model.PlayerId">
+                                    @await Html.PartialAsync("_PlayerBattingSeasonsTable", Model)
+                                </div>
+                                <div class="tab-pane fade" id="pitching-@Model.PlayerId" role="tabpanel"
+                                     aria-labelledby="pitching-tab-@Model.PlayerId">
+                                    @await Html.PartialAsync("_PlayerPitchingSeasonsTable", Model)
+                                </div>
+                            </div>
+                        }
+                        else if (Model.IsPitcher && Model.PitchingSeasons.Any())
                         {
                             @await Html.PartialAsync("_PlayerPitchingSeasonsTable", Model)
                         }
