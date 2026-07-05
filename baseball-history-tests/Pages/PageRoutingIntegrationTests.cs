@@ -174,7 +174,7 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
     [InlineData("/McpDocs", ">MCP Server</h1>", "search_players")]
     [InlineData("/Privacy", ">Privacy Policy</h1>", "do not collect, store, sell, or share")]
     [InlineData("/Health", ">Health Check</h1>", "Database Status")]
-    [InlineData("/Error", ">Error</h1>", "Development Mode")]
+    [InlineData("/Error", ">Rain Delay</h1>", "went wrong on our end")]
     public async Task SupportPages_FullPage_RenderWithinShell(string route, string headingMarker, string contentMarker)
     {
         var html = await GetStringAsync(route);

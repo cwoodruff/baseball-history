@@ -1,42 +1,28 @@
-﻿@page
+@page
 @model ErrorModel
 @{
     ViewData["Title"] = "Error";
 }
 
-@await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
-{
-    Title = "Error",
-    Subtitle = "An error occurred while processing your request.",
-    Eyebrow = "Support",
-    BadgeText = "Attention",
-    BadgeVariant = "warning"
-})
+<div class="text-center py-5">
+    <div style="font-size: 5rem;" aria-hidden="true">&#9918;</div>
+    <h1 class="text-mlb-navy mt-3">Rain Delay</h1>
+    <p class="lead text-muted">
+        Something went wrong on our end while processing your request.
+        Please try again in a moment.
+    </p>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-4">
-        <div class="alert alert-danger" role="alert">
-            An error occurred while processing your request.
-        </div>
-
-        @if (Model.ShowRequestId)
-        {
-            <p>
-                <strong>Request ID:</strong> <code>@Model.RequestId</code>
-            </p>
-        }
-
-        <h3>Development Mode</h3>
-        <p>
-            Swapping to the <strong>Development</strong> environment displays detailed information about the error that
-            occurred.
+    @if (Model.ShowRequestId)
+    {
+        <p class="text-muted small">
+            If the problem persists, mention this request ID:
+            <code>@Model.RequestId</code>
         </p>
-        <p class="mb-0">
-            <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-            It can result in displaying sensitive information from exceptions to end users.
-            For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong>
-            environment variable to <strong>Development</strong>
-            and restarting the app.
-        </p>
+    }
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+        <a class="btn btn-primary" href="/">Home</a>
+        <a class="btn btn-outline-primary" href="/Players">Players</a>
+        <a class="btn btn-outline-primary" href="/Teams">Teams</a>
     </div>
 </div>

@@ -695,3 +695,116 @@ a:hover {
     top: 0;
     color: #fff;
 }
+
+/* --------------------------------------------------------------------------
+   Dark Mode (issue #45)
+   Bootstrap 5.3 handles its own components via data-bs-theme; these overrides
+   re-map the custom design-system variables and the few hardcoded colors.
+   -------------------------------------------------------------------------- */
+[data-bs-theme="dark"] {
+    --bg-primary: #12151a;
+    --bg-secondary: #1c2027;
+    --text-primary: #e9ecef;
+    --text-secondary: #a5adb5;
+    --text-muted: #7a828a;
+    --card-border: #343a42;
+    --card-shadow: rgba(0, 0, 0, 0.45);
+    --link-color: #8fb3ee;
+    --link-hover: #b3ccf5;
+}
+
+/* Navy text reads as near-black on dark backgrounds — lift it to a legible blue */
+[data-bs-theme="dark"] .text-mlb-navy,
+[data-bs-theme="dark"] .player-card .stat-highlight,
+[data-bs-theme="dark"] .team-card .stat-highlight,
+[data-bs-theme="dark"] .table-baseball .rank-cell,
+[data-bs-theme="dark"] .alphabet-nav .letter-link {
+    color: #8fb3ee;
+}
+
+[data-bs-theme="dark"] .alphabet-nav .letter-link:hover,
+[data-bs-theme="dark"] .alphabet-nav .letter-link.active {
+    color: var(--mlb-white);
+}
+
+[data-bs-theme="dark"] .alphabet-nav .letter-link.disabled {
+    color: var(--text-muted);
+}
+
+/* Bootstrap's .text-black utility (leaderboard sort links) is !important */
+[data-bs-theme="dark"] .text-black {
+    color: var(--text-primary) !important;
+}
+
+[data-bs-theme="dark"] .table-baseball tbody tr:hover {
+    background-color: rgba(143, 179, 238, 0.08);
+}
+
+[data-bs-theme="dark"] .search-result-item:hover {
+    background-color: rgba(143, 179, 238, 0.08);
+}
+
+[data-bs-theme="dark"] .loading-overlay {
+    background: rgba(18, 21, 26, 0.85);
+}
+
+[data-bs-theme="dark"] .skeleton {
+    background: linear-gradient(90deg, #232830 25%, #2c323c 50%, #232830 75%);
+    background-size: 200% 100%;
+}
+
+[data-bs-theme="dark"] .btn:focus,
+[data-bs-theme="dark"] .btn:active:focus,
+[data-bs-theme="dark"] .btn-link.nav-link:focus,
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem var(--bg-primary), 0 0 0 0.25rem #8fb3ee;
+}
+
+/* --------------------------------------------------------------------------
+   Theme Toggle
+   -------------------------------------------------------------------------- */
+.theme-toggle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.theme-toggle:hover {
+    color: var(--mlb-white);
+}
+
+/* Show the icon for the theme you would switch TO */
+.theme-icon-dark,
+[data-bs-theme="dark"] .theme-icon-light {
+    display: none;
+}
+
+[data-bs-theme="dark"] .theme-icon-dark {
+    display: inline;
+}
+
+/* --------------------------------------------------------------------------
+   Modal Loading Overlay (issue #46)
+   Shown while any modal fragment is fetched via htmx.
+   -------------------------------------------------------------------------- */
+.modal-loading-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1900;
+}
+
+.modal-loading-overlay.show {
+    display: flex;
+}
+
+.modal-loading-overlay .loading-baseball {
+    background: var(--bg-secondary);
+    border-radius: 0.5rem;
+    padding: 1.5rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}

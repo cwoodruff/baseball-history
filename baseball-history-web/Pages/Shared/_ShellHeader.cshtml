@@ -69,6 +69,11 @@
                         <a class="@NavClass(isMcp)" aria-current="@AriaCurrent(isMcp)" asp-area="" asp-page="/McpDocs">MCP</a>
                     </li>
                 </ul>
+                <button type="button" id="theme-toggle" class="btn btn-link nav-link me-2 theme-toggle"
+                        aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon-light" aria-hidden="true">&#9728;</span>
+                    <span class="theme-icon-dark" aria-hidden="true">&#9789;</span>
+                </button>
                 <div class="search-container">
                     <label for="global-search" class="visually-hidden">Search players and teams</label>
                     <input type="search" class="form-control" placeholder="Search players, teams..."

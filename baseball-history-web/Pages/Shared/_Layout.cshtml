@@ -8,6 +8,16 @@
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg"/>
     <link rel="icon" type="image/x-icon" href="~/favicon.ico"/>
     <script type="importmap"></script>
+    <script>
+        // Apply the saved (or OS-preferred) theme before first paint to avoid a flash
+        (function () {
+            var theme = localStorage.getItem('bb-theme');
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
     <link rel="stylesheet" href="~/css/team-colors.css" asp-append-version="true"/>
@@ -40,6 +50,9 @@
 </div>
 
 <div id="modal-container"></div>
+<div id="modal-loading" class="modal-loading-overlay">
+    @await Html.PartialAsync("Components/_LoadingSpinner", "Loading player...")
+</div>
 
 @await Html.PartialAsync("_ShellFooter")
 
@@ -136,6 +149,35 @@
 
         window.addEventListener('beforeunload', function() {
             cleanupModals();
+        });
+
+        // Show a loading overlay while any modal content is being fetched
+        function setModalLoading(on) {
+            var overlay = document.getElementById('modal-loading');
+            if (overlay) overlay.classList.toggle('show', on);
+        }
+
+        document.addEventListener('htmx:beforeRequest', function (evt) {
+            if (evt.detail.target && evt.detail.target.id === 'modal-container') {
+                setModalLoading(true);
+            }
+        });
+
+        ['htmx:afterRequest', 'htmx:sendError', 'htmx:responseError', 'htmx:timeout'].forEach(function (name) {
+            document.addEventListener(name, function (evt) {
+                if (evt.detail.target && evt.detail.target.id === 'modal-container') {
+                    setModalLoading(false);
+                }
+            });
+        });
+
+        // Theme toggle (button lives in the navbar, delegated so it survives hx-boost swaps)
+        document.addEventListener('click', function (e) {
+            var toggle = e.target.closest('#theme-toggle');
+            if (!toggle) return;
+            var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', next);
+            localStorage.setItem('bb-theme', next);
         });
     }
 </script>

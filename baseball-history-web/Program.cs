@@ -65,6 +65,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Branded 404 (and other error-status) page for browser routes; re-execute
+// preserves the URL and status code. REST API responses stay bodyless.
+app.UseWhen(
+    ctx => !ctx.Request.Path.StartsWithSegments("/api"),
+    branch => branch.UseStatusCodePagesWithReExecute("/NotFound"));
+
 app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UsehtmxRazor();
