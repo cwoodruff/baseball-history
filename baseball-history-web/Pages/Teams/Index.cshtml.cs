@@ -12,9 +12,12 @@ public class IndexModel(BaseballDbContext context) : PageModel
 {
     public TeamListViewModel ViewModel { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync(string? league)
+    public async Task<IActionResult> OnGetAsync(string? league, [FromQuery] string? q = null,
+        [FromQuery] int? era = null)
     {
         ViewModel.SelectedLeague = league;
+        ViewModel.SearchQuery = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
+        ViewModel.Era = era is >= 1870 and <= 2030 ? era - era % 10 : null;
 
         // Aggregate team stats in the database instead of loading all 2700+ team records
         var summaries = await context.TeamsFranchises
@@ -43,6 +46,16 @@ public class IndexModel(BaseballDbContext context) : PageModel
             if (!string.IsNullOrEmpty(league) && summary.CurrentLeague != league)
                 continue;
 
+            // Name filter
+            if (ViewModel.SearchQuery != null &&
+                !summary.FranchiseName.Contains(ViewModel.SearchQuery, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            // Era filter: franchise fielded a team at some point during the decade
+            if (ViewModel.Era.HasValue &&
+                !(summary.FirstYear <= ViewModel.Era.Value + 9 && summary.LastYear >= ViewModel.Era.Value))
+                continue;
+
             if (summary.IsActive)
                 ViewModel.ActiveFranchises.Add(summary);
             else
@@ -55,7 +68,7 @@ public class IndexModel(BaseballDbContext context) : PageModel
 
         if (Request.IsHtmxNonBoostedRequest())
         {
-            return Partial("_TeamList", ViewModel);
+            return Partial("_TeamsContent", ViewModel);
         }
 
         return Page();

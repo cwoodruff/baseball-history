@@ -10,6 +10,17 @@ public class TeamListViewModel
     public List<FranchiseSummary> ActiveFranchises { get; set; } = new();
     public List<FranchiseSummary> InactiveFranchises { get; set; } = new();
     public string? SelectedLeague { get; set; }
+
+    // Filters (issue #43)
+    public string? SearchQuery { get; set; }
+    public int? Era { get; set; }
+
+    public bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchQuery) || Era.HasValue;
+
+    public int TotalFranchises => ActiveFranchises.Count + InactiveFranchises.Count;
+
+    // Decades from the first professional season through today
+    public static IEnumerable<int> EraOptions => PlayerListViewModel.EraOptions;
 }
 
 /// <summary>

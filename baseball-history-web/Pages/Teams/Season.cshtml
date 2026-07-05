@@ -9,7 +9,7 @@
 {
     var franchiseCrumb = !string.IsNullOrEmpty(Model.Team.FranchiseId)
         ? new BreadcrumbItem(Model.Team.FranchiseName ?? Model.Team.FranchiseId, $"/Teams/Franchise/{Model.Team.FranchiseId}")
-        : new BreadcrumbItem(Model.Team.TeamName);
+        : new BreadcrumbItem(Model.Team.TeamName ?? Model.Team.TeamId);
 
     @await Html.PartialAsync("Components/_Breadcrumbs", BreadcrumbModel.Build(
         new BreadcrumbItem("Teams", "/Teams"),

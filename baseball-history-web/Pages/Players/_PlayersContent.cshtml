@@ -2,12 +2,84 @@
 
 @await Html.PartialAsync("_PlayersHeader", Model)
 
+<form id="player-filter-form" class="row g-2 mb-3" onsubmit="return false;">
+    <input type="hidden" name="letter" value="@Model.CurrentLetter"/>
+    <div class="col-md-4">
+        <label for="player-search" class="visually-hidden">Filter players by name</label>
+        <input type="search" class="form-control" id="player-search" name="q"
+               placeholder="Filter by name..." value="@Model.SearchQuery" autocomplete="off"
+               hx-get="/Players"
+               hx-include="#player-filter-form"
+               hx-target="#players-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               hx-trigger="input changed delay:300ms, search"/>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="player-position" class="visually-hidden">Position</label>
+        <select class="form-select" id="player-position" name="pos"
+                hx-get="/Players"
+                hx-include="#player-filter-form"
+                hx-target="#players-content"
+                hx-swap="innerHTML"
+                hx-push-url="true">
+            <option value="">All Positions</option>
+            @foreach (var (value, label) in baseball_history_web.ViewModels.PlayerListViewModel.PositionOptions)
+            {
+                <option value="@value" selected="@(Model.Position == value)">@label</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="player-era" class="visually-hidden">Era</label>
+        <select class="form-select" id="player-era" name="era"
+                hx-get="/Players"
+                hx-include="#player-filter-form"
+                hx-target="#players-content"
+                hx-swap="innerHTML"
+                hx-push-url="true">
+            <option value="">All Eras</option>
+            @foreach (var decade in baseball_history_web.ViewModels.PlayerListViewModel.EraOptions)
+            {
+                <option value="@decade" selected="@(Model.Era == decade)">@(decade)s</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label for="player-sort" class="visually-hidden">Sort by</label>
+        <select class="form-select" id="player-sort" name="sort"
+                hx-get="/Players"
+                hx-include="#player-filter-form"
+                hx-target="#players-content"
+                hx-swap="innerHTML"
+                hx-push-url="true">
+            @foreach (var (value, label) in baseball_history_web.ViewModels.PlayerListViewModel.SortOptions)
+            {
+                <option value="@value" selected="@(Model.SortBy == value)">Sort: @label</option>
+            }
+        </select>
+    </div>
+    @if (Model.HasActiveFilters)
+    {
+        <div class="col-6 col-md-2">
+            <a class="btn btn-outline-secondary w-100" href="/Players?letter=@(Model.CurrentLetter ?? "A")"
+               hx-get="/Players?letter=@(Model.CurrentLetter ?? "A")"
+               hx-target="#players-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">
+                Clear Filters
+            </a>
+        </div>
+    }
+</form>
+
 @await Html.PartialAsync("Components/_AlphabetNav", new baseball_history_web.ViewModels.AlphabetNavModel
 {
     CurrentLetter = Model.CurrentLetter?.FirstOrDefault(),
     AvailableLetters = Model.AvailableLetters,
     BaseUrl = "/Players",
-    Target = "#players-content"
+    Target = "#players-content",
+    QueryParams = Model.FilterQueryParams(includeSearch: false)
 })
 
 <div id="player-list">

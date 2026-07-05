@@ -4,33 +4,8 @@
     ViewData["Title"] = "Teams";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="text-mlb-navy mb-0">Teams & Franchises</h1>
-    <div class="d-flex gap-2">
-        <a href="/Teams"
-           class="btn btn-sm @(Model.ViewModel.SelectedLeague == null ? "btn-primary" : "btn-outline-primary")"
-           hx-get="/Teams"
-           hx-target="#team-list"
-           hx-push-url="true">
-            All
-        </a>
-        <a href="/Teams?league=AL"
-           class="btn btn-sm @(Model.ViewModel.SelectedLeague == "AL" ? "btn-primary" : "btn-outline-primary")"
-           hx-get="/Teams?league=AL"
-           hx-target="#team-list"
-           hx-push-url="true">
-            AL
-        </a>
-        <a href="/Teams?league=NL"
-           class="btn btn-sm @(Model.ViewModel.SelectedLeague == "NL" ? "btn-primary" : "btn-outline-primary")"
-           hx-get="/Teams?league=NL"
-           hx-target="#team-list"
-           hx-push-url="true">
-            NL
-        </a>
-    </div>
-</div>
+<h1 class="text-mlb-navy mb-4">Teams &amp; Franchises</h1>
 
-<div id="team-list">
-    @await Html.PartialAsync("_TeamList", Model.ViewModel)
+<div id="teams-content">
+    @await Html.PartialAsync("_TeamsContent", Model.ViewModel)
 </div>

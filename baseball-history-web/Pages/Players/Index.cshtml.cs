@@ -17,10 +17,19 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     public PlayerListViewModel ViewModel { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync(string? letter, [FromQuery] int page = 1)
+    public async Task<IActionResult> OnGetAsync(string? letter, [FromQuery] int page = 1,
+        [FromQuery] string? q = null, [FromQuery] string? pos = null,
+        [FromQuery] int? era = null, [FromQuery] string? sort = null)
     {
+        var sortBy = PlayerListViewModel.SortOptions.Any(o => o.Value == sort) ? sort! : "name";
+        var searchQuery = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
+        var position = PlayerListViewModel.PositionOptions.Any(o => o.Value == pos) ? pos : null;
+        var eraDecade = era is >= 1870 and <= 2030 ? era - era % 10 : null;
+        var hasFilters = searchQuery != null || position != null || eraDecade.HasValue || sortBy != "name";
+
         // Serve from pre-warmed cache for the default view (letter A, page 1, full page load)
-        var isDefaultRequest = (letter == null || letter.Equals("A", StringComparison.OrdinalIgnoreCase)) && page <= 1;
+        var isDefaultRequest = (letter == null || letter.Equals("A", StringComparison.OrdinalIgnoreCase)) &&
+                               page <= 1 && !hasFilters;
         if (isDefaultRequest && !Request.IsHtmxNonBoostedRequest())
         {
             var cached = PlayerCacheService.GetCachedFirstPage(cache);
@@ -30,6 +39,11 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 return Page();
             }
         }
+
+        ViewModel.SearchQuery = searchQuery;
+        ViewModel.Position = position;
+        ViewModel.Era = eraDecade;
+        ViewModel.SortBy = sortBy;
 
         // Get all available first letters (cached)
         ViewModel.AvailableLetters = (await cache.GetOrCreateAsync("player_letters", async entry =>
@@ -47,9 +61,9 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .ToList();
         }))!;
 
-        // Default to 'A' if no letter specified
+        // Default to 'A' if no letter specified; a name search spans all letters
         var currentLetter = letter?.ToUpper().FirstOrDefault() ?? 'A';
-        ViewModel.CurrentLetter = currentLetter.ToString();
+        ViewModel.CurrentLetter = searchQuery == null ? currentLetter.ToString() : null;
 
         // Get Hall of Fame player IDs for highlighting (cached)
         var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
@@ -62,11 +76,41 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .ToHashSetAsync();
         }))!;
 
-        // Query players by last name starting letter
-        var query = context.People
-            .Where(p => p.NameLast != null && p.NameLast.ToUpper().StartsWith(currentLetter.ToString()))
-            .OrderBy(p => p.NameLast)
-            .ThenBy(p => p.NameFirst);
+        // Name search spans all players; otherwise browse by last-name letter
+        var query = searchQuery != null
+            ? context.People.Where(p =>
+                ((p.NameFirst ?? "") + " " + (p.NameLast ?? "")).ToLower().Contains(searchQuery.ToLower()))
+            : context.People.Where(p =>
+                p.NameLast != null && p.NameLast.ToUpper().StartsWith(currentLetter.ToString()));
+
+        if (position != null)
+        {
+            query = position == "OF"
+                ? query.Where(p => p.Fieldings.Any(f =>
+                    f.Pos == "OF" || f.Pos == "LF" || f.Pos == "CF" || f.Pos == "RF"))
+                : query.Where(p => p.Fieldings.Any(f => f.Pos == position));
+        }
+
+        if (eraDecade.HasValue)
+        {
+            // Active at any point during the decade
+            var eraStart = new DateOnly(eraDecade.Value, 1, 1);
+            var eraEnd = new DateOnly(eraDecade.Value + 9, 12, 31);
+            query = query.Where(p => p.Debut != null && p.FinalGame != null &&
+                                     p.Debut <= eraEnd && p.FinalGame >= eraStart);
+        }
+
+        query = sortBy switch
+        {
+            "hr" => query.OrderByDescending(p => p.Battings.Sum(b => (int?)b.Hr) ?? 0)
+                .ThenBy(p => p.NameLast).ThenBy(p => p.NameFirst),
+            "hits" => query.OrderByDescending(p => p.Battings.Sum(b => (int?)b.H) ?? 0)
+                .ThenBy(p => p.NameLast).ThenBy(p => p.NameFirst),
+            "games" => query.OrderByDescending(p =>
+                    (p.Battings.Sum(b => (int?)b.G) ?? 0) + (p.Pitchings.Sum(pi => (int?)pi.G) ?? 0))
+                .ThenBy(p => p.NameLast).ThenBy(p => p.NameFirst),
+            _ => query.OrderBy(p => p.NameLast).ThenBy(p => p.NameFirst)
+        };
 
         // Get total count for pagination
         ViewModel.TotalPlayers = await query.CountAsync();
