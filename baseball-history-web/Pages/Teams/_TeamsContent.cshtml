@@ -1,0 +1,95 @@
+@model baseball_history_web.ViewModels.TeamListViewModel
+
+@{
+    string LeagueUrl(string? league)
+    {
+        var parts = new List<string>();
+        if (league != null) parts.Add($"league={league}");
+        if (!string.IsNullOrEmpty(Model.SearchQuery)) parts.Add($"q={Uri.EscapeDataString(Model.SearchQuery)}");
+        if (Model.Era.HasValue) parts.Add($"era={Model.Era}");
+        return "/Teams" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+    }
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <span class="text-muted">@Model.TotalFranchises franchises</span>
+    <div class="d-flex gap-2" role="group" aria-label="Filter by league">
+        <a href="@LeagueUrl(null)"
+           class="btn btn-sm @(Model.SelectedLeague == null ? "btn-primary" : "btn-outline-primary")"
+           aria-current="@(Model.SelectedLeague == null ? "true" : null)"
+           hx-get="@LeagueUrl(null)"
+           hx-target="#teams-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            All
+        </a>
+        <a href="@LeagueUrl("AL")"
+           class="btn btn-sm @(Model.SelectedLeague == "AL" ? "btn-primary" : "btn-outline-primary")"
+           aria-current="@(Model.SelectedLeague == "AL" ? "true" : null)"
+           hx-get="@LeagueUrl("AL")"
+           hx-target="#teams-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            AL
+        </a>
+        <a href="@LeagueUrl("NL")"
+           class="btn btn-sm @(Model.SelectedLeague == "NL" ? "btn-primary" : "btn-outline-primary")"
+           aria-current="@(Model.SelectedLeague == "NL" ? "true" : null)"
+           hx-get="@LeagueUrl("NL")"
+           hx-target="#teams-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            NL
+        </a>
+    </div>
+</div>
+
+<form id="team-filter-form" class="row g-2 mb-4" onsubmit="return false;">
+    @if (!string.IsNullOrEmpty(Model.SelectedLeague))
+    {
+        <input type="hidden" name="league" value="@Model.SelectedLeague"/>
+    }
+    <div class="col-md-4">
+        <label for="team-search" class="visually-hidden">Filter franchises by name</label>
+        <input type="search" class="form-control" id="team-search" name="q"
+               placeholder="Filter by name..." value="@Model.SearchQuery" autocomplete="off"
+               hx-get="/Teams"
+               hx-include="#team-filter-form"
+               hx-target="#teams-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               hx-trigger="input changed delay:300ms, search"/>
+    </div>
+    <div class="col-6 col-md-3">
+        <label for="team-era" class="visually-hidden">Era</label>
+        <select class="form-select" id="team-era" name="era"
+                hx-get="/Teams"
+                hx-include="#team-filter-form"
+                hx-target="#teams-content"
+                hx-swap="innerHTML"
+                hx-push-url="true">
+            <option value="">All Eras</option>
+            @foreach (var decade in baseball_history_web.ViewModels.TeamListViewModel.EraOptions)
+            {
+                <option value="@decade" selected="@(Model.Era == decade)">@(decade)s</option>
+            }
+        </select>
+    </div>
+    @if (Model.HasActiveFilters)
+    {
+        <div class="col-6 col-md-2">
+            <a class="btn btn-outline-secondary w-100"
+               href="@(Model.SelectedLeague != null ? $"/Teams?league={Model.SelectedLeague}" : "/Teams")"
+               hx-get="@(Model.SelectedLeague != null ? $"/Teams?league={Model.SelectedLeague}" : "/Teams")"
+               hx-target="#teams-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">
+                Clear Filters
+            </a>
+        </div>
+    }
+</form>
+
+<div id="team-list">
+    @await Html.PartialAsync("_TeamList", Model)
+</div>

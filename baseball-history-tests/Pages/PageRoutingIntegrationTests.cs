@@ -223,17 +223,21 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         var html = await GetStringAsync("/Teams");
 
         AssertFullPageShell(html);
+        Assert.Contains("id=\"teams-content\"", html);
         Assert.Contains("id=\"team-list\"", html);
-        Assert.Contains("Teams & Franchises", html);
+        Assert.Contains("Teams &amp; Franchises", html);
     }
 
     [Fact]
-    public async Task Teams_NonBoostedHtmx_ReturnsTeamListPartialOnly()
+    public async Task Teams_NonBoostedHtmx_ReturnsTeamsContentPartialOnly()
     {
         var html = await GetHtmxStringAsync("/Teams?league=AL");
 
         AssertPartialResponse(html);
-        Assert.DoesNotContain("id=\"team-list\"", html);
+        // the partial swaps into #teams-content, so it contains the list host but not the outer shell
+        Assert.DoesNotContain("id=\"teams-content\"", html);
+        Assert.Contains("id=\"team-list\"", html);
+        Assert.Contains("id=\"team-filter-form\"", html);
         Assert.Contains("Active Franchises", html);
         Assert.DoesNotContain("<rhx-badge", html);
     }

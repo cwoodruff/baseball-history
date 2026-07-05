@@ -6,7 +6,7 @@
 }
 else
 {
-    var queryParams = new Dictionary<string, string>();
+    var queryParams = Model.FilterQueryParams();
     if (!string.IsNullOrEmpty(Model.CurrentLetter))
     {
         queryParams["letter"] = Model.CurrentLetter;
