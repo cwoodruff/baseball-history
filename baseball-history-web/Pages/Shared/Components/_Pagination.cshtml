@@ -11,6 +11,7 @@
             @* First page *@
             <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
                 <a class="page-link"
+                   href="@Model.GetPageUrl(1)"
                    hx-get="@Model.GetPageUrl(1)"
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
@@ -24,6 +25,7 @@
             @* Previous page *@
             <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
                 <a class="page-link"
+                   href="@Model.GetPageUrl(Model.CurrentPage - 1)"
                    hx-get="@Model.GetPageUrl(Model.CurrentPage - 1)"
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
@@ -47,6 +49,8 @@
                 {
                     <li class="page-item @(pageNum == Model.CurrentPage ? "active" : "")">
                         <a class="page-link"
+                           aria-current="@(pageNum == Model.CurrentPage ? "page" : null)"
+                           href="@Model.GetPageUrl(pageNum)"
                            hx-get="@Model.GetPageUrl(pageNum)"
                            hx-target="@Model.Target"
                            hx-swap="innerHTML"
@@ -61,6 +65,7 @@
             @* Next page *@
             <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
                 <a class="page-link"
+                   href="@Model.GetPageUrl(Model.CurrentPage + 1)"
                    hx-get="@Model.GetPageUrl(Model.CurrentPage + 1)"
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"
@@ -74,6 +79,7 @@
             @* Last page *@
             <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
                 <a class="page-link"
+                   href="@Model.GetPageUrl(Model.TotalPages)"
                    hx-get="@Model.GetPageUrl(Model.TotalPages)"
                    hx-target="@Model.Target"
                    hx-swap="innerHTML"

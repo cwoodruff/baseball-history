@@ -11,8 +11,14 @@
         var isActive = Model.CurrentLetter?.ToString().ToUpper() == letter.ToString();
 
         <a class="letter-link @(isActive ? "active" : "") @(!isAvailable ? "disabled" : "")"
+           aria-current="@(isActive ? "page" : null)"
+           @if (!isAvailable)
+           {
+           @:aria-disabled="true"
+           }
            @if (isAvailable && !isActive)
            {
+           @:href="@Model.GetLetterUrl(letter.ToString())"
            @:hx-get="@Model.GetLetterUrl(letter.ToString())"
            @:hx-target="@Model.Target"
            @:hx-swap="innerHTML"

@@ -13,17 +13,18 @@ else
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
+                <caption class="visually-hidden">@Model.Title</caption>
                 <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">Rank</th>
-                    <th>Player</th>
+                    <th class="text-center" style="width: 50px;" scope="col">Rank</th>
+                    <th scope="col">Player</th>
                     @if (Model.SingleSeason)
                     {
-                        <th>Year</th>
-                        <th>Team</th>
+                        <th scope="col">Year</th>
+                        <th scope="col">Team</th>
                     }
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "g" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "g" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=g" class="text-black text-decoration-none @(Model.StatColumn == "g" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=g"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -31,8 +32,8 @@ else
                             G @(Model.StatColumn == "g" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "ab" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "ab" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=ab" class="text-black text-decoration-none @(Model.StatColumn == "ab" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=ab"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -40,8 +41,8 @@ else
                             AB @(Model.StatColumn == "ab" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "h" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "h" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=h" class="text-black text-decoration-none @(Model.StatColumn == "h" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=h"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -49,8 +50,8 @@ else
                             H @(Model.StatColumn == "h" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "2b" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "2b" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=2b" class="text-black text-decoration-none @(Model.StatColumn == "2b" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=2b"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -58,8 +59,8 @@ else
                             2B @(Model.StatColumn == "2b" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "3b" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "3b" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=3b" class="text-black text-decoration-none @(Model.StatColumn == "3b" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=3b"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -67,8 +68,8 @@ else
                             3B @(Model.StatColumn == "3b" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "hr" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "hr" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=hr" class="text-black text-decoration-none @(Model.StatColumn == "hr" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=hr"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -76,8 +77,8 @@ else
                             HR @(Model.StatColumn == "hr" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "rbi" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "rbi" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=rbi" class="text-black text-decoration-none @(Model.StatColumn == "rbi" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=rbi"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -85,8 +86,8 @@ else
                             RBI @(Model.StatColumn == "rbi" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "r" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "r" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=r" class="text-black text-decoration-none @(Model.StatColumn == "r" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=r"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -94,8 +95,8 @@ else
                             R @(Model.StatColumn == "r" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "sb" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "sb" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=sb" class="text-black text-decoration-none @(Model.StatColumn == "sb" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=sb"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -103,8 +104,8 @@ else
                             SB @(Model.StatColumn == "sb" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "bb" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "bb" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=bb" class="text-black text-decoration-none @(Model.StatColumn == "bb" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=bb"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -112,8 +113,8 @@ else
                             BB @(Model.StatColumn == "bb" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "avg" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "avg" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=avg" class="text-black text-decoration-none @(Model.StatColumn == "avg" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=avg"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -121,8 +122,8 @@ else
                             AVG @(Model.StatColumn == "avg" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "ops" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "ops" ? "descending" : null)">
+                        <a href="/Stats/Batting?stat=ops" class="text-black text-decoration-none @(Model.StatColumn == "ops" ? "fw-bold" : "")"
                            hx-get="/Stats/Batting?stat=ops"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -138,7 +139,7 @@ else
                     <tr data-team="@leader.TeamId">
                         <td class="text-center rank-cell">@leader.Rank</td>
                         <td>
-                            <a href="#" class="text-decoration-none"
+                            <a href="/Players/@leader.PlayerId" class="text-decoration-none"
                                hx-get="/Players/Modal/@leader.PlayerId"
                                hx-target="#modal-container"
                                hx-swap="innerHTML"

@@ -13,17 +13,18 @@ else
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
+                <caption class="visually-hidden">@Model.Title</caption>
                 <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">Rank</th>
-                    <th>Player</th>
+                    <th class="text-center" style="width: 50px;" scope="col">Rank</th>
+                    <th scope="col">Player</th>
                     @if (Model.SingleSeason)
                     {
-                        <th>Year</th>
-                        <th>Team</th>
+                        <th scope="col">Year</th>
+                        <th scope="col">Team</th>
                     }
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "g" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "g" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=g" class="text-black text-decoration-none @(Model.StatColumn == "g" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=g"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -31,8 +32,8 @@ else
                             G @Html.Raw(Model.StatColumn == "g" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "gs" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "gs" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=gs" class="text-black text-decoration-none @(Model.StatColumn == "gs" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=gs"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -40,8 +41,8 @@ else
                             GS @Html.Raw(Model.StatColumn == "gs" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "w" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "w" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=w" class="text-black text-decoration-none @(Model.StatColumn == "w" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=w"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -49,8 +50,8 @@ else
                             W @Html.Raw(Model.StatColumn == "w" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "l" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "l" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=l" class="text-black text-decoration-none @(Model.StatColumn == "l" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=l"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -58,8 +59,8 @@ else
                             L @Html.Raw(Model.StatColumn == "l" ? "↑" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "sv" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "sv" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=sv" class="text-black text-decoration-none @(Model.StatColumn == "sv" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=sv"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -67,8 +68,8 @@ else
                             SV @Html.Raw(Model.StatColumn == "sv" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "ip" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "ip" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=ip" class="text-black text-decoration-none @(Model.StatColumn == "ip" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=ip"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -76,8 +77,8 @@ else
                             IP @Html.Raw(Model.StatColumn == "ip" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "so" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "so" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=so" class="text-black text-decoration-none @(Model.StatColumn == "so" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=so"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -85,8 +86,8 @@ else
                             SO @Html.Raw(Model.StatColumn == "so" ? "↓" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "bb" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "bb" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=bb" class="text-black text-decoration-none @(Model.StatColumn == "bb" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=bb"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -94,8 +95,8 @@ else
                             BB @Html.Raw(Model.StatColumn == "bb" ? "↑" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "era" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "era" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=era" class="text-black text-decoration-none @(Model.StatColumn == "era" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=era"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -103,8 +104,8 @@ else
                             ERA @Html.Raw(Model.StatColumn == "era" ? "↑" : "")
                         </a>
                     </th>
-                    <th class="text-end">
-                        <a href="#" class="text-black text-decoration-none @(Model.StatColumn == "whip" ? "fw-bold" : "")"
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "whip" ? "descending" : null)">
+                        <a href="/Stats/Pitching?stat=whip" class="text-black text-decoration-none @(Model.StatColumn == "whip" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=whip"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
@@ -120,7 +121,7 @@ else
                     <tr data-team="@leader.TeamId">
                         <td class="text-center rank-cell">@leader.Rank</td>
                         <td>
-                            <a href="#" class="text-decoration-none"
+                            <a href="/Players/@leader.PlayerId" class="text-decoration-none"
                                hx-get="/Players/Modal/@leader.PlayerId"
                                hx-target="#modal-container"
                                hx-swap="innerHTML"

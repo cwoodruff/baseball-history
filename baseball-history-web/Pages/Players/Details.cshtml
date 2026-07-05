@@ -6,12 +6,9 @@
 }
 
 <div id="player-details" data-team="@primaryTeamId">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/Players">Players</a></li>
-            <li class="breadcrumb-item active" aria-current="page">@Model.Player.FullName</li>
-        </ol>
-    </nav>
+    @await Html.PartialAsync("Components/_Breadcrumbs", baseball_history_web.ViewModels.BreadcrumbModel.Build(
+        new baseball_history_web.ViewModels.BreadcrumbItem("Players", "/Players"),
+        new baseball_history_web.ViewModels.BreadcrumbItem(Model.Player.FullName)))
 
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
         <div>

@@ -1,8 +1,28 @@
+@{
+    var currentPage = ViewContext.RouteData.Values["page"] as string ?? "";
+
+    bool IsSection(params string[] prefixes) =>
+        prefixes.Any(p => currentPage.Equals(p, StringComparison.OrdinalIgnoreCase) ||
+                          currentPage.StartsWith(p + "/", StringComparison.OrdinalIgnoreCase));
+
+    string NavClass(bool active) => active ? "nav-link active" : "nav-link";
+    string? AriaCurrent(bool active) => active ? "page" : null;
+
+    var isHome = currentPage.Equals("/Index", StringComparison.OrdinalIgnoreCase);
+    var isAbout = IsSection("/About");
+    var isPlayers = IsSection("/Players");
+    var isTeams = IsSection("/Teams");
+    var isStats = IsSection("/Stats", "/HallOfFame", "/Awards", "/Postseason", "/Salaries");
+    var isCompare = IsSection("/Compare");
+    var isApi = IsSection("/ApiDocs");
+    var isMcp = IsSection("/McpDocs");
+}
+
 <header>
     <nav class="navbar navbar-expand-lg navbar-dark navbar-mlb">
         <div class="container">
             <a class="navbar-brand" asp-area="" asp-page="/Index">
-                <span class="me-2">&#9918;</span>Baseball History
+                <span class="me-2" aria-hidden="true">&#9918;</span>Baseball History
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -11,19 +31,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/Index">Home</a>
+                        <a class="@NavClass(isHome)" aria-current="@AriaCurrent(isHome)" asp-area="" asp-page="/Index">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/About">About</a>
+                        <a class="@NavClass(isAbout)" aria-current="@AriaCurrent(isAbout)" asp-area="" asp-page="/About">About</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/Players/Index">Players</a>
+                        <a class="@NavClass(isPlayers)" aria-current="@AriaCurrent(isPlayers)" asp-area="" asp-page="/Players/Index">Players</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/Teams/Index">Teams</a>
+                        <a class="@NavClass(isTeams)" aria-current="@AriaCurrent(isTeams)" asp-area="" asp-page="/Teams/Index">Teams</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <button class="nav-link dropdown-toggle" id="statsDropdown"
+                        <button class="@NavClass(isStats) dropdown-toggle" id="statsDropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                             Stats
                         </button>
@@ -40,17 +60,19 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/Compare/Index">Compare</a>
+                        <a class="@NavClass(isCompare)" aria-current="@AriaCurrent(isCompare)" asp-area="" asp-page="/Compare/Index">Compare</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/ApiDocs">API</a>
+                        <a class="@NavClass(isApi)" aria-current="@AriaCurrent(isApi)" asp-area="" asp-page="/ApiDocs">API</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-area="" asp-page="/McpDocs">MCP</a>
+                        <a class="@NavClass(isMcp)" aria-current="@AriaCurrent(isMcp)" asp-area="" asp-page="/McpDocs">MCP</a>
                     </li>
                 </ul>
                 <div class="search-container">
+                    <label for="global-search" class="visually-hidden">Search players and teams</label>
                     <input type="search" class="form-control" placeholder="Search players, teams..."
+                           id="global-search"
                            name="q"
                            hx-get="/Search"
                            hx-trigger="input changed delay:300ms, search"
