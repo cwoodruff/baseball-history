@@ -25,7 +25,19 @@
             {
                 <tr data-team="@season.TeamId">
                     <td>@season.Year</td>
-                    <td>@(season.TeamName ?? season.TeamId)</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(season.TeamId) && !string.IsNullOrEmpty(season.LgId))
+                        {
+                            <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                               title="View the @season.Year @(season.TeamName ?? season.TeamId) season">
+                                @(season.TeamName ?? season.TeamId)
+                            </a>
+                        }
+                        else
+                        {
+                            @(season.TeamName ?? season.TeamId)
+                        }
+                    </td>
                     <td class="text-end stat-cell">@season.Games</td>
                     <td class="text-end stat-cell">@season.AtBats</td>
                     <td class="text-end stat-cell">@season.Hits</td>

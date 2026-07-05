@@ -81,7 +81,14 @@
                 {
                     <li class="list-group-item d-flex justify-content-between align-items-center"
                         data-team="@team.TeamId">
-                        <span>@(team.TeamName ?? team.TeamId)</span>
+                        @if (!string.IsNullOrEmpty(team.FranchId))
+                        {
+                            <a href="/Teams/Franchise/@team.FranchId">@(team.TeamName ?? team.TeamId)</a>
+                        }
+                        else
+                        {
+                            <span>@(team.TeamName ?? team.TeamId)</span>
+                        }
                         <small class="text-muted">@team.FirstYear-@team.LastYear</small>
                     </li>
                 }
@@ -107,7 +114,11 @@
                 @foreach (var award in Model.Awards.Take(10))
                 {
                     <div class="small mb-1">
-                        <strong>@award.Year</strong> - @award.AwardId (@award.LgId)
+                        <strong>@award.Year</strong> - @award.DisplayName
+                        @if (!string.IsNullOrEmpty(award.LgId))
+                        {
+                            <span class="text-muted">(@award.LgId)</span>
+                        }
                     </div>
                 }
                 @if (Model.Awards.Count > 10)

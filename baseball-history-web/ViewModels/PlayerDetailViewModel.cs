@@ -254,6 +254,29 @@ public class AwardRecord
     public string AwardId { get; set; } = null!;
     public string LgId { get; set; } = null!;
     public string? Notes { get; set; }
+
+    // Lahman award ids are mostly full names already; expand the terse or
+    // abbreviation-style ids so the UI never shows a raw code.
+    private static readonly Dictionary<string, string> FriendlyNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["MVP"] = "Most Valuable Player",
+        ["ROY"] = "Rookie of the Year",
+        ["CYA"] = "Cy Young Award",
+        ["GG"] = "Gold Glove",
+        ["SS"] = "Silver Slugger",
+        ["WS MVP"] = "World Series MVP",
+        ["ALCS MVP"] = "AL Championship Series MVP",
+        ["NLCS MVP"] = "NL Championship Series MVP",
+        ["TSN All-Star"] = "Sporting News All-Star",
+        ["TSN Guide MVP"] = "Sporting News Guide MVP",
+        ["TSN Major League Player of the Year"] = "Sporting News Player of the Year",
+        ["TSN Pitcher of the Year"] = "Sporting News Pitcher of the Year",
+        ["TSN Player of the Year"] = "Sporting News Player of the Year",
+        ["TSN Fireman of the Year"] = "Sporting News Fireman of the Year",
+        ["TSN Reliever of the Year"] = "Sporting News Reliever of the Year"
+    };
+
+    public string DisplayName => FriendlyNames.GetValueOrDefault(AwardId, AwardId);
 }
 
 /// <summary>
@@ -274,6 +297,7 @@ public class TeamRecord
 {
     public string TeamId { get; set; } = null!;
     public string? TeamName { get; set; }
+    public string? FranchId { get; set; }
     public short FirstYear { get; set; }
     public short LastYear { get; set; }
     public int Seasons { get; set; }

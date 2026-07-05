@@ -14,7 +14,11 @@
                     @Model.FullName
                     @if (Model.IsInHallOfFame)
                     {
-                        <span class="hof-badge ms-2">HOF @Model.HofInductionYear</span>
+                        <a class="hof-badge ms-2 text-decoration-none"
+                           href="/HallOfFame?year=@Model.HofInductionYear"
+                           title="View the @Model.HofInductionYear Hall of Fame class">
+                            HOF @Model.HofInductionYear
+                        </a>
                     }
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -67,6 +71,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <a class="btn btn-primary" href="/Players/@Model.PlayerId">View Full Page</a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>

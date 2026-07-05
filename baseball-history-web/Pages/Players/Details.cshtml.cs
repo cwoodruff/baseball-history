@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace baseball_history_web.Pages.Players;
 
-[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
-public class ModalModel(PlayerDetailService playerDetailService) : PageModel
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
+public class DetailsModel(PlayerDetailService playerDetailService) : PageModel
 {
-    public PlayerDetailViewModel? Player { get; set; }
+    public PlayerDetailViewModel Player { get; set; } = null!;
 
     public async Task<IActionResult> OnGetAsync(string id)
     {
@@ -17,13 +17,14 @@ public class ModalModel(PlayerDetailService playerDetailService) : PageModel
             return NotFound();
         }
 
-        Player = await playerDetailService.GetPlayerDetailAsync(id);
+        var player = await playerDetailService.GetPlayerDetailAsync(id);
 
-        if (Player == null)
+        if (player == null)
         {
             return NotFound();
         }
 
-        return Partial("_PlayerModal", Player);
+        Player = player;
+        return Page();
     }
 }

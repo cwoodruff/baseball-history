@@ -106,7 +106,7 @@ public class Sprint5SurfaceIntegrationTests(WebApplicationFactory<Program> facto
 
         AssertFullPageShell(html);
         Assert.Contains(">Privacy Policy</h1>", html);
-        Assert.Contains("detail your site's privacy policy", html);
+        Assert.Contains("do not collect, store, sell, or share", html);
     }
 
     [Fact]
