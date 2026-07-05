@@ -67,6 +67,17 @@
                     }
                 }
                 cleanupModals();
+            } else if (evt.detail.target === document.body && document.body.classList.contains('modal-open')) {
+                // Boosted navigation from a link inside an open modal: the swap
+                // replaces the modal markup but leaves the body scroll-lock behind
+                var openModal = document.querySelector('#modal-container .modal');
+                if (openModal) {
+                    var openInstance = bootstrap.Modal.getInstance(openModal);
+                    if (openInstance) {
+                        openInstance.dispose();
+                    }
+                }
+                cleanupModals();
             }
         });
 

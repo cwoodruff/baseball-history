@@ -1,0 +1,78 @@
+@page "/Players/{id}"
+@model baseball_history_web.Pages.Players.DetailsModel
+@{
+    ViewData["Title"] = Model.Player.FullName;
+    var primaryTeamId = Model.Player.Teams.FirstOrDefault()?.TeamId ?? "";
+}
+
+<div id="player-details" data-team="@primaryTeamId">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Players">Players</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Player.FullName</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+        <div>
+            <div class="text-uppercase small fw-semibold text-muted mb-2">Player</div>
+            <h1 class="mb-0">
+                @Model.Player.FullName
+                @if (Model.Player.IsInHallOfFame)
+                {
+                    <a class="hof-badge ms-2 text-decoration-none"
+                       href="/HallOfFame?year=@Model.Player.HofInductionYear"
+                       title="View the @Model.Player.HofInductionYear Hall of Fame class">
+                        HOF @Model.Player.HofInductionYear
+                    </a>
+                }
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        @await Html.PartialAsync("_PlayerModalOverview", Model.Player)
+
+        <div class="col-lg-8">
+            @await Html.PartialAsync("_PlayerCareerSummary", Model.Player)
+
+            @if (Model.Player.IsTwoWayPlayer)
+            {
+                <ul class="nav nav-tabs mb-2" id="seasonsTabs-@Model.Player.PlayerId" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="batting-tab-@Model.Player.PlayerId" data-bs-toggle="tab"
+                                data-bs-target="#batting-@Model.Player.PlayerId" type="button" role="tab"
+                                aria-controls="batting-@Model.Player.PlayerId" aria-selected="true">
+                            Batting
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pitching-tab-@Model.Player.PlayerId" data-bs-toggle="tab"
+                                data-bs-target="#pitching-@Model.Player.PlayerId" type="button" role="tab"
+                                aria-controls="pitching-@Model.Player.PlayerId" aria-selected="false">
+                            Pitching
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="seasonsTabContent-@Model.Player.PlayerId">
+                    <div class="tab-pane fade show active" id="batting-@Model.Player.PlayerId" role="tabpanel"
+                         aria-labelledby="batting-tab-@Model.Player.PlayerId">
+                        @await Html.PartialAsync("_PlayerBattingSeasonsTable", Model.Player)
+                    </div>
+                    <div class="tab-pane fade" id="pitching-@Model.Player.PlayerId" role="tabpanel"
+                         aria-labelledby="pitching-tab-@Model.Player.PlayerId">
+                        @await Html.PartialAsync("_PlayerPitchingSeasonsTable", Model.Player)
+                    </div>
+                </div>
+            }
+            else if (Model.Player.IsPitcher && Model.Player.PitchingSeasons.Any())
+            {
+                @await Html.PartialAsync("_PlayerPitchingSeasonsTable", Model.Player)
+            }
+            else if (Model.Player.BattingSeasons.Any())
+            {
+                @await Html.PartialAsync("_PlayerBattingSeasonsTable", Model.Player)
+            }
+        </div>
+    </div>
+</div>
