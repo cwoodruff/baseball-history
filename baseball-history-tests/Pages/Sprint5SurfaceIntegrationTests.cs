@@ -130,8 +130,8 @@ public class Sprint5SurfaceIntegrationTests(WebApplicationFactory<Program> facto
         var html = await response.Content.ReadAsStringAsync();
 
         AssertFullPageShell(html);
-        Assert.Contains(">Error</h1>", html);
-        Assert.Contains("An error occurred while processing your request.", html);
+        Assert.Contains(">Rain Delay</h1>", html);
+        Assert.Contains("went wrong on our end", html);
         Assert.True(response.Headers.CacheControl?.NoStore, "Expected /Error to be marked no-store.");
     }
 

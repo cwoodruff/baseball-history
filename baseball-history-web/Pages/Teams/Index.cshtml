@@ -6,6 +6,12 @@
 
 <h1 class="text-mlb-navy mb-4">Teams &amp; Franchises</h1>
 
-<div id="teams-content">
-    @await Html.PartialAsync("_TeamsContent", Model.ViewModel)
+@* hx-indicator is inherited by every htmx control inside (filters, league buttons) *@
+<div class="position-relative" hx-indicator="#teams-loading">
+    <div id="teams-loading" class="htmx-indicator loading-overlay">
+        @await Html.PartialAsync("Components/_LoadingSpinner", "Loading teams...")
+    </div>
+    <div id="teams-content">
+        @await Html.PartialAsync("_TeamsContent", Model.ViewModel)
+    </div>
 </div>

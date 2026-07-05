@@ -1,0 +1,29 @@
+@page
+@model baseball_history_web.Pages.NotFoundModel
+@{
+    ViewData["Title"] = "Page Not Found";
+}
+
+<div class="text-center py-5">
+    <div style="font-size: 5rem;" aria-hidden="true">&#9918;</div>
+    <h1 class="text-mlb-navy mt-3">Swing and a Miss!</h1>
+    <p class="lead text-muted">
+        @if (Model.ErrorStatusCode == 404)
+        {
+            @:We couldn't find that page. It may have been traded, retired, or never called up.
+        }
+        else
+        {
+            @:Something went wrong handling that request (status @Model.ErrorStatusCode).
+        }
+    </p>
+    <p class="text-muted">Try the search box above, or head back to one of these:</p>
+
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+        <a class="btn btn-primary" href="/">Home</a>
+        <a class="btn btn-outline-primary" href="/Players">Players</a>
+        <a class="btn btn-outline-primary" href="/Teams">Teams</a>
+        <a class="btn btn-outline-primary" href="/Stats/Batting">Batting Leaders</a>
+        <a class="btn btn-outline-primary" href="/HallOfFame">Hall of Fame</a>
+    </div>
+</div>
