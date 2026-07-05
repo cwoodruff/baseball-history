@@ -28,7 +28,7 @@
                     <tr class="@(vote.IsWinner ? "table-success" : "")">
                         <td class="text-end text-muted small">@voteRank</td>
                         <td>
-                            <a href="#" class="text-decoration-none fw-bold"
+                            <a href="/Players/@vote.PlayerId" class="text-decoration-none fw-bold"
                                hx-get="/Players/Modal/@vote.PlayerId"
                                hx-target="#modal-container"
                                hx-swap="innerHTML"
@@ -101,7 +101,7 @@ else
                 {
                     <tr>
                         <td>
-                            <a href="#" class="text-decoration-none fw-bold"
+                            <a href="/Players/@winner.PlayerId" class="text-decoration-none fw-bold"
                                hx-get="/Players/Modal/@winner.PlayerId"
                                hx-target="#modal-container"
                                hx-swap="innerHTML"

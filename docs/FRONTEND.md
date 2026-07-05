@@ -394,8 +394,19 @@ Shell lifecycle JavaScript is intentionally inline in `Pages/Shared/_Layout.csht
 ## Accessibility
 
 - Semantic HTML elements
+- Skip-to-content link (`.skip-link` in `_Layout.cshtml`, visually hidden until focused)
 - ARIA labels on interactive elements
-- Keyboard navigation support
+- Every htmx-triggered link carries a real `href` mirroring its `hx-get` URL, so
+  keyboard activation, middle-click, and open-in-new-tab all work. Player cards
+  are anchors: normal click opens the quick-view modal via htmx, while
+  middle-click/new-tab lands on the full `/Players/{id}` page.
+- `aria-current="page"` marks the active navbar section, pagination page, and
+  alphabet-nav letter; the navbar computes its active state from the current
+  Razor Pages route.
+- Sortable leaderboard headers set `aria-sort="descending"` on the active column.
+- Stat tables have visually hidden `<caption>`s and `scope="col"` on header cells.
+- Actions that are not navigation (e.g. "View all results" in the search
+  dropdown) are `<button>`s, not `href="#"` anchors.
 - Sufficient color contrast
 - Focus indicators
 

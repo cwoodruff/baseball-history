@@ -163,8 +163,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=w&singleSeason=true");
 
         AssertPartialResponse(html);
-        Assert.Contains("<th>Year</th>", html);
-        Assert.Contains("<th>Team</th>", html);
+        Assert.Contains("<th scope=\"col\">Year</th>", html);
+        Assert.Contains("<th scope=\"col\">Team</th>", html);
     }
 
     [Fact]
@@ -173,8 +173,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=w&singleSeason=false");
 
         AssertPartialResponse(html);
-        Assert.DoesNotContain("<th>Year</th>", html);
-        Assert.DoesNotContain("<th>Team</th>", html);
+        Assert.DoesNotContain("<th scope=\"col\">Year</th>", html);
+        Assert.DoesNotContain("<th scope=\"col\">Team</th>", html);
     }
 
     [Fact]

@@ -1,0 +1,24 @@
+@* Breadcrumb Component
+   Usage: @await Html.PartialAsync("Components/_Breadcrumbs", BreadcrumbModel.Build(
+       new BreadcrumbItem("Teams", "/Teams"),
+       new BreadcrumbItem("New York Yankees")))
+*@
+
+@model baseball_history_web.ViewModels.BreadcrumbModel
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        @foreach (var item in Model.Items)
+        {
+            var isLast = item == Model.Items[^1];
+            if (!isLast && !string.IsNullOrEmpty(item.Url))
+            {
+                <li class="breadcrumb-item"><a href="@item.Url">@item.Label</a></li>
+            }
+            else
+            {
+                <li class="breadcrumb-item active" aria-current="page">@item.Label</li>
+            }
+        }
+    </ol>
+</nav>

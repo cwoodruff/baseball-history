@@ -30,10 +30,11 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" defer></script>
 </head>
 <body hx-boost="true">
+<a class="skip-link" href="#main-content">Skip to main content</a>
 @await Html.PartialAsync("_ShellHeader")
 
 <div class="container mt-4">
-    <main role="main" class="pb-3">
+    <main role="main" class="pb-3" id="main-content">
         @RenderBody()
     </main>
 </div>

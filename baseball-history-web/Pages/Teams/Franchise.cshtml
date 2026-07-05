@@ -1,7 +1,15 @@
 @page "{id}"
+@using baseball_history_web.ViewModels
 @model baseball_history_web.Pages.Teams.FranchiseModel
 @{
     ViewData["Title"] = Model.ViewModel.Franchise?.FranchiseName ?? "Franchise";
+}
+
+@if (Model.ViewModel.Franchise != null)
+{
+    @await Html.PartialAsync("Components/_Breadcrumbs", BreadcrumbModel.Build(
+        new BreadcrumbItem("Teams", "/Teams"),
+        new BreadcrumbItem(Model.ViewModel.Franchise.FranchiseName)))
 }
 
 <div id="franchise-content">

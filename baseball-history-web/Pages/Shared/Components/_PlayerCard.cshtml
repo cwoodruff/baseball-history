@@ -5,12 +5,13 @@
 @model baseball_history_web.ViewModels.PlayerSummary
 
 <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-    <div class="card player-card h-100"
-         hx-get="/Players/Modal/@Model.PlayerId"
-         hx-target="#modal-container"
-         hx-swap="innerHTML"
-         hx-boost="false"
-         @(Model.LastTeamId != null ? $"data-team=\"{Model.LastTeamId}\"" : "")>
+    <a class="card player-card h-100 text-reset text-decoration-none"
+       href="/Players/@Model.PlayerId"
+       hx-get="/Players/Modal/@Model.PlayerId"
+       hx-target="#modal-container"
+       hx-swap="innerHTML"
+       hx-boost="false"
+       @(Model.LastTeamId != null ? $"data-team=\"{Model.LastTeamId}\"" : "")>
         <div class="card-img-placeholder">
             @{
                 var initials = "";
@@ -70,5 +71,5 @@
                 </div>
             }
         </div>
-    </div>
+    </a>
 </div>
