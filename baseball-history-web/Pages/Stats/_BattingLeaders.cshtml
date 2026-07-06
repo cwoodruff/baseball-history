@@ -29,7 +29,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            G @(Model.StatColumn == "g" ? "↓" : "")
+                            G @if (Model.StatColumn == "g") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "ab" ? "descending" : null)">
@@ -38,7 +38,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            AB @(Model.StatColumn == "ab" ? "↓" : "")
+                            AB @if (Model.StatColumn == "ab") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "h" ? "descending" : null)">
@@ -47,7 +47,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            H @(Model.StatColumn == "h" ? "↓" : "")
+                            H @if (Model.StatColumn == "h") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "2b" ? "descending" : null)">
@@ -56,7 +56,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            2B @(Model.StatColumn == "2b" ? "↓" : "")
+                            2B @if (Model.StatColumn == "2b") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "3b" ? "descending" : null)">
@@ -65,7 +65,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            3B @(Model.StatColumn == "3b" ? "↓" : "")
+                            3B @if (Model.StatColumn == "3b") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "hr" ? "descending" : null)">
@@ -74,7 +74,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            HR @(Model.StatColumn == "hr" ? "↓" : "")
+                            HR @if (Model.StatColumn == "hr") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "rbi" ? "descending" : null)">
@@ -83,7 +83,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            RBI @(Model.StatColumn == "rbi" ? "↓" : "")
+                            RBI @if (Model.StatColumn == "rbi") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "r" ? "descending" : null)">
@@ -92,7 +92,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            R @(Model.StatColumn == "r" ? "↓" : "")
+                            R @if (Model.StatColumn == "r") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "sb" ? "descending" : null)">
@@ -101,7 +101,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            SB @(Model.StatColumn == "sb" ? "↓" : "")
+                            SB @if (Model.StatColumn == "sb") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "bb" ? "descending" : null)">
@@ -110,7 +110,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            BB @(Model.StatColumn == "bb" ? "↓" : "")
+                            BB @if (Model.StatColumn == "bb") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "avg" ? "descending" : null)">
@@ -119,7 +119,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            AVG @(Model.StatColumn == "avg" ? "↓" : "")
+                            AVG @if (Model.StatColumn == "avg") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "ops" ? "descending" : null)">
@@ -128,7 +128,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            OPS @(Model.StatColumn == "ops" ? "↓" : "")
+                            OPS @if (Model.StatColumn == "ops") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                 </tr>
