@@ -15,7 +15,7 @@ else
     <div class="card mt-3">
         <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
             <strong>Postseason Series</strong>
-            <span class="badge bg-light text-dark">@Model.TotalSeries.ToString("N0") series</span>
+            <rhx-badge rhx-variant="neutral">@Model.TotalSeries.ToString("N0") series</rhx-badge>
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
@@ -45,7 +45,7 @@ else
                         <td>
                             @if (isWorldSeries)
                             {
-                                <span class="badge bg-warning text-dark">@series.RoundName</span>
+                                <rhx-badge rhx-variant="warning">@series.RoundName</rhx-badge>
                             }
                             else
                             {
