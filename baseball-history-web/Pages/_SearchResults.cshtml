@@ -63,13 +63,10 @@ else
     }
 
     <div class="px-3 py-2 text-center border-top">
-        <button type="button" class="btn btn-link btn-sm small text-decoration-none p-0"
-                hx-get="/Search?handler=AllResults&q=@Uri.EscapeDataString(Model.Query)"
-                hx-target="#modal-container"
-                hx-swap="innerHTML"
-                hx-boost="false"
-                onclick="setTimeout(function() { document.getElementById('search-results').innerHTML = ''; }, 0);">
+        <a href="/Search?q=@Uri.EscapeDataString(Model.Query)"
+           class="btn btn-link btn-sm small text-decoration-none p-0"
+           onclick="setTimeout(function() { document.getElementById('search-results').innerHTML = ''; }, 0);">
             View all results for "@Model.Query"
-        </button>
+        </a>
     </div>
 }
