@@ -252,6 +252,7 @@ public class PitchingModel(BaseballDbContext context, IMemoryCache cache) : Page
             (IQueryable<T> q, "g" or "games") => q.OrderByDescending(DynExpr<T>("G")),
             (IQueryable<T> q, "gs" or "gamesstarted") => q.OrderByDescending(DynExpr<T>("GS")),
             (IQueryable<T> q, "hr") => q.OrderByDescending(DynExpr<T>("HR")),
+            (IQueryable<T> q, "bb" or "walks") => q.OrderByDescending(DynExpr<T>("BB")),
             (IQueryable<T> q, "k9" or "strikeoutsper9") => q.OrderByDescending(DynK9Expr<T>()),
             (IQueryable<T> q, "bb9" or "walksper9") => q.OrderBy(DynBb9Expr<T>()),
             (IQueryable<T> q, "wpct" or "winningpercentage") => q.OrderByDescending(DynWpctExpr<T>()),
