@@ -9,12 +9,11 @@
     <link rel="icon" type="image/x-icon" href="~/favicon.ico"/>
     <script type="importmap"></script>
     <script>
-        // Apply the saved (or OS-preferred) theme before first paint to avoid a flash
+        // Apply the saved theme before first paint to avoid a flash.
+        // Light is always the default — dark mode is strictly opt-in via the
+        // navbar toggle, never inferred from the OS preference.
         (function () {
-            var theme = localStorage.getItem('bb-theme');
-            if (theme !== 'dark' && theme !== 'light') {
-                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
+            var theme = localStorage.getItem('bb-theme') === 'dark' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-bs-theme', theme);
         })();
     </script>
@@ -151,10 +150,23 @@
             cleanupModals();
         });
 
-        // Show a loading overlay while any modal content is being fetched
+        // Show a loading overlay while any modal content is being fetched.
+        // Hiding cannot rely only on htmx:afterRequest: that event fires on the
+        // requesting element, which some triggers (e.g. search results) remove
+        // from the DOM before the response lands, so it never bubbles here.
+        // htmx:beforeSwap/afterSwap fire on #modal-container itself, which is
+        // always attached; a failsafe timer covers error paths.
+        var modalLoadingTimer = null;
         function setModalLoading(on) {
             var overlay = document.getElementById('modal-loading');
             if (overlay) overlay.classList.toggle('show', on);
+            if (modalLoadingTimer) {
+                clearTimeout(modalLoadingTimer);
+                modalLoadingTimer = null;
+            }
+            if (on) {
+                modalLoadingTimer = setTimeout(function () { setModalLoading(false); }, 8000);
+            }
         }
 
         document.addEventListener('htmx:beforeRequest', function (evt) {
@@ -163,7 +175,7 @@
             }
         });
 
-        ['htmx:afterRequest', 'htmx:sendError', 'htmx:responseError', 'htmx:timeout'].forEach(function (name) {
+        ['htmx:beforeSwap', 'htmx:afterRequest', 'htmx:sendError', 'htmx:responseError', 'htmx:timeout'].forEach(function (name) {
             document.addEventListener(name, function (evt) {
                 if (evt.detail.target && evt.detail.target.id === 'modal-container') {
                     setModalLoading(false);

@@ -52,13 +52,14 @@ public class ErrorPagesAndPolishTests(WebApplicationFactory<Program> factory) : 
     // --- #45: dark mode ---
 
     [Fact]
-    public async Task Layout_AppliesThemeBeforeFirstPaint()
+    public async Task Layout_AppliesThemeBeforeFirstPaint_DefaultingToLight()
     {
         var html = await GetStringAsync("/");
 
         Assert.Contains("bb-theme", html);
-        Assert.Contains("prefers-color-scheme: dark", html);
         Assert.Contains("data-bs-theme", html);
+        // dark mode is opt-in only; the OS preference must not be consulted
+        Assert.DoesNotContain("prefers-color-scheme", html);
     }
 
     [Fact]

@@ -802,9 +802,12 @@ a:hover {
     display: flex;
 }
 
+/* Bare spinner over the dimmed page — no card behind it */
 .modal-loading-overlay .loading-baseball {
-    background: var(--bg-secondary);
-    border-radius: 0.5rem;
-    padding: 1.5rem 2.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    color: #fff;
+}
+
+.modal-loading-overlay .loading-baseball-text {
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
