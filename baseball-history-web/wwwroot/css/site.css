@@ -811,3 +811,44 @@ a:hover {
     color: #fff;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
+
+/* --------------------------------------------------------------------------
+   Back to Top
+   -------------------------------------------------------------------------- */
+.back-to-top {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--mlb-navy);
+    color: var(--mlb-white);
+    font-size: 1.25rem;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(0.5rem);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    z-index: 1030;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+.back-to-top:hover {
+    background: var(--mlb-navy-light);
+}
+
+[data-bs-theme="dark"] .back-to-top {
+    background: var(--mlb-navy-light);
+}
+
+[data-bs-theme="dark"] .back-to-top:hover {
+    background: var(--mlb-navy);
+}
