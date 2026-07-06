@@ -37,7 +37,7 @@
                                 hx-indicator="#loading-indicator"
                                 hx-push-url="true">
                             <option value="">All Time</option>
-                            @foreach (var year in Model.ViewModel.AvailableYears.Take(50))
+                            @foreach (var year in Model.ViewModel.AvailableYears)
                             {
                                 <option value="@year" selected="@(year == Model.ViewModel.FromYear)">@year</option>
                             }
@@ -52,7 +52,7 @@
                                 hx-indicator="#loading-indicator"
                                 hx-push-url="true">
                             <option value="">Present</option>
-                            @foreach (var year in Model.ViewModel.AvailableYears.Take(50))
+                            @foreach (var year in Model.ViewModel.AvailableYears)
                             {
                                 <option value="@year" selected="@(year == Model.ViewModel.ToYear)">@year</option>
                             }

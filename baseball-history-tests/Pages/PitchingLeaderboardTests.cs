@@ -178,6 +178,31 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
     }
 
     [Fact]
+    public async Task StatsPitching_SortByWalks_PutsCareerWalksLeaderFirst()
+    {
+        var html = await GetHtmxStringAsync("/Stats/Pitching?stat=bb&singleSeason=false");
+
+        // Nolan Ryan is the all-time walks leader (2,795); before the fix,
+        // stat=bb fell through to the default and sorted by wins (Cy Young first)
+        var firstRow = html.IndexOf("<tbody>", StringComparison.Ordinal);
+        var rowRegion = html.Substring(firstRow, 1500);
+        Assert.Contains("Nolan Ryan", rowRegion);
+        Assert.Contains("2,795", rowRegion);
+    }
+
+    [Theory]
+    [InlineData("/Stats/Pitching?stat=w")]
+    [InlineData("/Stats/Batting?stat=hr")]
+    public async Task StatsPages_YearDropdowns_SpanTheFullDataset(string url)
+    {
+        var html = await GetStringAsync(url);
+
+        // Lahman data starts in 1871; the dropdowns used to truncate at 1976
+        Assert.Contains("value=\"1871\"", html);
+        Assert.Contains("value=\"1950\"", html);
+    }
+
+    [Fact]
     public async Task StatsPitching_HOFBadge_AppearsForInductees()
     {
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=w&singleSeason=false");
