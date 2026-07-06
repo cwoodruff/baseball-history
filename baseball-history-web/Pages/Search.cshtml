@@ -1,2 +1,29 @@
 @page
 @model baseball_history_web.Pages.SearchModel
+@{
+    ViewData["Title"] = string.IsNullOrEmpty(Model.ViewModel.Query)
+        ? "Search"
+        : $"Search: {Model.ViewModel.Query}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-mlb-navy mb-0">Search</h1>
+    @if (Model.ViewModel.Query.Length >= 2)
+    {
+        <span class="text-muted">@((Model.ViewModel.TotalPlayerCount + Model.ViewModel.TotalTeamCount).ToString("N0")) results</span>
+    }
+</div>
+
+<form method="get" action="/Search" class="mb-4">
+    <div class="input-group">
+        <label for="search-page-query" class="visually-hidden">Search players and teams</label>
+        <input type="search" id="search-page-query" name="q" class="form-control"
+               value="@Model.ViewModel.Query" placeholder="Search players, teams..."
+               autocomplete="off"/>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+<div id="search-page-content">
+    @await Html.PartialAsync("_SearchPageResults", Model.ViewModel)
+</div>

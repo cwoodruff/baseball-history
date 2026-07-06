@@ -22,9 +22,9 @@ public class Sprint5SurfaceIntegrationTests(WebApplicationFactory<Program> facto
     }
 
     [Fact]
-    public async Task Search_Query_ReturnsDropdownPartialWithPlayerContracts()
+    public async Task Search_HtmxQuery_ReturnsDropdownPartialWithPlayerContracts()
     {
-        var html = await GetStringAsync("/Search?q=Ruth");
+        var html = await GetHtmxStringAsync("/Search?q=Ruth");
 
         AssertPartialResponse(html);
         Assert.Contains("PLAYERS", html);
@@ -32,46 +32,52 @@ public class Sprint5SurfaceIntegrationTests(WebApplicationFactory<Program> facto
         Assert.Contains("hx-get=\"/Players/Modal/ruthba01\"", html);
         Assert.Contains("hx-target=\"#modal-container\"", html);
         Assert.Contains("View all results for", html);
-        Assert.Contains("Ruth", html);
-        Assert.DoesNotContain("id=\"searchAllResultsModal\"", html);
-    }
-
-    [Fact]
-    public async Task Search_Query_WithHtmxHeaders_StillReturnsDropdownPartialOnly()
-    {
-        var html = await GetHtmxStringAsync("/Search?q=Ruth", boosted: true);
-
-        AssertPartialResponse(html);
-        Assert.Contains("Babe Ruth", html);
-        Assert.Contains("hx-get=\"/Players/Modal/ruthba01\"", html);
+        Assert.Contains("href=\"/Search?q=Ruth\"", html);
         Assert.DoesNotContain("class=\"search-container\"", html);
         Assert.DoesNotContain("id=\"modal-container\"", html);
     }
 
     [Fact]
-    public async Task Search_TeamQuery_ReturnsFranchiseNavigationContracts()
+    public async Task Search_PlainQuery_ReturnsFullResultsPage()
     {
-        var html = await GetStringAsync("/Search?q=Yankees");
+        var html = await GetStringAsync("/Search?q=Ruth");
+
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"search-page-content\"", html);
+        Assert.Contains("Babe Ruth", html);
+        Assert.Contains("hx-get=\"/Players/Modal/ruthba01\"", html);
+    }
+
+    [Fact]
+    public async Task Search_BoostedQuery_ReturnsFullResultsPage()
+    {
+        var html = await GetHtmxStringAsync("/Search?q=Ruth", boosted: true);
+
+        Assert.Contains("id=\"search-page-content\"", html);
+        Assert.Contains("Babe Ruth", html);
+    }
+
+    [Fact]
+    public async Task Search_HtmxTeamQuery_ReturnsFranchiseNavigationContracts()
+    {
+        var html = await GetHtmxStringAsync("/Search?q=Yankees");
 
         AssertPartialResponse(html);
         Assert.Contains("TEAMS", html);
         Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
         Assert.Contains("data-team=\"NYA\"", html);
-        Assert.DoesNotContain("id=\"searchAllResultsModal\"", html);
     }
 
     [Fact]
-    public async Task Search_AllResultsHandler_ReturnsModalPartialWithPlayerAndTeamContracts()
+    public async Task Search_FullPage_RendersPlayerAndTeamCountsWithPagination()
     {
-        var html = await GetStringAsync("/Search?handler=AllResults&q=Yankees");
+        var html = await GetStringAsync("/Search?q=Smith");
 
-        AssertPartialResponse(html);
-        Assert.Contains("id=\"searchAllResultsModal\"", html);
-        Assert.Contains("Search Results for", html);
-        Assert.Contains("Yankees", html);
-        Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
-        Assert.Contains("data-bs-dismiss=\"modal\"", html);
-        Assert.DoesNotContain("class=\"search-container\"", html);
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"search-page-content\"", html);
+        Assert.Contains(">Players</strong>", html);
+        Assert.DoesNotContain("<rhx-badge", html);
+        Assert.Contains("aria-label=\"Page navigation\"", html);
     }
 
     [Fact]

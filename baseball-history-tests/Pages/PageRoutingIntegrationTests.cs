@@ -97,9 +97,9 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
     }
 
     [Fact]
-    public async Task Search_ShortQuery_ReturnsEmptyDropdownPartial()
+    public async Task Search_HtmxShortQuery_ReturnsEmptyDropdownPartial()
     {
-        var html = await GetStringAsync("/Search?q=R");
+        var html = await GetHtmxStringAsync("/Search?q=R");
 
         AssertPartialResponse(html);
         Assert.DoesNotContain("PLAYERS", html);
@@ -108,34 +108,44 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
     }
 
     [Fact]
-    public async Task Search_Query_ReturnsDropdownResultsPartial()
+    public async Task Search_ShortQuery_FullPagePromptsForLongerQuery()
     {
-        var html = await GetStringAsync("/Search?q=Ruth");
+        var html = await GetStringAsync("/Search?q=R");
+
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"search-page-content\"", html);
+        Assert.Contains("Enter at least two characters", html);
+    }
+
+    [Fact]
+    public async Task Search_HtmxQuery_ReturnsDropdownResultsPartial()
+    {
+        var html = await GetHtmxStringAsync("/Search?q=Ruth");
 
         AssertPartialResponse(html);
         Assert.Contains("PLAYERS", html);
         Assert.Contains("View all results for", html);
         Assert.Contains("hx-get=\"/Players/Modal/", html);
         Assert.Contains("hx-target=\"#modal-container\"", html);
-        Assert.Contains("search-results", html);
+        Assert.Contains("href=\"/Search?q=Ruth\"", html);
     }
 
     [Fact]
-    public async Task Search_AllResultsHandler_ReturnsModalPartial()
+    public async Task Search_FullResultsPage_RendersPlayerContracts()
     {
-        var html = await GetStringAsync("/Search?handler=AllResults&q=Ruth");
+        var html = await GetStringAsync("/Search?q=Ruth");
 
-        AssertPartialResponse(html);
-        Assert.Contains("id=\"searchAllResultsModal\"", html);
-        Assert.Contains("Search Results for", html);
+        AssertFullPageShell(html);
+        Assert.Contains("id=\"search-page-content\"", html);
+        Assert.Contains("<strong>Players</strong>", html);
         Assert.Contains("hx-get=\"/Players/Modal/", html);
         Assert.Contains("hx-target=\"#modal-container\"", html);
     }
 
     [Fact]
-    public async Task Search_TeamQuery_PreservesFranchiseNavigationContracts()
+    public async Task Search_HtmxTeamQuery_PreservesFranchiseNavigationContracts()
     {
-        var html = await GetStringAsync("/Search?q=Yankees");
+        var html = await GetHtmxStringAsync("/Search?q=Yankees");
 
         AssertPartialResponse(html);
         Assert.Contains("TEAMS", html);
@@ -144,14 +154,14 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
     }
 
     [Fact]
-    public async Task Search_AllResultsTeamQuery_DismissesModalOnNavigation()
+    public async Task Search_FullResultsPage_PaginatesPlayers()
     {
-        var html = await GetStringAsync("/Search?handler=AllResults&q=Yankees");
+        var pageOne = await GetStringAsync("/Search?q=Smith");
+        var pageTwo = await GetStringAsync("/Search?q=Smith&page=2");
 
-        AssertPartialResponse(html);
-        Assert.Contains("id=\"searchAllResultsModal\"", html);
-        Assert.Contains("href=\"/Teams/Franchise/NYY\"", html);
-        Assert.Contains("data-bs-dismiss=\"modal\"", html);
+        Assert.Contains("aria-label=\"Page navigation\"", pageOne);
+        Assert.Contains("id=\"search-page-content\"", pageTwo);
+        Assert.NotEqual(pageOne, pageTwo);
     }
 
     [Fact]

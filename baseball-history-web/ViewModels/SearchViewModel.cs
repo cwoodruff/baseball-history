@@ -12,6 +12,11 @@ public class SearchViewModel
     public bool HasResults => TotalResults > 0;
     public int TotalPlayerCount { get; set; }
     public int TotalTeamCount { get; set; }
+
+    // Pagination (full results page)
+    public int CurrentPage { get; set; } = 1;
+    public int TotalPages { get; set; }
+    public int PageSize { get; set; } = 25;
 }
 
 /// <summary>
