@@ -41,9 +41,10 @@ public class SearchModel(BaseballDbContext context, IMemoryCache cache) : PageMo
 
     private async Task RunSearchAsync(bool isDropdown, int page)
     {
-        // ILIKE keeps the filter index-friendly (a pg_trgm GIN index can serve
-        // it — see scripts/add-search-trgm-indexes.sql) instead of wrapping
-        // every column in ToLower(), which forces a full scan.
+        // ILIKE instead of wrapping every column in ToLower(): one predicate
+        // per column, and a pg_trgm GIN index could serve it if that extension
+        // is ever allow-listed on the server. At current table sizes (~21k
+        // people) the sequential scan is a few milliseconds.
         var pattern = "%" + EscapeLikePattern(ViewModel.Query) + "%";
 
         var hofPlayerIds = await GetHallOfFamePlayerIdsAsync();
