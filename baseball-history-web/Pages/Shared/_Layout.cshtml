@@ -9,12 +9,11 @@
     <link rel="icon" type="image/x-icon" href="~/favicon.ico"/>
     <script type="importmap"></script>
     <script>
-        // Apply the saved (or OS-preferred) theme before first paint to avoid a flash
+        // Apply the saved theme before first paint to avoid a flash.
+        // Light is always the default — dark mode is strictly opt-in via the
+        // navbar toggle, never inferred from the OS preference.
         (function () {
-            var theme = localStorage.getItem('bb-theme');
-            if (theme !== 'dark' && theme !== 'light') {
-                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
+            var theme = localStorage.getItem('bb-theme') === 'dark' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-bs-theme', theme);
         })();
     </script>
