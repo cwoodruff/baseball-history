@@ -13,8 +13,19 @@
             <div class="modal-body">
                 @if (!Model.HasResults)
                 {
-                    <div class="text-center text-muted py-4">
-                        No results found for "@Model.Query"
+                    <div class="text-center py-4">
+                        <div class="text-muted">No results found for "@Model.Query"</div>
+                        <small class="text-muted d-block mb-3">Check the spelling or try just a last name.</small>
+                        <h6 class="text-muted fw-bold">POPULAR PLAYERS</h6>
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                            @foreach (var (id, name) in new[] { ("ruthba01", "Babe Ruth"), ("aaronha01", "Hank Aaron"), ("mayswi01", "Willie Mays"), ("jeterde01", "Derek Jeter"), ("ohtansh01", "Shohei Ohtani") })
+                            {
+                                <a href="/Players/@id" class="btn btn-sm btn-outline-primary rounded-pill" data-bs-dismiss="modal">
+                                    @name
+                                </a>
+                            }
+                        </div>
+                        <a href="/Players" class="small text-decoration-none" data-bs-dismiss="modal">Browse all players</a>
                     </div>
                 }
                 else

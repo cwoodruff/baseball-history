@@ -53,6 +53,10 @@
     @await Html.PartialAsync("Components/_LoadingSpinner", "Loading player...")
 </div>
 
+<button type="button" id="back-to-top" class="back-to-top" aria-label="Back to top" title="Back to top">
+    <span aria-hidden="true">&uarr;</span>
+</button>
+
 @await Html.PartialAsync("_ShellFooter")
 
 <script>
@@ -181,6 +185,18 @@
                     setModalLoading(false);
                 }
             });
+        });
+
+        // Back-to-top button (delegated so it survives hx-boost swaps)
+        window.addEventListener('scroll', function () {
+            var backToTop = document.getElementById('back-to-top');
+            if (backToTop) backToTop.classList.toggle('show', window.scrollY > 600);
+        }, { passive: true });
+
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('#back-to-top')) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         });
 
         // Theme toggle (button lives in the navbar, delegated so it survives hx-boost swaps)

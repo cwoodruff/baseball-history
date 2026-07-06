@@ -130,8 +130,9 @@
         {
             <div class="col-lg-6 mb-4">
                 <div class="card">
-                    <div class="card-header card-header-mlb">
+                    <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
                         <strong>Batting</strong>
+                        <rhx-badge rhx-variant="neutral">@(Model.Batters.Count > 25 ? $"top 25 of {Model.Batters.Count}" : Model.Batters.Count.ToString()) players</rhx-badge>
                     </div>
                     <div class="table-responsive" style="max-height: 500px;">
                         <table class="table table-sm table-baseball table-hover mb-0">
@@ -183,8 +184,9 @@
         {
             <div class="col-lg-6 mb-4">
                 <div class="card">
-                    <div class="card-header card-header-mlb">
+                    <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
                         <strong>Pitching</strong>
+                        <rhx-badge rhx-variant="neutral">@(Model.Pitchers.Count > 25 ? $"top 25 of {Model.Pitchers.Count}" : Model.Pitchers.Count.ToString()) players</rhx-badge>
                     </div>
                     <div class="table-responsive" style="max-height: 500px;">
                         <table class="table table-sm table-baseball table-hover mb-0">
