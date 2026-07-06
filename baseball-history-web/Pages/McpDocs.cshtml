@@ -99,21 +99,21 @@
 
             <h5 class="mt-3">Players</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><span class="badge bg-secondary me-2">search_players</span> Search players by free-text query or last-name prefix with paging.</li>
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_player</span> Get read-only detail for one player, including career batting, career pitching, and team tenures.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">search_players</rhx-badge> Search players by free-text query or last-name prefix with paging.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player</rhx-badge> Get read-only detail for one player, including career batting, career pitching, and team tenures.</li>
             </ul>
 
             <h5 class="mt-3">Franchises &amp; Teams</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><span class="badge bg-secondary me-2">list_franchises</span> List franchise summaries with optional filters and bounded paging.</li>
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_franchise</span> Get one franchise with season-by-season history.</li>
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_team_season</span> Get one exact team-season by team id, league, and year so franchise-era lookups stay deterministic.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_franchises</rhx-badge> List franchise summaries with optional filters and bounded paging.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_franchise</rhx-badge> Get one franchise with season-by-season history.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_team_season</rhx-badge> Get one exact team-season by team id, league, and year so franchise-era lookups stay deterministic.</li>
             </ul>
 
             <h5 class="mt-3">Leaderboards</h5>
 
             <div class="mb-4">
-                <h6><span class="badge bg-secondary me-2">get_batting_leaders</span></h6>
+                <h6><rhx-badge rhx-variant="neutral" class="me-2">get_batting_leaders</rhx-badge></h6>
                 <p>Read batting leaderboards in career or single-season form.</p>
                 <table class="table table-sm">
                     <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -131,7 +131,7 @@
             </div>
 
             <div class="mb-4">
-                <h6><span class="badge bg-secondary me-2">get_pitching_leaders</span></h6>
+                <h6><rhx-badge rhx-variant="neutral" class="me-2">get_pitching_leaders</rhx-badge></h6>
                 <p>Read pitching leaderboards in career or single-season form. ERA, WHIP, and BB9 sort ascending (lower is better); all others descending.</p>
                 <table class="table table-sm">
                     <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -150,19 +150,19 @@
 
             <h5 class="mt-3">Hall of Fame</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><span class="badge bg-secondary me-2">list_hall_of_fame_inductees</span> List inducted Hall of Fame rows with optional year/category filters and bounded paging.</li>
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_hall_of_fame_voting_history</span> Get bounded Hall of Fame voting history for one player. Rows are Lahman HallOfFame ballot rows, not a prose biography.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_hall_of_fame_inductees</rhx-badge> List inducted Hall of Fame rows with optional year/category filters and bounded paging.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_hall_of_fame_voting_history</rhx-badge> Get bounded Hall of Fame voting history for one player. Rows are Lahman HallOfFame ballot rows, not a prose biography.</li>
             </ul>
 
             <h5 class="mt-3">Salaries</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_player_salary_history</span> Get bounded salary history for one player, ordered most recent to oldest.</li>
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_salary_leaders</span> List highest salary rows with optional year filter and bounded paging.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player_salary_history</rhx-badge> Get bounded salary history for one player, ordered most recent to oldest.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_salary_leaders</rhx-badge> List highest salary rows with optional year filter and bounded paging.</li>
             </ul>
 
             <h5 class="mt-3">Diagnostics</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><span class="badge bg-secondary me-2">get_server_diagnostics</span> Inspect safe runtime posture, configured limits, and connectivity without exposing secrets.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_server_diagnostics</rhx-badge> Inspect safe runtime posture, configured limits, and connectivity without exposing secrets.</li>
             </ul>
         </section>
 

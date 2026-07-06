@@ -53,7 +53,7 @@
                 <h2 class="border-bottom pb-2">Players</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players</code></h5>
                     <p>List players filtered by last name initial.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -68,39 +68,39 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}</code></h5>
                     <p>Full player detail including career batting/pitching stats, teams played for, and Hall of Fame status.</p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/players/ruthba01"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/batting</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/batting</code></h5>
                     <p>Season-by-season batting statistics with team names and computed batting average.</p>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/pitching</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/pitching</code></h5>
                     <p>Season-by-season pitching statistics with ERA.</p>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/fielding</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/fielding</code></h5>
                     <p>Season-by-season fielding stats by position (putouts, assists, errors, double plays).</p>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/awards</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/awards</code></h5>
                     <p>All awards won (MVP, Cy Young, Gold Glove, etc.).</p>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/postseason/batting</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/postseason/batting</code></h5>
                     <p>Postseason batting stats by year and round (ALCS, NLCS, WS, etc.).</p>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/players/{playerId}/postseason/pitching</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/postseason/pitching</code></h5>
                     <p>Postseason pitching stats by year and round.</p>
                 </div>
             </section>
@@ -110,7 +110,7 @@
                 <h2 class="border-bottom pb-2">Teams</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/teams/franchises</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/teams/franchises</code></h5>
                     <p>List all franchises with all-time records, championships, and pennants.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -124,14 +124,14 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/teams/franchises/{franchiseId}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/teams/franchises/{franchiseId}</code></h5>
                     <p>Franchise detail with every season's record, division/pennant/World Series wins.</p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/franchises/NYY"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/teams/seasons/{teamId}/{lgId}/{year}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/teams/seasons/{teamId}/{lgId}/{year}</code></h5>
                     <p>
                         Complete team season: record, batting/pitching aggregates, full roster
                         (batters and pitchers), and managers. Includes Hall of Fame flags.
@@ -146,7 +146,7 @@
                 <h2 class="border-bottom pb-2">Leaders</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/leaders/batting</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/leaders/batting</code></h5>
                     <p>Batting leaderboard ranked by any stat. Supports career and single-season modes.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -166,7 +166,7 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/leaders/pitching</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/leaders/pitching</code></h5>
                     <p>Pitching leaderboard. ERA and WHIP sort ascending (lower is better); all others descending.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -191,7 +191,7 @@
                 <h2 class="border-bottom pb-2">Hall of Fame</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/hall-of-fame</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/hall-of-fame</code></h5>
                     <p>List Hall of Fame inductees with vote percentages.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -205,7 +205,7 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/hall-of-fame/{playerId}/voting</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/hall-of-fame/{playerId}/voting</code></h5>
                     <p>Complete voting history for a player across all ballot years.</p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/hall-of-fame/jeterda01/voting"</code></pre>
@@ -217,7 +217,7 @@
                 <h2 class="border-bottom pb-2">Search</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/search</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/search</code></h5>
                     <p>Search across players and franchises by name. Returns both result types with total counts.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -236,21 +236,21 @@
                 <h2 class="border-bottom pb-2">Salaries</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/salaries/players/{playerId}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/salaries/players/{playerId}</code></h5>
                     <p>Player salary history with career total. Data available from 1985 onward.</p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/salaries/players/troutmi01"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/salaries/teams/{teamId}/{year}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/salaries/teams/{teamId}/{year}</code></h5>
                     <p>Team payroll breakdown for a given season.</p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/salaries/teams/NYA/2014"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/salaries/leaders</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/salaries/leaders</code></h5>
                     <p>Highest-paid players. Paginated.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -268,7 +268,7 @@
                 <h2 class="border-bottom pb-2">Ballparks</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/parks</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/parks</code></h5>
                     <p>List all ballparks. Paginated.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -281,7 +281,7 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/parks/{parkKey}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/parks/{parkKey}</code></h5>
                     <p>Park detail with season-by-season attendance and game counts.</p>
                 </div>
             </section>
@@ -291,7 +291,7 @@
                 <h2 class="border-bottom pb-2">Postseason</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/postseason/series</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/postseason/series</code></h5>
                     <p>Postseason series results (World Series, LCS, Division Series, Wild Card). Paginated.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -307,7 +307,7 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/postseason/series/{year}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/postseason/series/{year}</code></h5>
                     <p>All postseason series for a given year.</p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/postseason/series/2024"</code></pre>
@@ -319,7 +319,7 @@
                 <h2 class="border-bottom pb-2">Awards</h2>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/awards/winners</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/awards/winners</code></h5>
                     <p>Award winners with optional filters. Paginated.</p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
@@ -336,7 +336,7 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
-                    <h5><span class="badge bg-success me-2">GET</span><code>/api/awards/voting/{awardId}/{year}/{lgId}</code></h5>
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/awards/voting/{awardId}/{year}/{lgId}</code></h5>
                     <p>
                         Full voting breakdown for an award race. Shows every candidate with points won,
                         max possible, first-place votes, and vote share percentage.

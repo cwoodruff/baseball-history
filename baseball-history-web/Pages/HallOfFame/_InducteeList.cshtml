@@ -15,7 +15,7 @@ else
     <div class="card">
         <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
             <strong>Hall of Fame Inductees</strong>
-            <span class="badge bg-light text-dark">@Model.TotalInductees.ToString("N0") inductees</span>
+            <rhx-badge rhx-variant="neutral">@Model.TotalInductees.ToString("N0") inductees</rhx-badge>
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
@@ -50,19 +50,19 @@ else
                             @switch (inductee.Category)
                             {
                                 case "Player":
-                                    <span class="badge bg-primary">Player</span>
+                                    <rhx-badge rhx-variant="brand">Player</rhx-badge>
                                     break;
                                 case "Manager":
-                                    <span class="badge bg-success">Manager</span>
+                                    <rhx-badge rhx-variant="success">Manager</rhx-badge>
                                     break;
                                 case "Pioneer/Executive":
-                                    <span class="badge bg-secondary">Pioneer</span>
+                                    <rhx-badge rhx-variant="neutral">Pioneer</rhx-badge>
                                     break;
                                 case "Umpire":
-                                    <span class="badge bg-info">Umpire</span>
+                                    <rhx-badge rhx-variant="warning">Umpire</rhx-badge>
                                     break;
                                 default:
-                                    <span class="badge bg-light text-dark">@inductee.Category</span>
+                                    <rhx-badge rhx-variant="neutral">@inductee.Category</rhx-badge>
                                     break;
                             }
                         </td>

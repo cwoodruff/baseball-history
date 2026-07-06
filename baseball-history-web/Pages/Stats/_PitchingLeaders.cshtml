@@ -29,7 +29,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            G @Html.Raw(Model.StatColumn == "g" ? "↓" : "")
+                            G @if (Model.StatColumn == "g") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "gs" ? "descending" : null)">
@@ -38,7 +38,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            GS @Html.Raw(Model.StatColumn == "gs" ? "↓" : "")
+                            GS @if (Model.StatColumn == "gs") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "w" ? "descending" : null)">
@@ -47,7 +47,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            W @Html.Raw(Model.StatColumn == "w" ? "↓" : "")
+                            W @if (Model.StatColumn == "w") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "l" ? "descending" : null)">
@@ -56,7 +56,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            L @Html.Raw(Model.StatColumn == "l" ? "↑" : "")
+                            L @if (Model.StatColumn == "l") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "sv" ? "descending" : null)">
@@ -65,7 +65,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            SV @Html.Raw(Model.StatColumn == "sv" ? "↓" : "")
+                            SV @if (Model.StatColumn == "sv") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "ip" ? "descending" : null)">
@@ -74,7 +74,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            IP @Html.Raw(Model.StatColumn == "ip" ? "↓" : "")
+                            IP @if (Model.StatColumn == "ip") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "so" ? "descending" : null)">
@@ -83,7 +83,7 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            SO @Html.Raw(Model.StatColumn == "so" ? "↓" : "")
+                            SO @if (Model.StatColumn == "so") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
                     <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "bb" ? "descending" : null)">
@@ -92,25 +92,25 @@ else
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            BB @Html.Raw(Model.StatColumn == "bb" ? "↑" : "")
+                            BB @if (Model.StatColumn == "bb") {<span aria-hidden="true">▼</span>}
                         </a>
                     </th>
-                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "era" ? "descending" : null)">
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "era" ? "ascending" : null)">
                         <a href="/Stats/Pitching?stat=era" class="text-black text-decoration-none @(Model.StatColumn == "era" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=era"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            ERA @Html.Raw(Model.StatColumn == "era" ? "↑" : "")
+                            ERA @if (Model.StatColumn == "era") {<span aria-hidden="true">▲</span>}
                         </a>
                     </th>
-                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "whip" ? "descending" : null)">
+                    <th class="text-end" scope="col" aria-sort="@(Model.StatColumn == "whip" ? "ascending" : null)">
                         <a href="/Stats/Pitching?stat=whip" class="text-black text-decoration-none @(Model.StatColumn == "whip" ? "fw-bold" : "")"
                            hx-get="/Stats/Pitching?stat=whip"
                            hx-include="#filter-form"
                            hx-target="#leaderboard"
                            hx-push-url="true">
-                            WHIP @Html.Raw(Model.StatColumn == "whip" ? "↑" : "")
+                            WHIP @if (Model.StatColumn == "whip") {<span aria-hidden="true">▲</span>}
                         </a>
                     </th>
                 </tr>

@@ -37,7 +37,7 @@
                             </a>
                             @if (vote.IsWinner)
                             {
-                                <span class="badge bg-success ms-1">Winner</span>
+                                <rhx-badge rhx-variant="success" class="ms-1">Winner</rhx-badge>
                             }
                             @if (vote.IsInHallOfFame)
                             {
@@ -82,7 +82,7 @@ else
     <div class="card mt-3">
         <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
             <strong>Award Winners</strong>
-            <span class="badge bg-light text-dark">@Model.TotalEntries.ToString("N0") awards</span>
+            <rhx-badge rhx-variant="neutral">@Model.TotalEntries.ToString("N0") awards</rhx-badge>
         </div>
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
@@ -114,7 +114,7 @@ else
                             }
                         </td>
                         <td>
-                            <span class="badge bg-primary">@winner.AwardId</span>
+                            <rhx-badge rhx-variant="brand">@winner.AwardId</rhx-badge>
                         </td>
                         <td class="text-center fw-bold text-mlb-navy">@winner.Year</td>
                         <td class="text-center">@winner.LgId</td>
