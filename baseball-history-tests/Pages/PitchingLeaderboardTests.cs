@@ -43,7 +43,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=era&singleSeason=true");
 
         AssertPartialResponse(html);
-        Assert.Contains("ERA ↑", html);
+        Assert.Contains("aria-sort=\"ascending\"", html);
+        Assert.Contains("▲", html);
         Assert.Contains("table-baseball", html);
     }
 
@@ -53,7 +54,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=era&singleSeason=false&minIp=1000");
 
         AssertPartialResponse(html);
-        Assert.Contains("ERA ↑", html);
+        Assert.Contains("aria-sort=\"ascending\"", html);
+        Assert.Contains("▲", html);
         Assert.Contains("Pitching Leaders - ERA", html);
     }
 
@@ -63,7 +65,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=whip&singleSeason=true");
 
         AssertPartialResponse(html);
-        Assert.Contains("WHIP ↑", html);
+        Assert.Contains("aria-sort=\"ascending\"", html);
+        Assert.Contains("▲", html);
         Assert.Contains("table-baseball", html);
     }
 
@@ -73,7 +76,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=whip&singleSeason=false&minIp=1000");
 
         AssertPartialResponse(html);
-        Assert.Contains("WHIP ↑", html);
+        Assert.Contains("aria-sort=\"ascending\"", html);
+        Assert.Contains("▲", html);
         Assert.Contains("Pitching Leaders - WHIP", html);
     }
 
@@ -83,7 +87,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=w");
 
         AssertPartialResponse(html);
-        Assert.Contains("W ↓", html);
+        Assert.Contains("aria-sort=\"descending\"", html);
+        Assert.Contains("▼", html);
     }
 
     [Fact]
@@ -92,7 +97,8 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
         var html = await GetHtmxStringAsync("/Stats/Pitching?stat=so");
 
         AssertPartialResponse(html);
-        Assert.Contains("SO ↓", html);
+        Assert.Contains("aria-sort=\"descending\"", html);
+        Assert.Contains("▼", html);
     }
 
     [Fact]
@@ -112,7 +118,7 @@ public class PitchingLeaderboardTests(WebApplicationFactory<Program> factory) : 
 
         AssertPartialResponse(html);
         Assert.Contains("hx-include=\"#filter-form\"", html);
-        Assert.Contains("ERA ↑", html);
+        Assert.Contains("aria-sort=\"ascending\"", html);
     }
 
     [Fact]

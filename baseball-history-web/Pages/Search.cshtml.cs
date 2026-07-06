@@ -33,6 +33,12 @@ public class SearchModel(BaseballDbContext context, IMemoryCache cache) : PageMo
         {
             await RunSearchAsync(isDropdown, page);
         }
+        else if (isDropdown)
+        {
+            // Too short to search: render an empty dropdown, not the
+            // "no results" state — nothing was actually searched.
+            ViewModel.Query = "";
+        }
 
         if (isDropdown) return Partial("_SearchResults", ViewModel);
         if (isPagePartial) return Partial("_SearchPageResults", ViewModel);
