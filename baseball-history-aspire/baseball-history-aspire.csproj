@@ -1,12 +1,13 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.2.3">
 
   <ItemGroup>
+    <ProjectReference Include="..\baseball-history-mcp\baseball-history-mcp.csproj" />
     <ProjectReference Include="..\baseball-history-web\baseball-history-web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.2.4" />
-    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.2.4" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.4.6" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.4.6" />
   </ItemGroup>
 
   <PropertyGroup>

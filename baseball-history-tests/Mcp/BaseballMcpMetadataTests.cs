@@ -89,7 +89,7 @@ public class BaseballMcpMetadataTests
 
         Assert.Equal("baseball-history-mcp", infoDocument.RootElement.GetProperty("name").GetString());
         Assert.False(infoDocument.RootElement.GetProperty("httpTransportEnabled").GetBoolean());
-        Assert.Contains("No-go for v1", infoDocument.RootElement.GetProperty("httpTransportRecommendation").GetString());
+        Assert.Contains("--transport http", infoDocument.RootElement.GetProperty("httpTransportRecommendation").GetString());
         Assert.Equal("ConnectionStrings:Lahman", infoDocument.RootElement.GetProperty("connectionStringKey").GetString());
         Assert.Equal(50, infoDocument.RootElement.GetProperty("limits").GetProperty("franchiseListPageSizeMax").GetInt32());
         Assert.Equal(50, infoDocument.RootElement.GetProperty("limits").GetProperty("hallOfFamePageSizeMax").GetInt32());
@@ -145,7 +145,8 @@ public class BaseballMcpMetadataTests
                 Name: "baseball-history-mcp",
                 Title: "Baseball History MCP",
                 Version: "1.0.0-test",
-                Description: "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."));
+                Description: "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."),
+            new McpTransportInfo(McpTransportMode.Stdio));
     }
 
     private static string GetProjectDirectory(string projectName)

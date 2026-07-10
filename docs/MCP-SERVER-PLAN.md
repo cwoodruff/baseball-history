@@ -2,16 +2,16 @@
 
 ## Status
 
-`baseball-history-mcp` is the shipped **v1** MCP server for this repository.
+`baseball-history-mcp` is the shipped MCP server for this repository.
 
-- **Transport:** stdio only
+- **Transport:** stdio (default) and streamable HTTP on port 5190 (`--transport http`)
 - **Runtime database contract:** `ConnectionStrings:Lahman`
 - **Database provider:** PostgreSQL via Npgsql
 - **Posture:** read-only, bounded queries, no mutations
 
-This file keeps the original path so existing README links continue to work, but the content is now the contributor/client adoption guide for the shipped v1 surface.
+This file keeps the original path so existing README links continue to work, but the content is now the contributor/client adoption guide for the shipped surface.
 
-## What v1 actually ships
+## What ships today
 
 The server exposes a deliberately small MCP surface:
 
@@ -38,65 +38,65 @@ The server exposes a deliberately small MCP surface:
    - Full Hall of Fame voting history for one player when Lahman voting rows exist
 10. `get_player_salary_history`
     - Salary history and career total for one player when Lahman salary rows exist
-11. `get_team_payroll`
-    - One team payroll snapshot for a supported salary year
-12. `get_salary_leaders`
+11. `get_salary_leaders`
     - Highest-paid player rows with optional year filtering and paging
-13. `get_server_diagnostics`
+12. `get_server_diagnostics`
     - Safe runtime posture and limits; no secrets returned
 
 ### Resources
 
 - `baseball-history://server/info`
   - Server identity, startup requirements, limits, tool names, and resource links
+- `baseball-history://server/workflow-guide`
+  - Workflow routing for common baseball question types
 - `baseball-history://server/stats-catalog`
   - Supported batting/pitching stats plus the supported Lahman year span
 - `baseball-history://server/diagnostics`
   - Safe runtime posture and connectivity status
-- `baseball-history://server/transport-policy`
-  - The shipped v1 HTTP no-go recommendation and the MCP C# SDK host-validation/CORS guidance behind it
-- `baseball-history://guides/getting-started`
-  - The recommended discovery-first adoption path for real MCP clients
-- `baseball-history://guides/workflows`
-  - Representative shipped v1 workflows for discovery, leaderboards, Hall of Fame, salaries, and diagnostics
+- `baseball-history://hall-of-fame/guide`
+  - Hall of Fame tool limits, year coverage, and voting-history caveats
+- `baseball-history://salary/guide`
+  - Salary tool limits, year coverage, and row-shape caveats
 
-### Configured limits in v1
+### Configured limits
 
-These concrete caps should match the shipped `baseball-history://server/info` limit snapshot:
+These concrete caps match `appsettings.json` and the shipped `baseball-history://server/info` limit snapshot:
 
 - Query timeout: **30 seconds**
 - `search_players` page size max: **100**
 - `list_franchises` page size max: **50**
-- `list_hall_of_fame_inductees` page size max: **100**
-- Batting/pitching/salary leaderboard page size max: **100**
-- `get_player_salary_history` season cap: **20**
-- `get_team_payroll` player-row cap: **25**
+- `list_hall_of_fame_inductees` page size max: **50**
+- Batting/pitching leaderboard page size max: **100**
+- `get_hall_of_fame_voting_history` row cap: **25**
+- `get_player_salary_history` season cap: **40**
+- `get_salary_leaders` page size max: **50**
 
-If you need capabilities beyond that surface, treat them as follow-on work. Do not document or assume generic SQL, writes, or REST-parity tools in v1 because they are not part of the shipped MCP contract.
+If you need capabilities beyond that surface, treat them as follow-on work. Do not document or assume generic SQL, writes, or REST-parity tools because they are not part of the shipped MCP contract.
 
-## Why v1 is stdio-first
+## Transports
 
-v1 is stdio-first on purpose:
+The server supports two transports from one executable, selected by `--transport <stdio|http>` (or the `MCP_TRANSPORT` environment variable). stdio is the default when nothing is specified.
 
-- It keeps adoption local and explicit while the MCP contracts settle.
-- It avoids premature HTTP hosting decisions around auth, public exposure, CORS, host filtering, and operational hardening.
-- It matches the implementation that actually ships today: the host registers `WithStdioServerTransport()` and nothing else.
-- It lets contributors validate the read/query surface separately from the public Razor/minimal API app.
+### stdio (default)
 
-That posture keeps v1 coherent: one local process, one database contract, one bounded read-only server surface.
+The MCP client launches the server as a child process and communicates over standard input and output. All logging goes to stderr so the stdout protocol stream stays clean.
 
-## HTTP transport recommendation for v1
+> When launching over stdio via `dotnet run`, pass `--no-launch-profile`. Otherwise `dotnet run` prints a "Using launch settings…" line to stdout, which corrupts the JSON-RPC stream.
 
-**Recommendation: no-go for v1. Keep `baseball-history-mcp` stdio-only.**
+### Streamable HTTP on port 5190
 
-That is grounded in the MCP C# SDK guidance for Streamable HTTP hosting:
+`--transport http` (or the `http` launch profile) serves streamable HTTP at `http://localhost:5190/`, with health endpoints at `/healthz` and `/alive` from the shared service defaults. Port 5190 is unique within this solution (the web app uses 5186/7209; Aspire infrastructure uses 15066–23211).
 
-- local HTTP servers should restrict `AllowedHosts` to loopback values instead of `"*"` because Kestrel does not validate `Host` headers by default
-- CORS should only be enabled when browser-based cross-origin access is intentional
-- CORS is not a substitute for host validation
-- stateful or resumable HTTP flows require additional CORS headers such as `Mcp-Session-Id`
+Hardening currently in place, per the MCP C# SDK guidance for local HTTP hosting:
 
-This repository does not yet have a committed browser client or remote-hosting requirement for MCP. Enabling HTTP now would therefore add host-filtering, CORS-policy, ingress, and transport-test obligations without improving the shipped stdio-first use case. Revisit HTTP only when the team is ready to own explicit `AllowedHosts` configuration and a narrowly scoped CORS allowlist end to end.
+- The server binds to localhost only; there is no remote or public hosting story.
+- `AllowedHosts` is restricted to `localhost;127.0.0.1` because Kestrel does not validate `Host` headers by default.
+- No CORS is enabled; browser-based cross-origin access is not a supported scenario.
+- There is no authentication — do not expose the port beyond the local machine.
+
+### Aspire orchestration
+
+The Aspire AppHost (`baseball-history-aspire`) hosts the MCP server as the `mcp` resource using the `http` launch profile, with an HTTP health check on `/healthz`. `aspire run` (or `dotnet run --project baseball-history-aspire`) starts the web app and the MCP server together.
 
 ## Local setup for contributors
 
@@ -126,11 +126,24 @@ You can also provide the same value through `ConnectionStrings__Lahman`. The ser
 
 ### 3. Run the server locally
 
+stdio (for MCP clients that launch the process themselves):
+
 ```bash
-dotnet run --project baseball-history-mcp --no-build
+dotnet run --project baseball-history-mcp --no-build --no-launch-profile
 ```
 
-The process stays attached to stdio for MCP clients. It is not an HTTP server.
+Streamable HTTP on port 5190:
+
+```bash
+dotnet run --project baseball-history-mcp --launch-profile http
+curl http://localhost:5190/healthz   # -> Healthy
+```
+
+Everything at once via Aspire:
+
+```bash
+aspire run
+```
 
 ### 4. Validate the shipped metadata/query surface
 
@@ -140,9 +153,11 @@ Use the existing MCP-focused test coverage when touching the server contract or 
 dotnet test baseball-history-tests --filter "FullyQualifiedName~baseball_history_tests.Mcp"
 ```
 
+This includes stdio protocol integration tests and HTTP smoke tests that spawn the server in each mode.
+
 ## Sample local client configuration
 
-Example workspace `.mcp.json` entry for a stdio client that launches the server through `dotnet run`:
+This repository's own `.mcp.json` registers the server over stdio (no separately running server needed):
 
 ```json
 {
@@ -152,9 +167,25 @@ Example workspace `.mcp.json` entry for a stdio client that launches the server 
       "args": [
         "run",
         "--project",
-        "/absolute/path/to/baseball-history/baseball-history-mcp/baseball-history-mcp.csproj",
-        "--no-build"
-      ]
+        "baseball-history-mcp",
+        "--no-launch-profile"
+      ],
+      "env": {
+        "Logging__LogLevel__Default": "Warning"
+      }
+    }
+  }
+}
+```
+
+If the server is already running in HTTP mode (for example under `aspire run`), an HTTP client entry avoids per-session startup latency:
+
+```json
+{
+  "mcpServers": {
+    "baseball-history": {
+      "type": "http",
+      "url": "http://localhost:5190"
     }
   }
 }
@@ -162,11 +193,12 @@ Example workspace `.mcp.json` entry for a stdio client that launches the server 
 
 Notes:
 
-- Use an absolute path so the client does not depend on its own working-directory behavior.
+- For clients outside this repository, use an absolute `--project` path so the client does not depend on its own working-directory behavior.
 - The client machine still needs `ConnectionStrings:Lahman` configured through user-secrets or environment variables before launch.
-- If you already built the solution, `--no-build` keeps startup faster and closer to normal client usage.
+- Add `--no-build` to the args if you keep the solution built; it makes startup faster and closer to normal client usage.
+- Keep `--no-launch-profile` for stdio entries (see the stdio transport note above).
 
-## How client authors should adopt v1
+## How client authors should adopt the server
 
 Start from the discoverable metadata instead of hard-coding assumptions:
 
@@ -174,7 +206,7 @@ Start from the discoverable metadata instead of hard-coding assumptions:
    - Confirm transport, limits, tool names, and startup requirements
 2. Read `baseball-history://server/stats-catalog`
    - Discover supported stat keys and aliases before leaderboard calls
-3. Read `baseball-history://guides/getting-started` or `baseball-history://guides/workflows`
+3. Read `baseball-history://server/workflow-guide`, `baseball-history://hall-of-fame/guide`, and `baseball-history://salary/guide`
    - Follow the shipped discovery and workflow guidance instead of inventing new tool sequences
 4. Use the bounded tools
    - Respect page contracts and configured caps
@@ -190,18 +222,16 @@ Client authors should assume:
 
 Client authors should **not** assume:
 
-- HTTP endpoints
+- Remote or authenticated HTTP access (the HTTP transport is localhost-only)
 - Browser/CORS compatibility
 - Write tools
 - Arbitrary table/query access
 - Full parity with the web app or future roadmap ideas
 
-## Explicit v1 non-goals
+## Explicit non-goals
 
-These are out of scope for the shipped v1 server:
+These are out of scope for the shipped server:
 
-- HTTP or Streamable HTTP transport
-- `ModelContextProtocol.AspNetCore`
 - Remote/public hosting
 - Browser-based MCP usage or CORS support
 - Authentication/authorization rollout beyond local execution
@@ -209,20 +239,17 @@ These are out of scope for the shipped v1 server:
 - Write/update/delete tools
 - Full REST parity with the web app
 - Reusing Razor `PageModel` types, partials, or HTML view models as MCP contracts
-- Aspire orchestration for the MCP host
 - Additional baseball domains that are not currently exposed as MCP tools/resources
 
 ## Plausible future expansion
 
-Reasonable follow-on directions, once v1 adoption is stable:
+Reasonable follow-on directions:
 
-1. **HTTP transport**
+1. **Remote hosting**
    - Only after auth, exposure, and hardening decisions are explicit
 2. **Broader read surface**
    - Additional baseball domains beyond the current player/franchise/team-season/leaderboard/Hall-of-Fame/salary surface, but only when shipped as bounded read models/tools
-3. **Operational hosting**
-   - Aspire orchestration or other local/dev hosting support if the team decides the MCP host should participate in the resource graph
-4. **More discoverability**
+3. **More discoverability**
    - Additional metadata resources when they reflect real shipped behavior, not aspirational scope
 
 Future notes are roadmap-shaped, not promises. Keep documentation anchored to code, tests, and the currently exported MCP surface.

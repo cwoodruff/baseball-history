@@ -14,7 +14,8 @@ public sealed class BaseballMcpMetadataService(
     IConfiguration configuration,
     IMemoryCache cache,
     IOptions<BaseballMcpOptions> options,
-    ServerBuildMetadata buildMetadata)
+    ServerBuildMetadata buildMetadata,
+    McpTransportInfo transport)
 {
     private const string SupportedYearSpanCacheKey = "baseball-history-mcp:supported-year-span";
     private const string HallOfFameYearSpanCacheKey = "baseball-history-mcp:hall-of-fame-year-span";
@@ -61,9 +62,9 @@ public sealed class BaseballMcpMetadataService(
             buildMetadata.Title,
             buildMetadata.Version,
             buildMetadata.Description,
-            Transport: "stdio",
-            HttpTransportEnabled: false,
-            HttpTransportRecommendation: "No-go for v1. Keep the shipped server stdio-only until the team is ready to own explicit HTTP host validation and narrowly scoped CORS.",
+            Transport: transport.Name,
+            HttpTransportEnabled: transport.HttpEnabled,
+            HttpTransportRecommendation: "Streamable HTTP is available via --transport http on port 5190; stdio remains the default for local MCP clients.",
             ReadOnly: true,
             ConnectionStringKey: "ConnectionStrings:Lahman",
             Limits: CreateLimitSnapshot(),
@@ -71,7 +72,7 @@ public sealed class BaseballMcpMetadataService(
             ResourceLinks,
             StartupRequirements:
             [
-                "ConnectionStrings:Lahman must be configured before the stdio server starts.",
+                "ConnectionStrings:Lahman must be configured before the server starts.",
                 "Placeholder connection strings containing '<' are rejected at startup.",
                 $"Player search page size is capped at {options.Value.Limits.PlayerSearchPageSizeMax} rows, franchise listing page size is capped at {options.Value.Limits.FranchiseListPageSizeMax} rows, Hall of Fame page size is capped at {options.Value.Limits.HallOfFamePageSizeMax} rows, batting and pitching leaderboard page size is capped at {options.Value.Limits.LeaderboardPageSizeMax} rows, salary history is capped at {options.Value.Limits.SalaryHistorySeasonsMax} seasons, and salary leaderboard page size is capped at {options.Value.Limits.SalaryLeaderboardPageSizeMax} rows.",
                 $"Database commands use a configured timeout of {options.Value.QueryTimeoutSeconds} seconds.",
@@ -331,7 +332,7 @@ public sealed class BaseballMcpMetadataService(
         return new ServerDiagnosticsDocument(
             buildMetadata.Name,
             buildMetadata.Version,
-            Transport: "stdio",
+            Transport: transport.Name,
             DatabaseProvider: "Npgsql",
             QueryTrackingBehavior: nameof(QueryTrackingBehavior.NoTracking),
             UsesPooledDbContextFactory: true,

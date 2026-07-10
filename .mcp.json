@@ -1,11 +1,67 @@
 {
   "mcpServers": {
+    "baseball-history": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "baseball-history-mcp",
+        "--no-launch-profile"
+      ],
+      "env": {
+        "Logging__LogLevel__Default": "Warning"
+      }
+    },
     "aspire": {
       "command": "aspire",
       "args": [
         "agent",
         "mcp"
       ]
+    },
+    "AgentsRoom-Browser": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/browser-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/cwoodruff/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1783549239398-6quhvm"
+      }
+    },
+    "AgentsRoom-MCP": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/app-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_PROJECT_ID": "proj-1783549239398-6quhvm",
+        "AR_PROJECT_PATH": "/Users/cwoodruff/Git/baseball-history",
+        "AR_API_BASE_URL": "https://agentsroom.dev",
+        "AR_SETTINGS_FILE": "/Users/cwoodruff/.agentsroom/settings.json",
+        "AR_BRIDGE_FILE": "/Users/cwoodruff/.agentsroom/browser-bridge.json"
+      }
+    },
+    "AgentsRoom-Test-Runner": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/test-runner-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/cwoodruff/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1783549239398-6quhvm",
+        "AR_PROJECT_PATH": "/Users/cwoodruff/Git/baseball-history"
+      }
+    },
+    "AgentsRoom-QA-Tester": {
+      "command": "node",
+      "args": [
+        "/Applications/AgentsRoom.app/Contents/Resources/qa-tester-mcp-server.cjs"
+      ],
+      "env": {
+        "AR_BROWSER_BRIDGE_FILE": "/Users/cwoodruff/.agentsroom/browser-bridge.json",
+        "AR_BROWSER_PROJECT_ID": "proj-1783549239398-6quhvm"
+      }
     }
   }
 }

@@ -19,7 +19,8 @@
                 <strong>What is MCP?</strong>
                 The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>
                 is an open standard that lets AI assistants call external tools. This server runs over
-                <strong>stdio</strong>, is <strong>read-only</strong>, and has <strong>no HTTP transport and no authentication</strong>.
+                <strong>stdio</strong> by default or <strong>streamable HTTP on port 5190</strong> (<code>--transport http</code>),
+                is <strong>read-only</strong>, and has <strong>no authentication</strong> &mdash; the HTTP endpoint binds to localhost only.
             </div>
         </div>
 
@@ -27,9 +28,11 @@
         <section class="mb-5">
             <h2 class="border-bottom pb-2">How it works</h2>
             <p>
-                The server exposes <strong>12 read-only tools</strong> and <strong>6 JSON resources</strong> over the
-                stdio transport. The MCP client launches the server as a child process and communicates over its
-                standard input and output &mdash; there is no network endpoint to call.
+                The server exposes <strong>12 read-only tools</strong> and <strong>6 JSON resources</strong>. Over the
+                default stdio transport the MCP client launches the server as a child process and communicates over its
+                standard input and output. Alternatively, run it with <code>--transport http</code> (or the
+                <code>http</code> launch profile) to serve streamable HTTP on <code>http://localhost:5190</code>,
+                which is how the Aspire AppHost hosts it.
             </p>
             <ul>
                 <li>Requires a <code>ConnectionStrings:Lahman</code> value at startup. Placeholder strings containing <code>&lt;</code> are rejected.</li>

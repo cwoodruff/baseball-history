@@ -22,4 +22,7 @@ builder.AddProject<Projects.baseball_history_web>("web")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/");
 
+builder.AddProject<Projects.baseball_history_mcp>("mcp", launchProfileName: "http")
+    .WithHttpHealthCheck("/healthz");
+
 builder.Build().Run();

@@ -378,7 +378,7 @@ public sealed class McpHostFixture : IAsyncLifetime
     public static Process StartHostProcess(string connectionString, bool isolateUserSecrets = false)
     {
         var projectPath = GetProjectPath("baseball-history-mcp", "baseball-history-mcp.csproj");
-        var startInfo = new ProcessStartInfo("dotnet", $"run --project \"{projectPath}\" --no-build")
+        var startInfo = new ProcessStartInfo("dotnet", $"run --project \"{projectPath}\" --no-build --no-launch-profile")
         {
             WorkingDirectory = GetSolutionDirectory(),
             RedirectStandardInput = true,

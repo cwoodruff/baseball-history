@@ -50,8 +50,8 @@ project startup flow.
 
 ### Optional: Run the MCP server locally
 
-The repository also ships a separate stdio-first MCP host in
-`baseball-history-mcp`.
+The repository also ships an MCP host in `baseball-history-mcp` that supports
+stdio (default) and streamable HTTP on port 5190.
 
 ```bash
 # Configure the shared PostgreSQL connection string
@@ -59,11 +59,17 @@ dotnet user-secrets set --project baseball-history-mcp \
   "ConnectionStrings:Lahman" \
   "Host=<server>;Port=5432;Database=lahman;Username=<user>;Password=<password>;SSL Mode=Require;Trust Server Certificate=true"
 
-# Run the MCP server over stdio
-dotnet run --project baseball-history-mcp --no-build
+# Run the MCP server over stdio (--no-launch-profile keeps stdout clean for the protocol)
+dotnet run --project baseball-history-mcp --no-build --no-launch-profile
+
+# Or serve streamable HTTP on http://localhost:5190 (health check at /healthz)
+dotnet run --project baseball-history-mcp --launch-profile http
 ```
 
-Use [MCP-SERVER-PLAN.md](./MCP-SERVER-PLAN.md) for the full v1 surface,
+The Aspire AppHost also hosts the MCP server as the `mcp` resource, so
+`aspire run` starts it alongside the web app.
+
+Use [MCP-SERVER-PLAN.md](./MCP-SERVER-PLAN.md) for the full shipped surface,
 sample client configuration, non-goals, and adoption guidance.
 
 ### Database Setup
