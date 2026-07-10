@@ -4,7 +4,7 @@
 
 `baseball-history-mcp` is the shipped MCP server for this repository.
 
-- **Transport:** stdio (default) and streamable HTTP on port 5190 (`--transport http`)
+- **Transport:** streamable HTTP on port 5190
 - **Runtime database contract:** `ConnectionStrings:Lahman`
 - **Database provider:** PostgreSQL via Npgsql
 - **Posture:** read-only, bounded queries, no mutations
@@ -73,19 +73,9 @@ These concrete caps match `appsettings.json` and the shipped `baseball-history:/
 
 If you need capabilities beyond that surface, treat them as follow-on work. Do not document or assume generic SQL, writes, or REST-parity tools because they are not part of the shipped MCP contract.
 
-## Transports
+## Transport
 
-The server supports two transports from one executable, selected by `--transport <stdio|http>` (or the `MCP_TRANSPORT` environment variable). stdio is the default when nothing is specified.
-
-### stdio (default)
-
-The MCP client launches the server as a child process and communicates over standard input and output. All logging goes to stderr so the stdout protocol stream stays clean.
-
-> When launching over stdio via `dotnet run`, pass `--no-launch-profile`. Otherwise `dotnet run` prints a "Using launch settings…" line to stdout, which corrupts the JSON-RPC stream.
-
-### Streamable HTTP on port 5190
-
-`--transport http` (or the `http` launch profile) serves streamable HTTP at `http://localhost:5190/`, with health endpoints at `/healthz` and `/alive` from the shared service defaults. Port 5190 is unique within this solution (the web app uses 5186/7209; Aspire infrastructure uses 15066–23211).
+The server serves streamable HTTP at `http://localhost:5190/`, with health endpoints at `/healthz` and `/alive` from the shared service defaults. Port 5190 is unique within this solution (the web app uses 5186/7209; Aspire infrastructure uses 15066–23211). The client connects to the running server over that URL; it does not launch the process itself.
 
 Hardening currently in place, per the MCP C# SDK guidance for local HTTP hosting:
 
@@ -126,16 +116,10 @@ You can also provide the same value through `ConnectionStrings__Lahman`. The ser
 
 ### 3. Run the server locally
 
-stdio (for MCP clients that launch the process themselves):
-
-```bash
-dotnet run --project baseball-history-mcp --no-build --no-launch-profile
-```
-
 Streamable HTTP on port 5190:
 
 ```bash
-dotnet run --project baseball-history-mcp --launch-profile http
+dotnet run --project baseball-history-mcp
 curl http://localhost:5190/healthz   # -> Healthy
 ```
 
@@ -153,39 +137,18 @@ Use the existing MCP-focused test coverage when touching the server contract or 
 dotnet test baseball-history-tests --filter "FullyQualifiedName~baseball_history_tests.Mcp"
 ```
 
-This includes stdio protocol integration tests and HTTP smoke tests that spawn the server in each mode.
+This includes protocol integration tests and HTTP smoke tests that spawn the server and exercise it over HTTP.
 
 ## Sample local client configuration
 
-This repository's own `.mcp.json` registers the server over stdio (no separately running server needed):
-
-```json
-{
-  "mcpServers": {
-    "baseball-history": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "baseball-history-mcp",
-        "--no-launch-profile"
-      ],
-      "env": {
-        "Logging__LogLevel__Default": "Warning"
-      }
-    }
-  }
-}
-```
-
-If the server is already running in HTTP mode (for example under `aspire run`), an HTTP client entry avoids per-session startup latency:
+The server must already be running (for example under `aspire run` or `dotnet run --project baseball-history-mcp`). This repository's own `.mcp.json` connects to it over HTTP:
 
 ```json
 {
   "mcpServers": {
     "baseball-history": {
       "type": "http",
-      "url": "http://localhost:5190"
+      "url": "http://localhost:5190/"
     }
   }
 }
@@ -193,10 +156,8 @@ If the server is already running in HTTP mode (for example under `aspire run`), 
 
 Notes:
 
-- For clients outside this repository, use an absolute `--project` path so the client does not depend on its own working-directory behavior.
-- The client machine still needs `ConnectionStrings:Lahman` configured through user-secrets or environment variables before launch.
-- Add `--no-build` to the args if you keep the solution built; it makes startup faster and closer to normal client usage.
-- Keep `--no-launch-profile` for stdio entries (see the stdio transport note above).
+- Start the server before the client connects; the client no longer launches the process itself.
+- The `ConnectionStrings:Lahman` value is configured on the server (through user-secrets or environment variables), not by the client.
 
 ## How client authors should adopt the server
 

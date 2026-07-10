@@ -47,8 +47,6 @@ public sealed record ServerInfoDocument(
     string Version,
     string Description,
     string Transport,
-    bool HttpTransportEnabled,
-    string HttpTransportRecommendation,
     bool ReadOnly,
     string ConnectionStringKey,
     McpLimitSnapshot Limits,
