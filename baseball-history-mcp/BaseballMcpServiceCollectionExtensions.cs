@@ -14,7 +14,7 @@ namespace baseball_history_mcp;
 
 internal static class BaseballMcpServiceCollectionExtensions
 {
-    public static IMcpServerBuilder AddBaseballMcpServer(this IHostApplicationBuilder builder, McpTransportInfo transport)
+    public static IMcpServerBuilder AddBaseballMcpServer(this IHostApplicationBuilder builder)
     {
         builder.Configuration.AddUserSecrets<UserSecretsMarker>(optional: true);
 
@@ -29,7 +29,6 @@ internal static class BaseballMcpServiceCollectionExtensions
                 "ConnectionStrings:Lahman must be set via user-secrets, environment variables, or Azure App Service configuration.");
         }
 
-        builder.Services.AddSingleton(transport);
         builder.Services.AddMemoryCache();
         builder.Services.AddSingleton(Options.Create(mcpOptions));
         builder.Services.AddSingleton<BaseballMcpRequestPolicy>();

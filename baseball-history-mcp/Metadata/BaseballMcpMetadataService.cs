@@ -14,9 +14,10 @@ public sealed class BaseballMcpMetadataService(
     IConfiguration configuration,
     IMemoryCache cache,
     IOptions<BaseballMcpOptions> options,
-    ServerBuildMetadata buildMetadata,
-    McpTransportInfo transport)
+    ServerBuildMetadata buildMetadata)
 {
+    private const string TransportName = "http";
+
     private const string SupportedYearSpanCacheKey = "baseball-history-mcp:supported-year-span";
     private const string HallOfFameYearSpanCacheKey = "baseball-history-mcp:hall-of-fame-year-span";
     private const string SalaryYearSpanCacheKey = "baseball-history-mcp:salary-year-span";
@@ -62,9 +63,7 @@ public sealed class BaseballMcpMetadataService(
             buildMetadata.Title,
             buildMetadata.Version,
             buildMetadata.Description,
-            Transport: transport.Name,
-            HttpTransportEnabled: transport.HttpEnabled,
-            HttpTransportRecommendation: "Streamable HTTP is available via --transport http on port 5190; stdio remains the default for local MCP clients.",
+            Transport: TransportName,
             ReadOnly: true,
             ConnectionStringKey: "ConnectionStrings:Lahman",
             Limits: CreateLimitSnapshot(),
@@ -332,7 +331,7 @@ public sealed class BaseballMcpMetadataService(
         return new ServerDiagnosticsDocument(
             buildMetadata.Name,
             buildMetadata.Version,
-            Transport: transport.Name,
+            Transport: TransportName,
             DatabaseProvider: "Npgsql",
             QueryTrackingBehavior: nameof(QueryTrackingBehavior.NoTracking),
             UsesPooledDbContextFactory: true,

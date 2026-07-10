@@ -19,8 +19,8 @@
                 <strong>What is MCP?</strong>
                 The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>
                 is an open standard that lets AI assistants call external tools. This server runs over
-                <strong>stdio</strong> by default or <strong>streamable HTTP on port 5190</strong> (<code>--transport http</code>),
-                is <strong>read-only</strong>, and has <strong>no authentication</strong> &mdash; the HTTP endpoint binds to localhost only.
+                <strong>streamable HTTP on port 5190</strong>, is <strong>read-only</strong>, and has
+                <strong>no authentication</strong> &mdash; the endpoint binds to localhost only.
             </div>
         </div>
 
@@ -28,11 +28,10 @@
         <section class="mb-5">
             <h2 class="border-bottom pb-2">How it works</h2>
             <p>
-                The server exposes <strong>12 read-only tools</strong> and <strong>6 JSON resources</strong>. Over the
-                default stdio transport the MCP client launches the server as a child process and communicates over its
-                standard input and output. Alternatively, run it with <code>--transport http</code> (or the
-                <code>http</code> launch profile) to serve streamable HTTP on <code>http://localhost:5190</code>,
-                which is how the Aspire AppHost hosts it.
+                The server exposes <strong>12 read-only tools</strong> and <strong>6 JSON resources</strong> over
+                streamable HTTP at <code>http://localhost:5190</code>. Start the server yourself with
+                <code>dotnet run --project baseball-history-mcp</code> (or let the Aspire AppHost host it), then point
+                your MCP client at the URL. Health endpoints are available at <code>/healthz</code> and <code>/alive</code>.
             </p>
             <ul>
                 <li>Requires a <code>ConnectionStrings:Lahman</code> value at startup. Placeholder strings containing <code>&lt;</code> are rejected.</li>
@@ -44,18 +43,22 @@
         <!-- Connecting -->
         <section class="mb-5">
             <h2 class="border-bottom pb-2">Connecting</h2>
-            <p>The client launches the server with <code>dotnet</code> and supplies the database connection string through an environment variable.</p>
+            <p>
+                First start the server so the HTTP endpoint is listening. The server reads its database connection
+                string from the <code>ConnectionStrings__Lahman</code> environment variable (the .NET double-underscore
+                convention) or from user-secrets during local development &mdash; the client does not supply it.
+            </p>
+            <pre class="bg-dark text-light p-3 rounded"><code>ConnectionStrings__Lahman="Host=your-host;Database=baseball-history;Username=user;Password=secret" \
+  dotnet run --project /path/to/baseball-history-mcp</code></pre>
+            <p>Then point your MCP client at <code>http://localhost:5190/</code>.</p>
 
             <h5 class="mt-4">Claude Desktop / Claude Code</h5>
             <p>Add the server to your MCP configuration:</p>
             <pre class="bg-dark text-light p-3 rounded"><code>{
   "mcpServers": {
     "baseball-history": {
-      "command": "dotnet",
-      "args": ["run", "--project", "/path/to/baseball-history-mcp"],
-      "env": {
-        "ConnectionStrings__Lahman": "Host=your-host;Database=baseball-history;Username=user;Password=secret"
-      }
+      "type": "http",
+      "url": "http://localhost:5190/"
     }
   }
 }</code></pre>
@@ -65,18 +68,11 @@
             <pre class="bg-dark text-light p-3 rounded"><code>{
   "servers": {
     "baseball-history": {
-      "command": "dotnet",
-      "args": ["run", "--project", "/path/to/baseball-history-mcp"],
-      "env": {
-        "ConnectionStrings__Lahman": "Host=your-host;Database=baseball-history;Username=user;Password=secret"
-      }
+      "type": "http",
+      "url": "http://localhost:5190/"
     }
   }
 }</code></pre>
-            <p>
-                The connection string is read from the <code>ConnectionStrings__Lahman</code> environment variable
-                (the .NET double-underscore convention), or from user-secrets during local development.
-            </p>
         </section>
 
         <!-- Example prompts -->
@@ -190,20 +186,15 @@
         <section class="mb-5">
             <h2 class="border-bottom pb-2">Calling the server from code</h2>
             <p>
-                Use the official MCP client SDK to launch the server over stdio and call tools directly.
+                Use the official MCP client SDK to connect to the running server over HTTP and call tools directly.
                 This C# example uses the <code>ModelContextProtocol.Client</code> package:
             </p>
             <pre class="bg-dark text-light p-3 rounded"><code>using ModelContextProtocol.Client;
 
-var transport = new StdioClientTransport(new StdioClientTransportOptions
+var transport = new HttpClientTransport(new HttpClientTransportOptions
 {
     Name = "baseball-history",
-    Command = "dotnet",
-    Arguments = ["run", "--project", "/path/to/baseball-history-mcp"],
-    EnvironmentVariables = new Dictionary&lt;string, string?&gt;
-    {
-        ["ConnectionStrings__Lahman"] = "Host=your-host;Database=baseball-history;Username=user;Password=secret"
-    }
+    Endpoint = new Uri("http://localhost:5190/")
 });
 
 await using var client = await McpClientFactory.CreateAsync(transport);

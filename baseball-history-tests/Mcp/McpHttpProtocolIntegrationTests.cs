@@ -71,7 +71,7 @@ public sealed class McpHttpHostFixture : IAsyncLifetime
         var baseAddress = new Uri($"http://127.0.0.1:{port}");
 
         var projectPath = Path.Combine(GetSolutionDirectory(), "baseball-history-mcp", "baseball-history-mcp.csproj");
-        var startInfo = new ProcessStartInfo("dotnet", $"run --project \"{projectPath}\" --no-build -- --transport http")
+        var startInfo = new ProcessStartInfo("dotnet", $"run --project \"{projectPath}\" --no-build --no-launch-profile")
         {
             WorkingDirectory = GetSolutionDirectory(),
             RedirectStandardOutput = true,

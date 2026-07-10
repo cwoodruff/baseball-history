@@ -1,16 +1,8 @@
 {
   "mcpServers": {
     "baseball-history": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "baseball-history-mcp",
-        "--no-launch-profile"
-      ],
-      "env": {
-        "Logging__LogLevel__Default": "Warning"
-      }
+      "type": "http",
+      "url": "http://localhost:5190/"
     },
     "aspire": {
       "command": "aspire",

@@ -1,7 +1,8 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
 
 namespace baseball_history_tests.Mcp;
 
@@ -74,7 +75,7 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         using var workflowGuide = JsonDocument.Parse(McpHostFixture.ReadResourceText(guideResponse));
 
         Assert.Equal("baseball-history-mcp", infoPayload.RootElement.GetProperty("name").GetString());
-        Assert.False(infoPayload.RootElement.GetProperty("httpTransportEnabled").GetBoolean());
+        Assert.Equal("http", infoPayload.RootElement.GetProperty("transport").GetString());
         Assert.Contains(
             infoPayload.RootElement.GetProperty("toolNames").EnumerateArray().Select(value => value.GetString()),
             value => value == "get_salary_leaders");
@@ -220,7 +221,7 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
     [Fact]
     public async Task Host_WithPlaceholderConnectionString_FailsFast()
     {
-        using var process = McpHostFixture.StartHostProcess("Host=<server>;Database=<db>;", isolateUserSecrets: true);
+        using var process = McpHostFixture.StartHostProcess("Host=<server>;Database=<db>;", baseAddress: null, isolateUserSecrets: true);
 
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var exited = true;
@@ -254,29 +255,20 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
 
 public sealed class McpHostFixture : IAsyncLifetime
 {
-    private readonly ConcurrentQueue<string> _stderrLines = new();
-    private readonly Channel<string> _stdoutLines = Channel.CreateUnbounded<string>();
     private Process? _process;
-    private Task? _stdoutPump;
-    private Task? _stderrPump;
-    private bool _initialized;
+    private HttpClient? _client;
+    private string _sessionId = string.Empty;
     private int _nextId;
 
     public async Task InitializeAsync()
     {
-        _process = StartHostProcess(TestDatabaseFactory.GetConnectionString());
-        _stdoutPump = PumpAsync(_process.StandardOutput, line => _stdoutLines.Writer.WriteAsync(line).AsTask());
-        _stderrPump = PumpAsync(_process.StandardError, line =>
-        {
-            _stderrLines.Enqueue(line);
-            while (_stderrLines.Count > 200 && _stderrLines.TryDequeue(out _))
-            {
-            }
+        var baseAddress = new Uri($"http://127.0.0.1:{GetFreePort()}");
+        _process = StartHostProcess(TestDatabaseFactory.GetConnectionString(), baseAddress);
+        _client = new HttpClient { BaseAddress = baseAddress, Timeout = TimeSpan.FromSeconds(20) };
 
-            return Task.CompletedTask;
-        });
+        await WaitForHealthyAsync();
 
-        using var initializeResponse = await RequestAsync(
+        using var response = await PostJsonRpcAsync(
             "initialize",
             new
             {
@@ -287,16 +279,23 @@ public sealed class McpHostFixture : IAsyncLifetime
                     name = "baseball-history-tests",
                     version = "1.0"
                 }
-            });
+            },
+            sessionId: null);
+        response.EnsureSuccessStatusCode();
+        _sessionId = response.Headers.GetValues("Mcp-Session-Id").Single();
 
-        Assert.Equal("baseball-history-mcp", initializeResponse.RootElement.GetProperty("result").GetProperty("serverInfo").GetProperty("name").GetString());
+        using var initializeDocument = await ReadJsonRpcDocumentAsync(response);
+        Assert.Equal(
+            "baseball-history-mcp",
+            initializeDocument.RootElement.GetProperty("result").GetProperty("serverInfo").GetProperty("name").GetString());
+
         await NotifyAsync("notifications/initialized");
-        _initialized = true;
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        _stdoutLines.Writer.TryComplete();
+        _client?.Dispose();
+        _client = null;
 
         if (_process is not null)
         {
@@ -310,55 +309,19 @@ public sealed class McpHostFixture : IAsyncLifetime
             catch (InvalidOperationException)
             {
             }
+
+            _process.Dispose();
+            _process = null;
         }
 
-        if (_stdoutPump is not null)
-        {
-            await _stdoutPump;
-        }
-
-        if (_stderrPump is not null)
-        {
-            await _stderrPump;
-        }
-
-        _process?.Dispose();
-        _process = null;
+        return Task.CompletedTask;
     }
 
     public async Task<JsonDocument> RequestAsync(string method, object? parameters)
     {
-        if (_process is null)
-        {
-            throw new InvalidOperationException("MCP host process has not started.");
-        }
-
-        if (!_initialized && method != "initialize")
-        {
-            throw new InvalidOperationException("MCP host must be initialized before sending requests.");
-        }
-
-        var request = JsonSerializer.Serialize(new
-        {
-            jsonrpc = "2.0",
-            id = Interlocked.Increment(ref _nextId),
-            method,
-            @params = parameters
-        });
-
-        await _process.StandardInput.WriteLineAsync(request);
-        await _process.StandardInput.FlushAsync();
-
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        try
-        {
-            var line = await _stdoutLines.Reader.ReadAsync(timeout.Token);
-            return JsonDocument.Parse(line);
-        }
-        catch (OperationCanceledException ex)
-        {
-            throw new TimeoutException($"Timed out waiting for MCP response to '{method}'.{Environment.NewLine}{GetDiagnostics()}", ex);
-        }
+        using var response = await PostJsonRpcAsync(method, parameters, _sessionId);
+        response.EnsureSuccessStatusCode();
+        return await ReadJsonRpcDocumentAsync(response);
     }
 
     public static JsonDocument ReadToolPayload(JsonDocument response) =>
@@ -375,19 +338,19 @@ public sealed class McpHostFixture : IAsyncLifetime
         response.RootElement.GetProperty("result").GetProperty("contents")[0].GetProperty("text").GetString()
         ?? throw new InvalidOperationException("Expected MCP resource text content.");
 
-    public static Process StartHostProcess(string connectionString, bool isolateUserSecrets = false)
+    public static Process StartHostProcess(string connectionString, Uri? baseAddress, bool isolateUserSecrets = false)
     {
         var projectPath = GetProjectPath("baseball-history-mcp", "baseball-history-mcp.csproj");
         var startInfo = new ProcessStartInfo("dotnet", $"run --project \"{projectPath}\" --no-build --no-launch-profile")
         {
             WorkingDirectory = GetSolutionDirectory(),
-            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
         };
 
         startInfo.Environment["ConnectionStrings__Lahman"] = connectionString;
+        startInfo.Environment["ASPNETCORE_URLS"] = (baseAddress ?? new Uri($"http://127.0.0.1:{GetFreePort()}")).ToString();
         if (isolateUserSecrets)
         {
             startInfo.Environment["HOME"] = GetSolutionDirectory();
@@ -404,35 +367,96 @@ public sealed class McpHostFixture : IAsyncLifetime
 
     private async Task NotifyAsync(string method)
     {
-        if (_process is null)
-        {
-            throw new InvalidOperationException("MCP host process has not started.");
-        }
+        var payload = JsonSerializer.Serialize(new { jsonrpc = "2.0", method });
+        using var request = CreateJsonRpcRequest(payload, _sessionId);
+        using var response = await Client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
 
-        var notification = JsonSerializer.Serialize(new
+    private async Task<HttpResponseMessage> PostJsonRpcAsync(string method, object? parameters, string? sessionId)
+    {
+        var payload = JsonSerializer.Serialize(new
         {
             jsonrpc = "2.0",
-            method
+            id = Interlocked.Increment(ref _nextId),
+            method,
+            @params = parameters
         });
 
-        await _process.StandardInput.WriteLineAsync(notification);
-        await _process.StandardInput.FlushAsync();
+        using var request = CreateJsonRpcRequest(payload, sessionId);
+        return await Client.SendAsync(request);
     }
 
-    private string GetDiagnostics()
+    private static HttpRequestMessage CreateJsonRpcRequest(string payload, string? sessionId)
     {
-        var stderr = string.Join(Environment.NewLine, _stderrLines.Reverse().Take(25).Reverse());
-        return string.IsNullOrWhiteSpace(stderr)
-            ? "No stderr output captured."
-            : $"Recent stderr:{Environment.NewLine}{stderr}";
-    }
-
-    private static async Task PumpAsync(StreamReader reader, Func<string, Task> onLine)
-    {
-        while (await reader.ReadLineAsync() is { } line)
+        var request = new HttpRequestMessage(HttpMethod.Post, "/")
         {
-            await onLine(line);
+            Content = new StringContent(payload, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Add("Accept", "application/json, text/event-stream");
+        if (!string.IsNullOrEmpty(sessionId))
+        {
+            request.Headers.Add("Mcp-Session-Id", sessionId);
         }
+
+        return request;
+    }
+
+    private static async Task<JsonDocument> ReadJsonRpcDocumentAsync(HttpResponseMessage response)
+    {
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (response.Content.Headers.ContentType?.MediaType == "text/event-stream")
+        {
+            var dataLine = body.Split('\n')
+                .Select(line => line.TrimEnd('\r'))
+                .FirstOrDefault(line => line.StartsWith("data: ", StringComparison.Ordinal))
+                ?? throw new InvalidOperationException($"No SSE data line in response:{Environment.NewLine}{body}");
+            return JsonDocument.Parse(dataLine["data: ".Length..]);
+        }
+
+        return JsonDocument.Parse(body);
+    }
+
+    private async Task WaitForHealthyAsync()
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        Exception? lastError = null;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            if (_process is { HasExited: true })
+            {
+                var stderr = await _process.StandardError.ReadToEndAsync();
+                throw new InvalidOperationException($"MCP host exited during startup.{Environment.NewLine}{stderr}");
+            }
+
+            try
+            {
+                using var response = await Client.GetAsync("/healthz");
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    return;
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                lastError = ex;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250));
+        }
+
+        throw new TimeoutException("MCP host did not become healthy within 30 seconds.", lastError);
+    }
+
+    private HttpClient Client => _client ?? throw new InvalidOperationException("MCP host process has not started.");
+
+    private static int GetFreePort()
+    {
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        return ((IPEndPoint)listener.LocalEndpoint).Port;
     }
 
     private static string GetSolutionDirectory() =>
