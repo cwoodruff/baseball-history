@@ -440,3 +440,6 @@ CLAUDE.md
 .worktree-*/
 /.dotnet
 /.local
+.mcp.json
+.agentsroom/handoff-transcript-*.txt
+.agentsroom/handoff-summary-*.md
