@@ -267,3 +267,42 @@ Did not run a full manual query test in this session (would require PostgreSQL a
 
 **Note:** Implementation was sound; bugs were in edge cases (career path, NULL Teams.G handling) that automated tests didn't exercise.
 
+
+## Learnings
+
+### Compare Season-Relative Context (2026-08-08)
+
+Implemented season-range filtering and qualified-seasons badge for Compare Players feature. Key takeaways:
+
+**Qualification Logic Reuse:**
+- Successfully reused `QualificationRules` methods (`CalculatePlateAppearances`, `CalculateSeasonBattingThreshold`, `CalculateSeasonPitchingThreshold`) from the leaderboard implementation
+- Applied same sanity floors (100 PA, 90 outs) using `Math.Max`
+- Per-season aggregation for multi-stint years: group by `(PlayerId, YearId)`, then take `Max(Team.G)` as team-games value
+
+**Year-Range UI Pattern:**
+- Simple GET form in header (no htmx partial swapping) matches Compare's existing `hx-boost="false"` pattern for player selection
+- Year range applies to both players simultaneously (single shared filter, not per-player)
+- Dynamic card headers: `"Career Batting"` vs `"Batting (1920-1928)"` using parenthetical format
+- No server-side validation needed; invalid ranges just return zero results (graceful fallback)
+
+**Qualified-Seasons Badge Placement:**
+- Small muted text in card header's `float-end` span (unobtrusive, as specified)
+- Shown only in full-career view (hidden when year range is active)
+- Format: `"PlayerName: N of M seasons qualified"` — both players side-by-side when applicable
+- Computed from full career regardless of year-range filter (qualification is a career-level attribute)
+
+**EF Core Year-Range Filtering:**
+- Optional year-range filter applied to batting/pitching queries before aggregation: `Where(b => b.YearId >= FromYear && b.YearId <= ToYear)`
+- Reuses exact same aggregation shape as career queries (no new projections needed)
+- Qualified-seasons count queries run separately (full career scope, not year-range-filtered)
+
+**Live Verification Pattern:**
+- Started web app in background (`dotnet run --project baseball-history-web --urls http://localhost:5350 > web_app.log 2>&1 &`)
+- Tested with real data (Ty Cobb vs Babe Ruth, both full career and 1920-1928 range)
+- Verified dynamic labels, qualified-seasons badge, and year-range UI controls all render correctly
+- Cleaned up background process and log file after verification
+
+**Test Results:**
+- 479 passed, 8 failed (exact pre-existing MCP protocol failures)
+- No new failures introduced by Compare changes
+- Build succeeded (only pre-existing NU1903 warnings)
