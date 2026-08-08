@@ -319,3 +319,36 @@ Two viable strategies, each with distinct trade-offs:
 5. **Test Negro Leagues visibility:** Verify Charleston, Gibson, Suttles appear on AVG leaderboard after fix (currently invisible with 3000-AB floor)
 6. **Add deterministic tie-breaker:** When implementing ordering changes, add secondary sort (e.g., by playerID) to fix existing nondeterminism
 
+
+### 2026-08-08 — Issue #63 DI Wiring Fix for MCP Leaderboard Adapter
+
+**Root Cause:**
+Parker's shared `LeaderboardQueryService` (in `baseball-history-data`) was correctly designed for scoped web app usage, taking `BaseballDbContext` directly via DI. The MCP project registered the adapter `LeaderboardReadService` as a Singleton (matching other MCP services' pattern), but never registered the required `ILeaderboardQueryService` dependency. This caused DI resolution failures at runtime when MCP tried to construct `LeaderboardReadService`.
+
+**Fix Applied (commit 763d673):**
+1. **Added `AddDataServices()` call** in `BaseballMcpServiceCollectionExtensions.cs` line 36 to register `ILeaderboardQueryService` (scoped) and `BaseballDbContext` (scoped)
+2. **Changed `ILeaderboardReadService` lifetime from Singleton to Scoped** (line 56) to match its dependency's lifetime
+3. **Retained `AddPooledDbContextFactory`** (line 39) for other singleton MCP services (`HallOfFameReadService`, `PlayerReadService`, etc.) which use the `IDbContextFactory<BaseballDbContext>` pattern
+
+**Key Insight:**
+The MCP project now uses a **hybrid DI pattern**:
+- **Scoped services:** `LeaderboardReadService` + shared data layer (`ILeaderboardQueryService`, `BaseballDbContext`)
+- **Singleton services with factories:** All other read services (`IHallOfFameReadService`, `IPlayerReadService`, etc.) inject `IDbContextFactory<BaseballDbContext>` for per-request context creation
+
+This allows the MCP to adopt Parker's shared query layer without forcing all legacy MCP services to migrate from factory to scoped pattern.
+
+**Verification:**
+- Full suite: **446/446 tests passed** (vs 443/446 before fix)
+- MCP integration tests that were failing:
+  - ✅ `Host_CallsHallOfFameSalaryAndDiagnosticsToolsTheWayClientsDo` — now passes
+  - ✅ `Host_CallsDiscoveryAndLeaderboardToolsTheWayClientsDo` — now passes (13s runtime, leaderboard tools working)
+  - ✅ `Host_InvalidToolCalls_ReturnSanitizedUsageErrors` — now passes
+- No regressions in UI (Razor Pages) or API endpoints
+
+**Platform Pattern Locked:**
+When sharing data layer services across projects with different DI lifetime patterns (web = scoped, MCP = singleton), use:
+- `AddDataServices()` for the shared scoped services
+- `AddPooledDbContextFactory()` alongside it for singleton consumers that use `IDbContextFactory<TContext>`
+- Match adapter lifetime to dependency lifetime (scoped adapter for scoped service)
+
+This pattern allows incremental migration without forcing all consumers to adopt the same DI strategy.
