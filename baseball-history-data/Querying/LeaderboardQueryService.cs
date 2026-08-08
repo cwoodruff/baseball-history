@@ -196,24 +196,24 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
                 HBP = g.Sum(b => (int?)(b.Hbp)),
                 SH = g.Sum(b => (int?)(b.Sh)),
                 SF = g.Sum(b => (int?)(b.Sf)),
-                // Season-relative threshold: SUM(3.1 × Teams.G) across all stints
-                Threshold = g.Sum(b => (decimal?)(
-                    QualificationRules.BattingPlateAppearancesPerGame * (b.Team.G ?? 0)
-                ))
+                // Season-relative threshold: SUM(3.1 × Teams.G) for stints with valid Team.G
+                // Use conditional to skip null/zero values (EF Core translates to SQL CASE)
+                Threshold = g.Sum(b => 
+                    b.Team != null && b.Team.G.HasValue && b.Team.G.Value > 0
+                        ? (decimal?)(QualificationRules.BattingPlateAppearancesPerGame * b.Team.G.Value)
+                        : (decimal?)null
+                )
             });
 
         // Apply qualification
         if (statDef.IsRateStat)
         {
+            // ALWAYS apply minimum threshold for rate stats to exclude tiny samples
+            grouped = grouped.Where(x => x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= 100);
+            
             if (request.MinAtBats.HasValue)
             {
                 grouped = grouped.Where(x => x.AB >= request.MinAtBats.Value);
-            }
-            else if (request.Qualified)
-            {
-                // Career PA >= career threshold
-                grouped = grouped.Where(x =>
-                    x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= x.Threshold);
             }
         }
 
@@ -469,20 +469,23 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
                 BB = g.Sum(p => (int?)(p.Bb)) ?? 0,
                 SO = g.Sum(p => (int?)(p.So)) ?? 0,
                 ER = g.Sum(p => (int?)(p.Er)),
-                Threshold = g.Sum(p => (decimal?)(
-                    QualificationRules.PitchingOutsPerGame * (p.Team!.G ?? 0)
-                ))
+                // Season-relative threshold: SUM(3 outs × Teams.G) for stints with valid Team.G
+                // Use conditional to skip null/zero values (EF Core translates to SQL CASE)
+                Threshold = g.Sum(p => 
+                    p.Team != null && p.Team.G.HasValue && p.Team.G.Value > 0
+                        ? (decimal?)(QualificationRules.PitchingOutsPerGame * p.Team.G.Value)
+                        : (decimal?)null
+                )
             });
 
         if (statDef.IsRateStat)
         {
+            // ALWAYS apply minimum threshold for rate stats to exclude tiny samples
+            grouped = grouped.Where(x => x.IPouts >= 90);  // 30 IP minimum
+            
             if (request.MinInningsPitched.HasValue)
             {
                 grouped = grouped.Where(x => x.IPouts >= request.MinInningsPitched.Value * 3);
-            }
-            else if (request.Qualified)
-            {
-                grouped = grouped.Where(x => x.IPouts >= x.Threshold);
             }
         }
 
