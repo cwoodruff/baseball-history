@@ -5,12 +5,16 @@
     <div>
         @if (Model.BothSelected)
         {
+            <button type="button" class="btn btn-sm btn-outline-success me-2" id="export-csv-btn"
+                    onclick="exportCompareCSV()">
+                Export CSV
+            </button>
             <button type="button" class="btn btn-sm btn-outline-primary me-2" id="copy-link-btn"
                     onclick="copyCompareLink()">
                 <span id="copy-link-text">Copy Link</span>
             </button>
         }
-        @if (Model.Player1 != null || Model.Player2 != null)
+        @if (Model.SelectedCount > 0)
         {
             <a href="/Compare" class="btn btn-sm btn-outline-secondary" hx-boost="false">Start Over</a>
         }
@@ -19,16 +23,21 @@
 
 @if (Model.BothSelected)
 {
-    var player1 = ViewContext.HttpContext.Request.Query["player1"].ToString();
-    var player2 = ViewContext.HttpContext.Request.Query["player2"].ToString();
-    var fromYear = ViewContext.HttpContext.Request.Query["fromYear"].ToString();
-    var toYear = ViewContext.HttpContext.Request.Query["toYear"].ToString();
+    var queryParams = ViewContext.HttpContext.Request.Query;
+    var player1 = queryParams["player1"].ToString();
+    var player2 = queryParams["player2"].ToString();
+    var player3 = queryParams["player3"].ToString();
+    var player4 = queryParams["player4"].ToString();
+    var fromYear = queryParams["fromYear"].ToString();
+    var toYear = queryParams["toYear"].ToString();
     
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" action="/Compare">
-                <input type="hidden" name="player1" value="@player1" />
-                <input type="hidden" name="player2" value="@player2" />
+                @if (!string.IsNullOrEmpty(player1)) { <input type="hidden" name="player1" value="@player1" /> }
+                @if (!string.IsNullOrEmpty(player2)) { <input type="hidden" name="player2" value="@player2" /> }
+                @if (!string.IsNullOrEmpty(player3)) { <input type="hidden" name="player3" value="@player3" /> }
+                @if (!string.IsNullOrEmpty(player4)) { <input type="hidden" name="player4" value="@player4" /> }
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small">From Year</label>
@@ -44,7 +53,13 @@
                         <button type="submit" class="btn btn-sm btn-primary">Apply Range</button>
                         @if (!string.IsNullOrEmpty(fromYear) || !string.IsNullOrEmpty(toYear))
                         {
-                            <a href="/Compare?player1=@player1&player2=@player2" class="btn btn-sm btn-outline-secondary">Clear</a>
+                            var clearParams = new List<string>();
+                            if (!string.IsNullOrEmpty(player1)) clearParams.Add($"player1={player1}");
+                            if (!string.IsNullOrEmpty(player2)) clearParams.Add($"player2={player2}");
+                            if (!string.IsNullOrEmpty(player3)) clearParams.Add($"player3={player3}");
+                            if (!string.IsNullOrEmpty(player4)) clearParams.Add($"player4={player4}");
+                            var clearUrl = "/Compare?" + string.Join("&", clearParams);
+                            <a href="@clearUrl" class="btn btn-sm btn-outline-secondary">Clear</a>
                         }
                     </div>
                 </div>
@@ -67,6 +82,46 @@
             console.error('Failed to copy link:', err);
             alert('Failed to copy link to clipboard');
         });
+    }
+
+    function exportCompareCSV() {
+        // Build CSV from the comparison data already on the page
+        var rows = [];
+        rows.push(['Category', 'Stat'].concat(window.comparePlayerNames || []));
+        
+        // If we have chart data, use it, otherwise extract from DOM
+        if (window.compareChartData) {
+            var data = window.compareChartData;
+            data.labels.forEach(function(label, idx) {
+                var row = ['Stats', label];
+                data.datasets.forEach(function(ds) {
+                    row.push(ds.data[idx] !== undefined ? ds.data[idx] : '—');
+                });
+                rows.push(row);
+            });
+        }
+        
+        // Build CSV string
+        var csv = rows.map(function(row) {
+            return row.map(function(cell) {
+                var str = String(cell);
+                // Escape quotes and wrap in quotes if contains comma/newline
+                if (str.indexOf(',') >= 0 || str.indexOf('"') >= 0 || str.indexOf('\n') >= 0) {
+                    return '"' + str.replace(/"/g, '""') + '"';
+                }
+                return str;
+            }).join(',');
+        }).join('\n');
+        
+        // Trigger download
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'player-comparison.csv';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 

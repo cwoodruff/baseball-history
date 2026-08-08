@@ -4,13 +4,24 @@ public class CompareViewModel
 {
     public ComparePlayer? Player1 { get; set; }
     public ComparePlayer? Player2 { get; set; }
+    public ComparePlayer? Player3 { get; set; }
+    public ComparePlayer? Player4 { get; set; }
 
-    public bool BothSelected => Player1 != null && Player2 != null;
-    public bool HasBatters => (Player1?.BattingStats != null) || (Player2?.BattingStats != null);
-    public bool HasPitchers => (Player1?.PitchingStats != null) || (Player2?.PitchingStats != null);
-    public bool HasPostseasonBatting => (Player1?.PostseasonBattingStats != null) || (Player2?.PostseasonBattingStats != null);
-    public bool HasPostseasonPitching => (Player1?.PostseasonPitchingStats != null) || (Player2?.PostseasonPitchingStats != null);
-    public bool HasFielding => (Player1?.FieldingStats != null) || (Player2?.FieldingStats != null);
+    public List<ComparePlayer> SelectedPlayers => new[] { Player1, Player2, Player3, Player4 }
+        .Where(p => p != null)
+        .Cast<ComparePlayer>()
+        .ToList();
+
+    public int SelectedCount => SelectedPlayers.Count;
+
+    // Backward compat: BothSelected now means "2 or more selected"
+    public bool BothSelected => SelectedCount >= 2;
+    
+    public bool HasBatters => SelectedPlayers.Any(p => p.BattingStats != null);
+    public bool HasPitchers => SelectedPlayers.Any(p => p.PitchingStats != null);
+    public bool HasPostseasonBatting => SelectedPlayers.Any(p => p.PostseasonBattingStats != null);
+    public bool HasPostseasonPitching => SelectedPlayers.Any(p => p.PostseasonPitchingStats != null);
+    public bool HasFielding => SelectedPlayers.Any(p => p.FieldingStats != null);
 }
 
 public class ComparePlayer

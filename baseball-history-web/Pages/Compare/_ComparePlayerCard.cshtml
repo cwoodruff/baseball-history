@@ -1,8 +1,8 @@
-@model (baseball_history_web.ViewModels.ComparePlayer? Player, int Side, string? OtherPlayerId, string Gradient)
+@model (baseball_history_web.ViewModels.ComparePlayer? Player, int Side, string? OtherPlayerIds, string Gradient)
 @{
     var player = Model.Player;
     var side = Model.Side;
-    var otherPlayerId = Model.OtherPlayerId;
+    var otherPlayerIds = Model.OtherPlayerIds ?? "";
     var gradient = Model.Gradient;
     var resultsDivId = $"search-results-{side}";
     var searchSide = side;
@@ -47,9 +47,16 @@
         </div>
         <div class="card-footer text-center bg-light">
             @{
-                var changeUrl = side == 1
-                    ? (!string.IsNullOrEmpty(otherPlayerId) ? $"/Compare?player2={otherPlayerId}" : "/Compare")
-                    : (!string.IsNullOrEmpty(otherPlayerId) ? $"/Compare?player1={otherPlayerId}" : "/Compare");
+                var otherParams = string.IsNullOrEmpty(otherPlayerIds)
+                    ? ""
+                    : string.Join("&", otherPlayerIds.Split(',')
+                        .Select((id, idx) =>
+                        {
+                            var targetSide = idx + 1;
+                            return targetSide >= side ? targetSide + 1 : targetSide;
+                        })
+                        .Zip(otherPlayerIds.Split(','), (s, id) => $"player{s}={id}"));
+                var changeUrl = string.IsNullOrEmpty(otherParams) ? "/Compare" : $"/Compare?{otherParams}";
             }
             <a href="@changeUrl" class="btn btn-sm btn-outline-secondary" hx-boost="false">Change Player</a>
         </div>
@@ -59,9 +66,22 @@
         <div class="card-body">
             <div class="position-relative">
                 @{
-                    var player1Param = side == 1 ? "" : (otherPlayerId ?? "");
-                    var player2Param = side == 2 ? "" : (otherPlayerId ?? "");
-                    var searchUrl = $"/Compare?handler=Search&side={side}&player1={player1Param}&player2={player2Param}";
+                    var searchParams = new List<string>();
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        if (i == side)
+                        {
+                            searchParams.Add($"player{i}=");
+                        }
+                        else if (!string.IsNullOrEmpty(otherPlayerIds))
+                        {
+                            var otherIdsList = otherPlayerIds.Split(',').Where(id => !string.IsNullOrEmpty(id)).ToList();
+                            var targetIdx = i < side ? i - 1 : i - 2;
+                            if (targetIdx >= 0 && targetIdx < otherIdsList.Count)
+                                searchParams.Add($"player{i}={otherIdsList[targetIdx]}");
+                        }
+                    }
+                    var searchUrl = $"/Compare?handler=Search&side={side}&{string.Join("&", searchParams)}";
                     var searchIndicatorId = $"search-indicator-{side}";
                 }
                 <div class="position-relative">
