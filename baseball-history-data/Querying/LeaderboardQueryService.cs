@@ -208,13 +208,22 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
         // Apply qualification
         if (statDef.IsRateStat)
         {
-            // ALWAYS apply minimum threshold for rate stats to exclude tiny samples
-            grouped = grouped.Where(x => x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= 100);
-            
             if (request.MinAtBats.HasValue)
             {
+                // Explicit override takes precedence over automatic qualification
                 grouped = grouped.Where(x => x.AB >= request.MinAtBats.Value);
             }
+            else if (request.Qualified)
+            {
+                // Season-relative qualification: use the computed Threshold (SUM of 3.1 PA
+                // per team game across stints) when available; fall back to a flat 100 PA
+                // floor only when Threshold is null due to missing Teams.G data.
+                grouped = grouped.Where(x =>
+                    x.Threshold.HasValue
+                        ? x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= x.Threshold.Value
+                        : x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= 100);
+            }
+            // When request.Qualified is false and no explicit override, no threshold filter is applied.
         }
 
         if (statDef.IsRateStat)
@@ -480,13 +489,22 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
 
         if (statDef.IsRateStat)
         {
-            // ALWAYS apply minimum threshold for rate stats to exclude tiny samples
-            grouped = grouped.Where(x => x.IPouts >= 90);  // 30 IP minimum
-            
             if (request.MinInningsPitched.HasValue)
             {
+                // Explicit override takes precedence over automatic qualification
                 grouped = grouped.Where(x => x.IPouts >= request.MinInningsPitched.Value * 3);
             }
+            else if (request.Qualified)
+            {
+                // Season-relative qualification: use the computed Threshold (SUM of 3 outs
+                // per team game across stints) when available; fall back to a flat 30 IP
+                // (90 outs) floor only when Threshold is null due to missing Teams.G data.
+                grouped = grouped.Where(x =>
+                    x.Threshold.HasValue
+                        ? x.IPouts >= x.Threshold.Value
+                        : x.IPouts >= 90);
+            }
+            // When request.Qualified is false and no explicit override, no threshold filter is applied.
         }
 
         if (statDef.IsRateStat)
