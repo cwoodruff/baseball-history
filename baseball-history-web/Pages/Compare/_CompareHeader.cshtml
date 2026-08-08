@@ -52,38 +52,21 @@
         </div>
     </div>
 
-    <script>
-        function copyCompareLink() {
-            navigator.clipboard.writeText(window.location.href).then(function() {
-                var btn = document.getElementById('copy-link-text');
-                var originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                }, 1500);
-            }).catch(function(err) {
-                console.error('Failed to copy link:', err);
-                alert('Failed to copy link to clipboard');
-            });
-        }
-    </script>
 }
-else if (Model.Player1 == null && Model.Player2 == null)
-{
-    <script>
-        function copyCompareLink() {
-            navigator.clipboard.writeText(window.location.href).then(function() {
-                var btn = document.getElementById('copy-link-text');
-                var originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                }, 1500);
-            }).catch(function(err) {
-                console.error('Failed to copy link:', err);
-                alert('Failed to copy link to clipboard');
-            });
-        }
-    </script>
-}
+
+<script>
+    function copyCompareLink() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            var btn = document.getElementById('copy-link-text');
+            var originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function() {
+                btn.textContent = originalText;
+            }, 1500);
+        }).catch(function(err) {
+            console.error('Failed to copy link:', err);
+            alert('Failed to copy link to clipboard');
+        });
+    }
+</script>
 
