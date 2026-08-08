@@ -24,7 +24,7 @@ public sealed class LeaderboardReadService(
             ToYear: normalizedRequest.ToYear,
             League: normalizedRequest.League,
             SingleSeason: normalizedRequest.SingleSeason,
-            Qualified: normalizedRequest.MinAtBats == 0,  // If explicit min is 0, use qualification
+            Qualified: normalizedRequest.MinAtBats > 0 ? false : normalizedRequest.Qualified,  // Explicit minAtBats overrides qualified
             MinAtBats: normalizedRequest.MinAtBats > 0 ? normalizedRequest.MinAtBats : null,
             MinInningsPitched: null,
             Page: normalizedRequest.Page,
@@ -85,7 +85,7 @@ public sealed class LeaderboardReadService(
             ToYear: normalizedRequest.ToYear,
             League: normalizedRequest.League,
             SingleSeason: normalizedRequest.SingleSeason,
-            Qualified: normalizedRequest.MinInningsPitched == 0,  // If explicit min is 0, use qualification
+            Qualified: normalizedRequest.MinInningsPitched > 0 ? false : normalizedRequest.Qualified,  // Explicit minInningsPitched overrides qualified
             MinAtBats: null,
             MinInningsPitched: normalizedRequest.MinInningsPitched > 0 ? normalizedRequest.MinInningsPitched : null,
             Page: normalizedRequest.Page,
