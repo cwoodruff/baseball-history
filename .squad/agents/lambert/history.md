@@ -310,3 +310,55 @@ Completed final acceptance review of PostgreSQL migration and health route fix. 
 
 Existing `database/lahman.db` has all necessary data. No fixture augmentation required.
 
+
+## 2026-08-08 — Issue #63 Implementation Review (REJECTED)
+
+**Context:** Reviewed Parker's season-relative qualification implementation on branch `squad/63-season-relative-qualification` (commit e7a03b7). The coordinator reported 3 MCP test failures contradicting Parker's claim that failures were "format-only."
+
+### Root Cause Analysis
+
+**MCP DI Registration Defect:**
+- Parker's `LeaderboardReadService` (baseball-history-mcp/Querying/LeaderboardReadService.cs:11) constructor injects `ILeaderboardQueryService` from the shared data layer.
+- The MCP DI container (baseball-history-mcp/BaseballMcpServiceCollectionExtensions.cs) registers `ILeaderboardReadService` but **NEVER registers `ILeaderboardQueryService`**.
+- The web project correctly calls `AddDataServices(connectionString)` (baseball-history-web/Program.cs:20), which registers `ILeaderboardQueryService` via `DataServiceExtensions.AddDataServices` (baseball-history-data/DataServiceExtensions.cs:10-16).
+- The MCP project does NOT call `AddDataServices` anywhere in its startup (baseball-history-mcp/Program.cs:18 calls `AddBaseballMcpServer`, which never chains to `AddDataServices`).
+
+**Evidence:**
+1. MCP tests pass 6/6 on `main` (verified via `git checkout main && dotnet test --filter "FullyQualifiedName~McpProtocolIntegrationTests"`).
+2. MCP tests fail 3/6 on feature branch with DI resolution errors:
+   - `Host_CallsHallOfFameSalaryAndDiagnosticsToolsTheWayClientsDo` — generic sanitized error (line 159)
+   - `Host_CallsDiscoveryAndLeaderboardToolsTheWayClientsDo` — JSON parsing failure suggests MCP returned error text instead of JSON (line 99)
+   - `Host_InvalidToolCalls_ReturnSanitizedUsageErrors` — expected "Unsupported batting stat" but got generic error (line 210)
+3. When the MCP runtime tries to construct `LeaderboardReadService`, it cannot resolve `ILeaderboardQueryService`, causing cascading failures in all tests that touch leaderboard tools (including the diagnostic/discovery tests, since those enumerate available tools).
+
+### Hard Gate Violation
+
+**Applicable Gate (from my test strategy):**
+> 5. ✅ **Explicit minimum parameter honored** — tests #22-24 pass to prove API contract preserved
+
+**Issue #63 Acceptance Criteria (from spec doc, section 1):**
+> "One shared query layer... **consumed by all three paths**. The three duplicate implementations are deleted."
+> "**Single code path serves UI, API, and MCP**"
+
+**Verdict:** This is a **HARD BLOCKER**. The MCP surface is completely broken due to missing DI registration. Issue #63's core acceptance criterion is "single code path serves UI, API, and MCP." The UI and API work (443 tests pass), but MCP is non-functional (3/6 MCP integration tests fail). This violates the explicit acceptance gate.
+
+### Review Decision
+
+**REJECT** — DI wiring defect breaks the MCP surface, violating issue #63's acceptance criteria.
+
+**Why not let Parker fix it:**
+Per strict lockout rule (my boundaries), the original author cannot self-revise a defect I identify in review. Parker wrote the shared service and the MCP adapter correctly, but missed the DI registration step.
+
+**Recommended Fix Owner:**
+**Ash (Data/Platform Dev)** should fix this defect. Rationale:
+- Ash has strong data layer + runtime integration context (approved PostgreSQL migration, designed `AddDataServices` pattern).
+- The fix is a DI/wiring issue (add one line calling `AddDataServices` in the MCP startup), not a logic bug in Parker's query service.
+- Ash is familiar with the cross-project DI registration pattern from the web project migration.
+- The fix is surgical: add `builder.Services.AddDataServices(connectionString);` before the existing MCP service registrations in `BaseballMcpServiceCollectionExtensions.cs` lines 30-39.
+
+**Acceptance gate for the fix:**
+- All 6 MCP protocol integration tests must pass green.
+- Full suite must remain at 443+ passing (no new regressions).
+- Verify the MCP project correctly chains `AddDataServices` before registering MCP-specific read services.
+
+**Decision logged:** 2026-08-08T11:01 EDT

@@ -2,6 +2,7 @@ using System.Reflection;
 using baseball_history_mcp.Configuration;
 using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Querying;
+using BaseballHistory.Data;
 using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +33,11 @@ internal static class BaseballMcpServiceCollectionExtensions
         builder.Services.AddMemoryCache();
         builder.Services.AddSingleton(Options.Create(mcpOptions));
         builder.Services.AddSingleton<BaseballMcpRequestPolicy>();
+        
+        // Register shared data services (BaseballDbContext + ILeaderboardQueryService)
+        builder.Services.AddDataServices(connectionString);
+        
+        // Register DbContext factory for singleton MCP services that need direct DB access
         builder.Services.AddPooledDbContextFactory<BaseballDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
                 npgsqlOptions.CommandTimeout(mcpOptions.QueryTimeoutSeconds).EnableRetryOnFailure())
@@ -48,7 +54,7 @@ internal static class BaseballMcpServiceCollectionExtensions
         builder.Services.AddSingleton<IPlayerReadService, PlayerReadService>();
         builder.Services.AddSingleton<IFranchiseReadService, FranchiseReadService>();
         builder.Services.AddSingleton<ITeamReadService, TeamReadService>();
-        builder.Services.AddSingleton<ILeaderboardReadService, LeaderboardReadService>();
+        builder.Services.AddScoped<ILeaderboardReadService, LeaderboardReadService>();
         builder.Services.AddSingleton<ISalaryReadService, SalaryReadService>();
 
         return builder.Services
