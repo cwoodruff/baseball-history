@@ -81,6 +81,7 @@
                                 hx-target="#leaderboard"
                                 hx-indicator="#loading-indicator"
                                 hx-push-url="true">
+                            <option value="-1" selected="@(Model.ViewModel.MinimumAtBats == -1)">Qualified</option>
                             <option value="0" selected="@(Model.ViewModel.MinimumAtBats == 0)">No minimum</option>
                             <option value="100" selected="@(Model.ViewModel.MinimumAtBats == 100)">100 AB</option>
                             <option value="500" selected="@(Model.ViewModel.MinimumAtBats == 500)">500 AB</option>

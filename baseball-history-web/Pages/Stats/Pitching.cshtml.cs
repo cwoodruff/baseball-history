@@ -22,7 +22,7 @@ public class PitchingModel(ILeaderboardQueryService leaderboardService, Baseball
         int? fromYear = null,
         int? toYear = null,
         string? league = null,
-        int minIp = 0,
+        int? minIp = null,
         bool singleSeason = false,
         [FromQuery] int page = 1)
     {
@@ -36,10 +36,16 @@ public class PitchingModel(ILeaderboardQueryService leaderboardService, Baseball
         ViewModel.FromYear = fromYear;
         ViewModel.ToYear = toYear;
         ViewModel.League = league;
-        ViewModel.MinimumInningsPitched = minIp;
         ViewModel.SingleSeason = singleSeason;
         ViewModel.CurrentPage = page;
         ViewModel.AvailableStats = LeaderboardStats.PitchingStats;
+        
+        // Default to "Qualified" for rate stats if no explicit minimum provided
+        bool isRateStat = statDef?.IsRateStat ?? false;
+        int effectiveMinIp = minIp ?? (isRateStat ? -1 : 0);
+        
+        ViewModel.MinimumInningsPitched = effectiveMinIp;
+        ViewModel.IsQualified = effectiveMinIp == -1;
 
         // Get available years (cached)
         ViewModel.AvailableYears = (await cache.GetOrCreateAsync("pitching_years", async entry =>
@@ -70,9 +76,9 @@ public class PitchingModel(ILeaderboardQueryService leaderboardService, Baseball
             ToYear: toYear,
             League: league,
             SingleSeason: singleSeason,
-            Qualified: minIp == 0, // If explicit minIp is 0, use qualification; otherwise override
+            Qualified: effectiveMinIp == -1, // -1 means "Qualified" (season-relative)
             MinAtBats: null,
-            MinInningsPitched: minIp > 0 ? minIp : null,
+            MinInningsPitched: effectiveMinIp > 0 ? effectiveMinIp : null,
             Page: page,
             PageSize: PageSize);
 

@@ -81,6 +81,7 @@
                                 hx-target="#leaderboard"
                                 hx-indicator="#loading-indicator"
                                 hx-push-url="true">
+                            <option value="-1" selected="@(Model.ViewModel.MinimumInningsPitched == -1)">Qualified</option>
                             <option value="0" selected="@(Model.ViewModel.MinimumInningsPitched == 0)">No minimum</option>
                             <option value="50" selected="@(Model.ViewModel.MinimumInningsPitched == 50)">50 IP</option>
                             <option value="100" selected="@(Model.ViewModel.MinimumInningsPitched == 100)">100 IP</option>
