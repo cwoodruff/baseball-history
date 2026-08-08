@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Globalization;
 
 namespace baseball_history_web.Pages.Compare;
 
@@ -144,7 +145,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
         if (battingAgg is { AB: > 0 })
         {
-            player.BattingStats = new CareerBattingStats
+            player.BattingStats = new CompareCareerBattingStats
             {
                 Games = battingAgg.G, AtBats = battingAgg.AB, Runs = battingAgg.R,
                 Hits = battingAgg.H, Doubles = battingAgg.Doubles, Triples = battingAgg.Triples,
@@ -205,7 +206,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
         if (pitchingAgg is { G: > 0 })
         {
-            player.PitchingStats = new CareerPitchingStats
+            player.PitchingStats = new CompareCareerPitchingStats
             {
                 Games = pitchingAgg.G, GamesStarted = pitchingAgg.GS,
                 Wins = pitchingAgg.W, Losses = pitchingAgg.L, Saves = pitchingAgg.SV,
@@ -213,6 +214,93 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 InningsPitched = pitchingAgg.IPOuts / 3.0,
                 Hits = pitchingAgg.H, EarnedRuns = pitchingAgg.ER, HomeRuns = pitchingAgg.HR,
                 Walks = pitchingAgg.BB, Strikeouts = pitchingAgg.SO
+            };
+        }
+
+        var postseasonBattingAgg = await context.BattingPost
+            .Where(b => b.PlayerId == playerId)
+            .GroupBy(b => b.PlayerId)
+            .Select(g => new
+            {
+                G = g.Sum(b => b.G ?? 0),
+                AB = g.Sum(b => b.Ab ?? 0),
+                H = g.Sum(b => b.H ?? 0),
+                HR = g.Sum(b => b.Hr ?? 0),
+                RBI = g.Sum(b => b.Rbi ?? 0)
+            })
+            .FirstOrDefaultAsync();
+
+        if (postseasonBattingAgg is { AB: > 0 })
+        {
+            player.PostseasonBattingStats = new ComparePostseasonBattingStats
+            {
+                Games = postseasonBattingAgg.G,
+                AtBats = postseasonBattingAgg.AB,
+                Hits = postseasonBattingAgg.H,
+                HomeRuns = postseasonBattingAgg.HR,
+                Rbi = postseasonBattingAgg.RBI
+            };
+        }
+
+        var postseasonPitchingAgg = await context.PitchingPost
+            .Where(p => p.PlayerId == playerId)
+            .GroupBy(p => p.PlayerId)
+            .Select(g => new
+            {
+                G = g.Sum(p => p.G ?? 0),
+                W = g.Sum(p => p.W ?? 0),
+                L = g.Sum(p => p.L ?? 0),
+                SV = g.Sum(p => p.Sv ?? 0),
+                IPOuts = g.Sum(p => p.Ipouts ?? 0),
+                ER = g.Sum(p => p.Er ?? 0),
+                SO = g.Sum(p => p.So ?? 0)
+            })
+            .FirstOrDefaultAsync();
+
+        if (postseasonPitchingAgg is { IPOuts: > 0 })
+        {
+            player.PostseasonPitchingStats = new ComparePostseasonPitchingStats
+            {
+                Games = postseasonPitchingAgg.G,
+                Wins = postseasonPitchingAgg.W,
+                Losses = postseasonPitchingAgg.L,
+                Saves = postseasonPitchingAgg.SV,
+                InningsPitched = postseasonPitchingAgg.IPOuts / 3.0,
+                EarnedRuns = postseasonPitchingAgg.ER,
+                Strikeouts = postseasonPitchingAgg.SO
+            };
+        }
+
+        var fieldingRows = await context.Fielding
+            .Where(f => f.PlayerId == playerId)
+            .Select(f => new { f.Pos, Games = f.G ?? 0, f.Po, f.A, f.E, f.Dp })
+            .ToListAsync();
+
+        var primaryFielding = fieldingRows
+            .GroupBy(f => f.Pos)
+            .Select(g => new
+            {
+                Position = g.Key,
+                Games = g.Sum(f => f.Games),
+                Putouts = g.Sum(f => ParseIntOrZero(f.Po)),
+                Assists = g.Sum(f => ParseIntOrZero(f.A)),
+                Errors = g.Sum(f => ParseIntOrZero(f.E)),
+                DoublePlays = g.Sum(f => ParseIntOrZero(f.Dp))
+            })
+            .OrderByDescending(g => g.Games)
+            .ThenBy(g => g.Position)
+            .FirstOrDefault();
+
+        if (primaryFielding is { Games: > 0 })
+        {
+            player.FieldingStats = new CompareFieldingStats
+            {
+                PrimaryPosition = primaryFielding.Position,
+                Games = primaryFielding.Games,
+                Putouts = primaryFielding.Putouts,
+                Assists = primaryFielding.Assists,
+                Errors = primaryFielding.Errors,
+                DoublePlays = primaryFielding.DoublePlays
             };
         }
 
@@ -286,4 +374,9 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .ToHashSetAsync();
         }))!;
     }
+
+    private static int ParseIntOrZero(string? value) =>
+        int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : 0;
 }
