@@ -86,7 +86,8 @@ public class NavigationAndAccessibilityTests(WebApplicationFactory<Program> fact
     {
         var html = await GetStringAsync("/Players?letter=A");
 
-        Assert.Contains("<a class=\"card player-card h-100 text-reset text-decoration-none\"", html);
+        Assert.Contains("class=\"card player-card h-100", html);
+        Assert.Contains("stretched-link", html);
         Assert.Contains("href=\"/Players/", html);
     }
 

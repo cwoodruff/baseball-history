@@ -141,12 +141,32 @@
             });
         });
 
-        // Hide search results when clicking outside
+        // Hide search results when clicking outside (handles both single and multi-search)
         document.addEventListener('click', function (e) {
             var searchContainer = document.querySelector('.search-container');
             var searchResults = document.getElementById('search-results');
-            if (searchContainer && !searchContainer.contains(e.target)) {
+            if (searchContainer && !searchContainer.contains(e.target) && searchResults) {
                 searchResults.innerHTML = '';
+            }
+            
+            // Handle Compare page multiple search dropdowns
+            var allSearchResults = document.querySelectorAll('[id^="search-results"]');
+            allSearchResults.forEach(function(resultsDiv) {
+                if (resultsDiv.id === 'search-results') return; // Already handled above
+                var parent = resultsDiv.closest('.card-body, .position-relative');
+                if (parent && !parent.contains(e.target)) {
+                    resultsDiv.innerHTML = '';
+                }
+            });
+        });
+        
+        // Close search dropdowns on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var allSearchResults = document.querySelectorAll('[id^="search-results"]');
+                allSearchResults.forEach(function(resultsDiv) {
+                    resultsDiv.innerHTML = '';
+                });
             }
         });
 

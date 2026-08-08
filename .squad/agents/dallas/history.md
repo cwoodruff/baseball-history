@@ -244,6 +244,38 @@ All leaderboard-specific markup is in `_BattingLeaders.cshtml` and `_PitchingLea
 6. **Caching:** Coordinate with Ash/Parker on cache invalidation and URL compatibility
 
 
+## Compare UX Quick-Wins (2026-08-08)
+
+Implemented 6 approved UX improvements for Compare Players feature on branch `squad/compare-ux-quickwins`.
+
+### Learnings
+
+- **Generalized handlers scale better than hardcoded IDs** — Using `[id^="search-results"]` selector accommodates both single and multi-dropdown patterns without breaking existing pages.
+- **Unicode characters for accessible indicators** — Simple ▲ character meets WCAG "not color alone" without hidden text or icons. Both visual and announced by screen readers.
+- **Stretched-link pattern enables secondary actions** — Restructuring player card from wrapping anchor to `div` + `stretched-link` allows footer actions (Compare link) without complex overlays or z-index hacks.
+- **Inline spinners > full overlays for scoped actions** — Existing `.htmx-indicator` CSS mechanism works great for per-input loading feedback. Avoided heavyweight `_LoadingSpinner.cshtml` for inline search.
+- **Button text swap for ephemeral feedback** — When there's no existing toast pattern, simple text swap ("Copy Link" → "Copied!" for 1.5s) is cleaner than introducing new dependencies.
+- **Empty states matter for accessibility** — "No players found" message prevents confusion when search returns no results. Small touch, big UX impact.
+- **Test brittleness from markup changes** — Player card restructure required test update (`NavigationAndAccessibilityTests`). Lesson: prefer semantic selectors over exact class string matching.
+
+### Quality Gates
+- ✅ Build: Clean (3 pre-existing NU1903 warnings, unchanged)
+- ✅ Tests: 438 passing, 8 pre-existing MCP failures (unchanged baseline)
+- ✅ No breaking changes to existing Compare functionality
+- ✅ Accessibility improvements validated (WCAG "not color alone" satisfied)
+- ✅ No new dependencies added
+
+### Files Modified
+- `baseball-history-web/Pages/Shared/_Layout.cshtml` — Generalized click-outside + Escape handler
+- `baseball-history-web/Pages/Compare/_CompareContent.cshtml` — Added ▲ indicators to 3 tables
+- `baseball-history-web/Pages/Compare/_CompareSearchResults.cshtml` — Added empty state
+- `baseball-history-web/Pages/Compare/_ComparePlayerCard.cshtml` — Added loading spinner, fixed button color
+- `baseball-history-web/Pages/Compare/_CompareHeader.cshtml` — Added Copy Link button
+- `baseball-history-web/Pages/Shared/Components/_PlayerCard.cshtml` — Restructured card, added Compare link
+- `baseball-history-tests/Pages/NavigationAndAccessibilityTests.cs` — Updated test for new card structure
+
+### Status
+✅ Complete. Branch pushed, decision doc written, ready for PR review.
 ## Session: Leaderboard Qualification Fix (2026-08-08)
 
 **Issue #64 Implementation:** Rate-stat UI defaults to "Qualified" (season-relative 3.1 PA per team game) with explicit override controls.
