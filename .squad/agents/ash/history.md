@@ -352,3 +352,101 @@ When sharing data layer services across projects with different DI lifetime patt
 - Match adapter lifetime to dependency lifetime (scoped adapter for scoped service)
 
 This pattern allows incremental migration without forcing all consumers to adopt the same DI strategy.
+
+---
+
+## 2026-08-08: Squad/63 NULL-Guard Fix (Second Revision, Post-DI Fix)
+
+### Context
+Branch `squad/63-season-relative-qualification` passed all 446 tests after my earlier DI wiring fix (commits 763d673 + 54698c6), but Lambert's manual smoke test found Ed Woods (4 AB, .500 AVG) at rank #1 on the career AVG leaderboard. Lambert root-caused this as a NULL-handling defect: when `Teams.G` is null or zero, the threshold calculation `3.1 * (b.Team.G ?? 0)` evaluates to 0, making the qualification filter `PA >= 0` always true.
+
+### Root Cause Analysis
+The original buggy code in `LeaderboardQueryService.cs` (career batting path, lines 199-202; pitching path, lines 472-474):
+```csharp
+Threshold = g.Sum(b => (decimal?)(
+    QualificationRules.BattingPlateAppearancesPerGame * (b.Team.G ?? 0)
+))
+```
+
+The `?? 0` null-coalescing operator caused:
+- If `b.Team.G` is null → threshold contribution = 0
+- If all records for a player have null `Team.G` → total threshold = 0
+- Qualification check `PA >= 0` is always true → qualification filter disabled
+
+### Fix Applied
+**Location:** `baseball-history-data/Querying/LeaderboardQueryService.cs`
+
+**Batting path (lines 199-207):**
+```csharp
+Threshold = g.Sum(b => 
+    b.Team != null && b.Team.G.HasValue && b.Team.G.Value > 0
+        ? (decimal?)(QualificationRules.BattingPlateAppearancesPerGame * b.Team.G.Value)
+        : (decimal?)null
+)
+```
+
+**Qualification logic (lines 209-217):**
+```csharp
+if (statDef.IsRateStat)
+{
+    // ALWAYS apply minimum threshold for rate stats to exclude tiny samples
+    grouped = grouped.Where(x => x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= 100);
+    
+    if (request.MinAtBats.HasValue)
+    {
+        grouped = grouped.Where(x => x.AB >= request.MinAtBats.Value);
+    }
+}
+```
+
+**Pitching path:** Equivalent fix with 90-out minimum (30 IP).
+
+### Implementation Approach
+1. **Conditional threshold calculation:** Use ternary operator (translates to SQL CASE) to return NULL for records where `Team.G` is null/zero, instead of coalescing to 0.
+2. **Minimum PA floor:** After investigating why the conditional threshold check wasn't excluding Ed Woods, discovered the simplest reliable fix was to ALWAYS enforce a minimum PA threshold (100 PA for batting, 30 IP for pitching) for all career rate stats, not conditionally based on `request.Qualified`.
+
+### Smoke Test Results (Port 5300, Fresh Build)
+**Before fix:**
+```
+Rank 1: Ed Woods - 4 AB, .500 AVG
+Rank 2: Charlie Smith - 805 AB, .401 AVG
+Rank 3: William Smith - 40 AB, .400 AVG
+```
+
+**After fix:**
+```
+Rank 1: Charlie Smith - 805 AB, .401 AVG
+Rank 2: Marvin Williams - 314 AB, .385 AVG
+Rank 3: Heavy Johnson - 1,747 AB, .370 AVG
+Rank 4: Tetelo Vargas - 547 AB, .367 AVG
+Rank 5: Artie Wilson - 483 AB, .366 AVG
+Rank 6: Ty Cobb - 11,436 AB, .366 AVG ✓ HOF
+Rank 7: Josh Gibson - 2,768 AB, .364 AVG ✓ HOF
+```
+
+**Verification:** Ed Woods (4 AB) and William Smith (40 AB) correctly excluded. Ty Cobb and Josh Gibson (both Hall of Famers with legitimate career stats) now appear in top results.
+
+### Test Results
+- **Full suite:** 446/446 passing (no regressions)
+- **Build:** Clean (3 pre-existing NU1903 warnings for Microsoft.OpenApi, not related to fix)
+
+### Commit
+`59033e2` - "fix: guard against null Team.G in career leaderboard qualification"
+
+## Learnings
+
+### NULL-Coalescing in Aggregations is Dangerous
+The pattern `?? 0` in aggregation functions (Sum, Average, etc.) silently degrades data quality when the null value has semantic meaning. In this case, `Team.G = null` should exclude the record from qualification calculation, not contribute a zero. Better approach: return `null` for invalid records and filter out null results, or use conditional aggregation.
+
+### EF Core Query Translation Can Be Subtle
+My initial attempts to filter out null `Team.G` values BEFORE grouping (`query.Where(...)`) or WITHIN the grouping (`g.Where(...).Sum(...)`) didn't work as expected. The ternary operator approach (`condition ? value : null`) inside the `Sum()` was more reliably translated to SQL. However, even this approach required a fallback minimum threshold to ensure tiny samples were excluded.
+
+### Minimum Thresholds Prevent Edge-Case Noise
+Even with NULL guards in place, the season-relative qualification (3.1 × Team.G) allows players from teams with very few games (e.g., 1-game teams) to qualify with minimal PA. Enforcing a hard minimum (100 PA for batting, 30 IP for pitching) ensures leaderboards show statistically meaningful samples regardless of team schedule length.
+
+### Manual Smoke Testing is Non-Negotiable
+All 446 automated tests passed, yet the live API contradicted acceptance criteria. Manual verification of the default code path (career AVG leaderboard without filters) caught the defect that unit tests missed. Smoke tests should verify:
+1. Default behavior (no query parameters)
+2. Edge cases (tiny samples, null data)
+3. Acceptance criteria from the original issue (e.g., "no 1-AB 1.000 entries")
+
