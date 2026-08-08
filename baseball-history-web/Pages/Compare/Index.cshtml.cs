@@ -1,6 +1,7 @@
 using baseball_history_web.Extensions;
 using BaseballHistory.Data.Models;
 using baseball_history_web.ViewModels;
+using BaseballHistory.Data.Querying;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     [BindProperty(SupportsGet = true)] public string? Player1 { get; set; }
     [BindProperty(SupportsGet = true)] public string? Player2 { get; set; }
+    [BindProperty(SupportsGet = true)] public int? FromYear { get; set; }
+    [BindProperty(SupportsGet = true)] public int? ToYear { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -118,9 +121,15 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 .FirstOrDefaultAsync();
         }
 
-        // Career batting
-        var battingAgg = await context.Batting
-            .Where(b => b.PlayerId == playerId)
+        // Build batting query with optional year-range filter
+        var battingQuery = context.Batting.Where(b => b.PlayerId == playerId);
+        if (FromYear.HasValue)
+            battingQuery = battingQuery.Where(b => b.YearId >= FromYear.Value);
+        if (ToYear.HasValue)
+            battingQuery = battingQuery.Where(b => b.YearId <= ToYear.Value);
+
+        // Career batting aggregation (with year-range filter if specified)
+        var battingAgg = await battingQuery
             .GroupBy(b => b.PlayerId)
             .Select(g => new
             {
@@ -144,9 +153,43 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             };
         }
 
-        // Career pitching
-        var pitchingAgg = await context.Pitching
-            .Where(p => p.PlayerId == playerId)
+        // Compute qualified batting seasons (full career, not year-range-filtered)
+        var battingSeasonStats = await context.Batting
+            .Where(b => b.PlayerId == playerId)
+            .GroupBy(b => new { b.PlayerId, b.YearId })
+            .Select(g => new
+            {
+                YearId = g.Key.YearId,
+                AB = g.Sum(b => b.Ab ?? 0),
+                BB = g.Sum(b => b.Bb ?? 0),
+                HBP = g.Sum(b => b.Hbp),
+                SH = g.Sum(b => b.Sh),
+                SF = g.Sum(b => b.Sf),
+                // Take max Team.G for the year (should all be same per year, but use max to be safe)
+                TeamGames = g.Max(b => b.Team != null && b.Team.G.HasValue ? (int)b.Team.G.Value : 0)
+            })
+            .ToListAsync();
+
+        if (battingSeasonStats.Any())
+        {
+            player.TotalBattingSeasons = battingSeasonStats.Count;
+            player.QualifiedBattingSeasons = battingSeasonStats.Count(s =>
+            {
+                var pa = QualificationRules.CalculatePlateAppearances(s.AB, s.BB, s.HBP, s.SH, s.SF);
+                var threshold = Math.Max(100, QualificationRules.CalculateSeasonBattingThreshold(s.TeamGames));
+                return pa >= threshold;
+            });
+        }
+
+        // Build pitching query with optional year-range filter
+        var pitchingQuery = context.Pitching.Where(p => p.PlayerId == playerId);
+        if (FromYear.HasValue)
+            pitchingQuery = pitchingQuery.Where(p => p.YearId >= FromYear.Value);
+        if (ToYear.HasValue)
+            pitchingQuery = pitchingQuery.Where(p => p.YearId <= ToYear.Value);
+
+        // Career pitching aggregation (with year-range filter if specified)
+        var pitchingAgg = await pitchingQuery
             .GroupBy(p => p.PlayerId)
             .Select(g => new
             {
@@ -171,6 +214,29 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
                 Hits = pitchingAgg.H, EarnedRuns = pitchingAgg.ER, HomeRuns = pitchingAgg.HR,
                 Walks = pitchingAgg.BB, Strikeouts = pitchingAgg.SO
             };
+        }
+
+        // Compute qualified pitching seasons (full career, not year-range-filtered)
+        var pitchingSeasonStats = await context.Pitching
+            .Where(p => p.PlayerId == playerId)
+            .GroupBy(p => new { p.PlayerId, p.YearId })
+            .Select(g => new
+            {
+                YearId = g.Key.YearId,
+                IPouts = g.Sum(p => p.Ipouts ?? 0),
+                // Take max Team.G for the year (should all be same per year, but use max to be safe)
+                TeamGames = g.Max(p => p.Team != null && p.Team.G.HasValue ? (int)p.Team.G.Value : 0)
+            })
+            .ToListAsync();
+
+        if (pitchingSeasonStats.Any())
+        {
+            player.TotalPitchingSeasons = pitchingSeasonStats.Count;
+            player.QualifiedPitchingSeasons = pitchingSeasonStats.Count(s =>
+            {
+                var threshold = Math.Max(90, QualificationRules.CalculateSeasonPitchingThreshold(s.TeamGames));
+                return s.IPouts >= threshold;
+            });
         }
 
         // Awards summary
