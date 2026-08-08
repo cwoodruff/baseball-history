@@ -450,3 +450,18 @@ All 446 automated tests passed, yet the live API contradicted acceptance criteri
 2. Edge cases (tiny samples, null data)
 3. Acceptance criteria from the original issue (e.g., "no 1-AB 1.000 entries")
 
+
+## Session: Leaderboard Qualification Fix (2026-08-08)
+
+**Issue #65 Implementation:** API documentation and MCP tool description updates for `qualified` parameter.
+
+**Bug Fixes (Requested by Coordinator):**
+1. DI Wiring Defect (Commit 763d673): `ILeaderboardQueryService` not registered in MCP container — added `AddDataServices()` call, changed `ILeaderboardReadService` lifetime to Scoped
+2. NULL-Handling Defect (Commit 59033e2): Career qualification threshold coalesced NULL to 0, disabling filter — fixed with ternary operator, added 100 PA / 30 IP safety floor
+
+**Concurrent Agent Collision:** Initial work on shared checkout collided with Dallas and Lambert. Work was entirely lost (squad/65 had zero commits). Coordinator created isolated worktree at `../baseball-history-65` and had Ash redo work there cleanly.
+
+**Lesson:** Shared checkout + concurrent agents = work loss. Isolated worktrees prevent collisions. `.squad/config.json` now has `worktrees: true` for future sessions.
+
+**Note:** NULL-guard fix uses defensive ternary operator in aggregation (translates to SQL CASE). Hard minimum (100 PA / 30 IP) acts as secondary guard against edge-case low-G thresholds.
+

@@ -781,3 +781,24 @@ Branch: `squad/66-qualification-regression-suite`
 Commit: `1eb915f` - "test(qualification): add regression suite for #63 season-relative qualification"
 
 **NOT PUSHED** per task instructions — stopped after clean local commit and reporting back.
+
+## Session: Leaderboard Qualification Fix (2026-08-08)
+
+**Issue #66 Implementation:** Expanded regression suite to 30 new integration tests covering season-relative qualification logic.
+
+**Review Cycles (Issue #63):**
+1. Rejection 1: DI wiring defect (MCP broken) — identified, assigned to Ash
+2. Rejection 2: NULL-handling defect (career filter disabled) — identified, assigned to Ash
+3. Approval: All gates pass after Ash's fixes
+
+**Concurrent Agent Collision:** Work performed on shared checkout concurrent with Dallas and Ash. Coordinator manually rebased branch post-fix.
+
+**Post-Implementation:** Coordinator discovered 2 bugs via live smoke-testing that automated tests missed. Added 33 new regression tests (commit ac3f01c) to close coverage gap. Final count: 479/479 tests (446 baseline + 33 new).
+
+**Lessons:**
+1. Hard gates prevent some issues but not edge cases (career path, NULL Teams.G, low-G thresholds)
+2. Live smoke-testing essential for default-behavior correctness
+3. Concurrent agents on shared checkout cause git collisions
+
+**Note:** 5 hard merge gates all passing. Recommendation: Continue manual smoke tests post-deploy for leaderboard changes.
+

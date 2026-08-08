@@ -243,3 +243,14 @@ All leaderboard-specific markup is in `_BattingLeaders.cshtml` and `_PitchingLea
 5. **Testing:** Ensure htmx partial and full-page responses both reflect the new default
 6. **Caching:** Coordinate with Ash/Parker on cache invalidation and URL compatibility
 
+
+## Session: Leaderboard Qualification Fix (2026-08-08)
+
+**Issue #64 Implementation:** Rate-stat UI defaults to "Qualified" (season-relative 3.1 PA per team game) with explicit override controls.
+
+**Concurrent Agent Collision:** Work performed on shared checkout concurrent with Ash and Lambert. Coordinator manually rebased branch post-fix.
+
+**Lesson:** Concurrent agents on shared checkout cause git collisions. `.squad/config.json` now enables worktree isolation for future concurrent agents.
+
+**Note:** Cache investigation during planning phase flagged concerns (HIGH PRIORITY). Coordinator verified that leaderboards are NOT cached at presentation layer, so cache invalidation risk is LOW.
+
