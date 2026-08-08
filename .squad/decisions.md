@@ -1519,3 +1519,376 @@ Plan the baseball statistics MCP work as a **dedicated `baseball-history-mcp` pr
 - Plan doc: `docs/MCP-SERVER-PLAN.md`
 - GitHub milestones: `MCP M1: Foundation & Contracts`, `MCP M2: Query Surface v1`, `MCP M3: Hardening & Adoption`
 - GitHub issues: `#21`-`#31`
+
+---
+
+# Ash — Leaderboard Qualification Data Findings (2026-08-08)
+
+**Author:** Ash (Data/Platform)  
+**Date:** 2026-08-08  
+**Status:** APPROVED
+
+## Context
+
+Investigation for proposed shift from flat 3000-AB threshold to season-relative 3.1 PA per team game qualification. Part of parallel team investigation into rate-stat qualification bug (small-sample outliers on default) and Negro Leagues erasure (95% of players below 3000-AB floor).
+
+## Key Findings
+
+### PA Is Not a Stored Column
+Plate appearances must be derived as `AB + BB + HBP + SF + SH`. All components exist in `Models/Batting.cs` and are populated (verified 0 nulls for Negro Leagues data), but no `PA` column exists in the schema.
+
+**Implication:** Any PA-based qualification requires runtime calculation or precomputed denormalization.
+
+### Teams.G Exists and Is Fully Populated
+`Models/Teams.cs` line 20 defines `public short? G { get; set; }` for team games played. Verified 0 NULL values across all 338 Negro Leagues team-seasons (1920-1948, leagues: ECL, EWL, NAL, NN2, NNL, NSL).
+
+**Implication:** Season-relative qualification (3.1 PA per team game) is feasible without data-quality fallbacks for Negro Leagues.
+
+### 95% of Negro Leagues Players Fall Below 3000-AB Threshold
+- Total NL players: 2,348
+- Players with <3000 career AB: 2,235 (95%)
+- Notable exclusions: Oscar Charleston (2,897 AB), Biz Mackey (2,773 AB), Jud Wilson (2,863 AB)
+- Only 6 NL players exceed 3000 AB (Bell, Wells, Stearnes, Allen, Creacy, Suttles)
+
+**Implication:** Current flat threshold effectively erases Negro Leagues from rate-stat leaderboards.
+
+### Season-Relative Qualification Restores NL Visibility
+Using 3.1 PA per team game threshold:
+- 1,343 qualifying NL player-seasons (vs effectively 0 under current career-aggregated 3000-AB floor for single-season rate stats)
+- Threshold scales correctly: 60-game NL season = 186 PA (vs 502 PA for modern 162-game season)
+- Top qualifiers include Bell, Charleston, Wells, Stearnes with 400+ PA seasons in 80-95 game schedules
+
+**Implication:** Proposed qualification standard aligns with MLB batting-title rules and surfaces historically significant NL players without artificially lowering the bar.
+
+### Rate-Stat Default Behavior Defect Confirmed
+580 batting records exist with 1.000 average (AB = H), predominantly pitchers with 1-2 AB. Current UI defaults to `minAb=0` ("No minimum"), allowing these to appear at top of AVG/OBP/SLG leaderboards when user doesn't change the filter.
+
+**Implication:** Automatic qualification logic is needed for rate stats; counting stats can remain user-selectable.
+
+## Recommended Data Strategy
+1. Compute PA inline via join: `Batting b JOIN Teams t ON b.yearID = t.yearID AND b.teamID = t.teamID WHERE (PA calculation) >= (3.1 * t.G)`
+2. Defer precomputed flag/denormalization unless performance testing shows unacceptable cost
+3. Apply automatic qualification to rate stats only (AVG, OBP, SLG, OPS, ERA, WHIP); leave counting stats user-controlled
+4. Multi-team seasons: sum PA across stints, compare to Games value of team with most PA (matches MLB batting-title logic)
+
+---
+
+# Parker — Leaderboard Qualification Logic Map — Duplication Evidence (2026-08-08)
+
+**Author:** Parker (Backend)  
+**Date:** 2026-08-08  
+**Status:** APPROVED
+
+## Context
+
+User feedback on rate-stat qualification bug + Negro Leagues erasure. Investigation revealed the "3000 AB" threshold and `minAb=0` / `minIp=0` default logic are duplicated across three separate implementations.
+
+## Summary
+
+The qualification threshold and default logic are duplicated across **three separate implementations**:
+
+1. Razor Pages (`baseball-history-web/Pages/Stats/`)
+2. REST API (`baseball-history-web/Api/Endpoints/LeaderEndpoints.cs`)
+3. MCP Server (`baseball-history-mcp/Querying/LeaderboardReadService.cs`)
+
+All three accept user-controlled minimums and share no common query logic. A fix for the qualification bug would need to touch all three surfaces independently — high risk of drift.
+
+## Rate vs Counting Stats — Current Behavior
+
+### Rate Stats (should require qualification)
+- Batting: `avg`, `obp`, `slg`, `ops`
+- Pitching: `era`, `whip`, `k9`, `wpct`, `bb9`
+- **Current behavior:** All default to `minAb=0` / `minIp=0`, meaning **no qualification**
+
+### Counting Stats (self-limit naturally)
+- Batting: `hr`, `h`, `r`, `rbi`, `sb`, `2b`, `3b`, `bb`, `g`, `ab`
+- Pitching: `w`, `l`, `so`, `sv`, `cg`, `sho`, `ip`, `g`, `gs`, `hr`
+- **Current behavior:** Also default to `minAb=0` / `minIp=0`, but naturally sort to bottom (low counts)
+
+## Missing Shared Logic
+
+**No shared query service.** The three surfaces implement separate:
+- Expression tree builders for dynamic ordering (duplicated logic)
+- Pagination logic (different PageSize defaults: Pages=100, API=50, MCP=50)
+- HoF ID resolution (cached in Pages/API, not in MCP)
+- Stat metadata (Pages/API share structure; MCP uses `LeaderboardStatCatalog` with `UsesPlayingTimeTieBreaker` flag)
+
+**Why this matters for the fix:** A season-relative qualification rule (e.g., "3.1 PA per team game") would need to:
+1. Identify which stats are rate stats
+2. Join to `Teams.G` to compute per-stint thresholds
+3. Default to "Qualified=true" for rate stats
+4. Preserve explicit `minAb`/`minIp` overrides
+
+This logic would be duplicated **three times** under the current architecture.
+
+## Recommendation
+
+Before fixing the qualification bug, **extract a shared leaderboard query service** (per the design in `docs/superpowers/specs/2026-07-21-leaderboard-qualification-design.md`). This ensures:
+1. The season-relative qualification rule is implemented once
+2. Rate vs counting stat distinction is centralized
+3. All three surfaces (Pages, API, MCP) get the fix simultaneously with zero drift risk
+
+---
+
+# Dallas — Leaderboard Minimum-Selector UX Decision (2026-08-08)
+
+**Author:** Dallas (Frontend)  
+**Date:** 2026-08-08  
+**Status:** PENDING TEAM REVIEW
+
+## Problem
+
+Rate-stat leaderboards (Batting Average, OBP, SLG, ERA, WHIP) currently default to "No minimum," which surfaces players with small samples (e.g., 1.000 BA with 1 AB) instead of qualified leaders.
+
+## Proposed UX Direction
+
+### 1. Keep "No minimum" as an option, but change the default behavior
+
+**For rate stats** (AVG, OBP, SLG, ERA, WHIP, K/9, BB/9, Win %):
+- **Default to "Qualified"** — a new option that maps to season-relative qualification (3.1 PA/team-game for batting, 1.0 IP/team-game for pitching)
+- Users can still select "No minimum" to see all players including small samples
+
+**For counting stats** (HR, Wins, Hits, Strikeouts, etc.):
+- **Keep "No minimum" as the default** — counting stats don't require qualification to be meaningful
+
+### 2. Add visual indicator for qualification
+
+Since season-relative qualification differs from a fixed career AB floor, add a "Qualified" badge next to player names (similar to HOF badge):
+```html
+<rhx-badge rhx-variant="success" rhx-size="sm" class="ms-1" title="Qualified via 3.1 PA per team game">✓</rhx-badge>
+```
+
+**Why this matters:** Negro Leagues players often have fewer career ABs due to incomplete records, but many had complete, qualified single-season performances. The UI should make it clear that someone with 2,400 career ABs can appear because they *qualified in a season*, not across their career.
+
+### 3. Update the minimum selector options
+
+**Batting:**
+- "Qualified" (new, default for rate stats) → season-relative 3.1 PA/team-game
+- "No minimum" (existing, default for counting stats) → `minAb=0`
+- "100 AB" → `minAb=100`
+- "500 AB" → `minAb=500`
+- "1000 AB" → `minAb=1000`
+- "3000 AB" → `minAb=3000`
+
+**Pitching:**
+- "Qualified" (new, default for rate stats) → season-relative 1.0 IP/team-game
+- "No minimum" (existing, default for counting stats) → `minIp=0`
+- "50 IP" → `minIp=50`
+- "100 IP" → `minIp=100`
+- "500 IP" → `minIp=500`
+- "1000 IP" → `minIp=1000`
+
+### 4. Implementation notes
+
+**Server-side:**
+- Add logic to detect rate stats vs. counting stats
+- Set stat-aware defaults: if rate stat, default to "Qualified"; if counting stat, default to "No minimum"
+- Add season-relative calculation logic
+
+**Client-side:**
+- Minimum selector should reflect stat-aware default (selected option updates when stat changes)
+- Add tooltip/help icon next to "Qualified"
+
+**Caching:**
+- Changing default minimums changes URL signatures, which may affect cached responses and bookmarks
+- **HIGH PRIORITY:** Must investigate whether leaderboard results are cached before deploying this change
+
+---
+
+# Lambert — Leaderboard Qualification Fix — Reviewer Gate Requirements (2026-08-08)
+
+**Author:** Lambert (Tester)  
+**Date:** 2026-08-08  
+**Status:** ⚠️ GATE REQUIREMENT
+
+## Context
+
+User feedback identified rate-stat leaderboards default to "No minimum," showing small-sample outliers instead of real leaders. Proposed fix: season-relative qualification (3.1 PA per team game) instead of flat career minimum.
+
+## Hard Merge Requirements
+
+**MUST PROVE** with passing automated tests before this change can merge:
+
+### 1. Golden-Name Smoke Test (BLOCKER)
+
+**Test:** Career rate-stat leaderboards must include historically recognized names on page one.
+
+- `BattingAVG_CareerLeaders_Top10IncludesHistoricalNames`: First page must include **at least 3 of:** Ty Cobb, Rogers Hornsby, Ted Williams, Tony Gwynn, Rod Carew
+- `PitchingERA_CareerLeaders_Top10IncludesHistoricalNames`: First page must include **at least 2 of:** Clayton Kershaw, Lefty Grove, Walter Johnson, Christy Mathewson
+
+**Gate:** If these tests fail, the qualification logic is WRONG. Do not merge.
+
+### 2. Negro Leagues Inclusion Verification (BLOCKER)
+
+**Test:** Career rate-stat leaderboards must include qualified Negro Leagues players.
+
+- `BattingAVG_Career_IncludesNegroLeaguesQualifiedPlayers`: Query must include **at least one of:** Josh Gibson, Turkey Stearnes, Cool Papa Bell
+
+**Gate:** If this test fails, the fix didn't work. Do not merge.
+
+### 3. Small-Sample Exclusion Verification (BLOCKER)
+
+**Test:** Rate-stat leaderboards must NOT show small-sample outliers on page one.
+
+- `BattingAVG_DefaultMinimum_ExcludesSmallSampleOutliers`: First 10 rows must have `AtBats >= 100`
+- `PitchingERA_DefaultMinimum_ExcludesSmallSampleOutliers`: First 10 rows must have `InningsPitched >= 30`
+
+**Gate:** If small-sample players appear on page one, do not merge.
+
+### 4. Counting-Stat Regression Test (BLOCKER)
+
+**Test:** Counting-stat leaderboards must behave identically before and after the fix.
+
+- `BattingHR_CountingStat_UnaffectedByQualificationChange`: Barry Bonds (or leader) must still be #1
+- `PitchingWins_CountingStat_UnaffectedByQualificationChange`: Cy Young (or leader) must still be #1
+
+**Gate:** If counting-stat leaderboards change, do not merge.
+
+### 5. API Contract Preservation (BLOCKER)
+
+**Test:** Explicit `minAb` and `minIp` query parameters must still be honored exactly.
+
+- `BattingAPI_MinAbParameter_StillHonored`: Query `?stat=avg&minAb=500` must return all with `AtBats >= 500`
+- `PitchingAPI_MinIpParameter_StillHonored`: Query `?stat=era&minIp=100` must return all with `InningsPitched >= 100`
+
+**Gate:** If explicit minimums are ignored, do not merge.
+
+## Rollout Risk: Cache Invalidation
+
+**Concern:** If leaderboard results are cached in `IMemoryCache` with 24h expiration, the fix may not be visible immediately after deploy.
+
+**Mitigation:**
+1. Grep for `IMemoryCache.Set` in `Batting.cshtml.cs` and `Pitching.cshtml.cs` to confirm if cached
+2. Choose mitigation:
+   - **Option A:** Invalidate all leaderboard caches on deploy (app restart or cache-clear endpoint)
+   - **Option B:** Change cache key to include qualification version (e.g., `batting_leaders_v2_{stat}`)
+   - **Option C:** Accept 24h stale data post-deploy
+
+**Test:** Manual smoke test post-deploy confirms cache either invalidated or keyed correctly.
+
+---
+
+# Ripley — Leaderboard Qualification — Authoritative Execution Plan (2026-08-08)
+
+**Author:** Ripley (Lead)  
+**Date:** 2026-08-08  
+**Status:** APPROVED — Ready for Execution
+
+## Context
+
+External feedback identified two related bugs:
+1. **Surface bug:** Rate-stat leaderboards default to "No minimum," so batting average shows 124 players batting 1.000 with 1-2 at-bats.
+2. **Deeper problem:** The 3,000-AB career floor erases the entire Negro Leagues population (Josh Gibson, Charleston, Stearnes all under the line) because those leagues played 60-80 game schedules.
+
+## Key Discovery
+
+This exact problem was **already analyzed**. An approved design spec (`docs/superpowers/specs/2026-07-21-leaderboard-qualification-design.md`) and 6 open GitHub issues (#63-#66, #70, #75) already exist. Today's independent team investigation confirmed the spec's approach.
+
+## Reconciliation: Spec + Fresh Findings
+
+1. **Ash (Data/Platform):** Confirmed Teams.G fully populated, PA derivable, season-relative qualification feasible
+2. **Parker (Backend):** Confirmed 3 duplicate implementations, found `UsesPlayingTimeTieBreaker` flag in MCP, identified OBP formula bug in all three places
+3. **Dallas (UI/UX):** Proposed stat-aware defaults and "Qualified" badge, flagged cache invalidation as HIGH PRIORITY
+4. **Lambert (Test Lead):** Defined 24 test scenarios with 5 hard merge blockers
+
+## Execution Plan (Issue-Mapped Rollout)
+
+### Phase 1: Foundation (#63) — BLOCKING FOR ALL OTHERS
+
+**Owner:** Parker  
+**Scope:**
+- Create `baseball-history-data` project
+- Move EF entities from web to data project
+- Implement `ILeaderboardQueryService` with `QualificationRules` static class
+- Correct OBP formula
+- Rewire all three surfaces (Pages, API, MCP) to use service
+- Delete duplicate dynamic expression helpers
+- Migrate stat catalog from MCP (include `UsesPlayingTimeTieBreaker` flag)
+
+**Acceptance:**
+- Lambert's 5 hard gates pass in CI:
+  1. ✅ Golden-name smoke test
+  2. ✅ Negro Leagues inclusion proof (Gibson appears)
+  3. ✅ Small-sample exclusion (no 1.000 hitters on page one)
+  4. ✅ Counting-stat regression test
+  5. ✅ Explicit-parameter preservation (API contract)
+
+**Merge Blocker:** All 5 hard gates must pass.
+
+### Phase 2: UI Default & Override Control (#64) — DEPENDS ON #63
+
+**Owner:** Dallas  
+**Scope:**
+- Change minimum-selector dropdown defaults
+- Add "Qualified" option for rate stats
+- Add visual "Qualified" badge (rhx-badge)
+- Preserve all existing options
+
+**Dependency:** #63 must land first
+
+**Cache Investigation (BLOCKER):**
+- Parker/Dallas must grep for `IMemoryCache.Set` in `Batting.cshtml.cs`
+- **MUST investigate before #64 deploy**
+- Choose cache mitigation: invalidate, version keys, or accept stale data
+
+**Merge Blocker:** Manual smoke test post-deploy confirms:
+- Gibson appears (if qualified)
+- No 1.000 hitters with 1-2 ABs on page one
+- Cache invalidation strategy working
+
+### Phase 3: API/MCP Parameter & Documentation (#65) — DEPENDS ON #63
+
+**Owner:** Ash  
+**Scope:**
+- Plumb `qualified` query param through API endpoints (default `true`)
+- Update MCP tool descriptions to document default behavior
+- Add regression test: default MCP response excludes sub-threshold players
+
+**Dependency:** #63 must land first
+
+**Can run parallel to #64** (independent work streams)
+
+### Phase 4: Regression Test Suite (#66) — DEPENDS ON #63, GATES FINAL RELEASE
+
+**Owner:** Lambert  
+**Scope:**
+- Automate all 24 test scenarios
+- Pin known aggregation totals (Bonds 762 HR, Aaron 755 W, etc.)
+
+**Can run parallel to #64/#65** once #63 lands
+
+## Rollout Safety & Risks
+
+### 1. Cache Invalidation (HIGH PRIORITY BLOCKER FOR #64 DEPLOY)
+
+**Investigation required before #64 deploy:**
+1. Parker/Dallas grep for `IMemoryCache.Set` in `Batting.cshtml.cs` and `Pitching.cshtml.cs`
+2. If results ARE cached, choose mitigation (invalidate, version keys, or accept stale data)
+3. Lambert's manual smoke test post-deploy verifies strategy works
+
+### 2. EF Core Translation Risk (MEDIUM)
+
+**Status:** Spec documents fallback
+
+**Mitigation:** If grouped `SUM(3.1 × Teams.G)` join doesn't translate to SQL, fallback is hand-written SQL view.
+
+### 3. All-or-Nothing Rollback (MEDIUM)
+
+**Status:** Shared-service extraction cannot be partially reverted
+
+**Mitigation:** All 5 Lambert hard gates in CI reduce this risk
+
+## Decision
+
+The spec + team findings converged on the approach. No open architectural decisions remain. Execution sequence:
+
+1. **#63 (Parker)** — shared query layer, entity migration, OBP fix
+2. **#64 (Dallas)** + **#65 (Ash)** — parallel work, both depend on #63
+3. **#66 (Lambert)** — parallel with #64/#65 once #63 lands; gates final release
+
+**Cache invalidation verification is a hard gate before #64 deploy.**
+
+All five of Lambert's hard merge blockers must pass before any PR merges.
+
+**Status:** APPROVED — Ready for Execution.
+

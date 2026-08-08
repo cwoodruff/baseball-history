@@ -194,3 +194,119 @@ Completed final acceptance review of PostgreSQL migration and health route fix. 
 **Rationale:** Documentation matches runtime behavior; configuration contract is consistent; quality gates all passing; no security risks identified.
 
 **Consequences:** Engineering can merge; Azure deployment still requires operator to configure real `ConnectionStrings:Lahman` before app startup.
+
+## 2026-08-08 — Leaderboard Qualification Fix Test Strategy
+
+**Context:** User feedback identified two related issues:
+1. **Surface bug:** Rate-stat leaderboards default to "No minimum" (minAb=0), showing small-sample outliers (1.000 hitters with 1-2 ABs) instead of real leaders
+2. **Deeper problem:** Fixed 3,000-AB career floor excludes Negro Leagues population (Gibson ~2,768 ABs, Stearnes ~2,951, Bell ~2,923) due to shorter league schedules (60-80 games typical vs 154-162 in MLB eras)
+
+**Proposed fix:** Season-relative qualification (3.1 PA per team game via `Teams.G`) instead of flat 3,000-AB career minimum.
+
+### Regression Risk Inventory
+
+**MUST NOT BREAK:**
+1. **Counting-stat leaderboards** (HR, H, R, RBI, SB, W, SO, etc.) — these should continue working exactly as before, with optional minimum filters
+2. **Existing qualified players** who clear both old (3,000 AB) and new (season-relative) bars — Ty Cobb (11,436 ABs), Rogers Hornsby (8,173 ABs), and other MLB-era stars must remain visible
+3. **API parameter semantics** — `minAb` and `minIp` query parameters are public contracts; changing their behavior could break API consumers or bookmarked URLs
+4. **Cached page defaults** — `IMemoryCache` 24h cache for `batting_years`, `batting_leagues`, `pitching_years`, `pitching_leagues`, `hof_player_ids`; if qualification logic changes, cached leaderboard results may be stale
+5. **Pagination boundary clamping** — existing tests prove `page=0`, `page=-10`, `page=999999` all clamp correctly; new qualification logic must not regress this
+6. **htmx partial vs full-page contracts** — leaderboard responses return partials for non-boosted htmx, full pages for boosted/normal requests; changing qualification filters must preserve this split
+
+**HIGH-RISK AREAS:**
+- Rate-stat leaderboards (AVG, OBP, SLG, OPS, ERA, WHIP) currently have no default minimum, so changing the default will visibly alter page-one results
+- Career vs single-season mode toggle — season-relative qualification makes sense for career mode but may need different logic for single-season mode
+- Multi-team players in single season — if a player appears on multiple teams in one year, which `Teams.G` value applies for qualification?
+- Null/zero `Teams.G` handling — database check shows zero `Teams.G IS NULL OR G = 0` rows, but defensive code should handle this edge case
+
+### Test Data Assessment
+
+**Database reality (verified against `database/lahman.db`):**
+- ✅ Negro Leagues data present: NNL, NAL, ECL leagues represented
+- ✅ Josh Gibson: 2,768 career ABs (17 seasons, 1930-1946)
+- ✅ Turkey Stearnes: 2,951 ABs; Cool Papa Bell: 2,923 ABs
+- ✅ Teams.G values exist for Negro Leagues teams (60-93 games typical)
+- ✅ Ty Cobb: 11,436 ABs; Rogers Hornsby: 8,173 ABs (control cases for "must still qualify")
+- ✅ No null/zero Teams.G in dataset (defensive code still recommended)
+
+**Verdict:** Existing test database is **sufficient** for exercising both the bug (small-sample outliers) and the fix (Negro Leagues inclusion). No new fixture data needed.
+
+### Proposed Test Coverage (Do Not Write Yet)
+
+**Unit Tests (LeaderboardViewModelTests or new QualificationLogicTests):**
+1. `SeasonRelativeQualification_CalculatesCorrectly_For80GameSchedule` — verify 3.1 PA/G × 80 games = 248 minimum
+2. `SeasonRelativeQualification_CalculatesCorrectly_For162GameSchedule` — verify 3.1 PA/G × 162 games = 502 minimum
+3. `SeasonRelativeQualification_HandlesNullTeamsG_WithoutCrashing` — edge case: if Teams.G is null, fall back to league/era default or skip qualification
+4. `SeasonRelativeQualification_ExcludesSmallSample_1AB` — player with 1 AB in 80-game season should NOT qualify
+5. `SeasonRelativeQualification_IncludesQualified_250ABIn80Games` — player with 250 AB in 80-game season SHOULD qualify
+
+**Integration Tests (new `BattingLeaderboardQualificationTests.cs`):**
+6. `BattingAVG_DefaultMinimum_ExcludesSmallSampleOutliers` — rate-stat leaderboard with new default must NOT show 1.000 hitters with 1-2 ABs on page 1
+7. `BattingAVG_Career_IncludesNegroLeaguesQualifiedPlayers` — Josh Gibson, Turkey Stearnes, Cool Papa Bell should appear in career AVG leaderboard if their per-season ABs meet season-relative bar
+8. `BattingAVG_Career_StillIncludesMLBEraLeaders` — Ty Cobb, Rogers Hornsby, and other >3,000 AB players must NOT be excluded by new logic
+9. `BattingHR_CountingStat_UnaffectedByQualificationChange` — counting-stat leaderboard (HR, H, R, etc.) behavior must be identical before/after fix
+10. `BattingSLG_SingleSeason_AppliesSingleSeasonQualification` — single-season mode should use that year's Teams.G, not career aggregate
+11. `BattingOPS_MultiTeamPlayer_UsesCorrectTeamsG` — player traded mid-season should use weighted or max Teams.G (implementation detail to verify)
+12. `BattingAVG_ExplicitMinAb_OverridesDefault` — if user sets `minAb=1000`, new season-relative logic should NOT override explicit user filter
+13. `BattingLeaderboard_CachedResults_RefreshAfterQualificationChange` — verify cache invalidation or warm-up after deploying new qualification logic
+
+**Integration Tests (new `PitchingLeaderboardQualificationTests.cs`):**
+14. `PitchingERA_DefaultMinimum_ExcludesSmallSampleOutliers` — ERA leaderboard must NOT show 0.00 pitchers with 1-2 IP on page 1
+15. `PitchingWHIP_Career_IncludesNegroLeaguesPitchers` — verify Negro Leagues pitchers with season-relative qualification appear in career WHIP leaderboard
+16. `PitchingERA_Career_StillIncludesMLBEraLeaders` — Cy Young, Walter Johnson, and other established leaders must remain visible
+17. `PitchingWins_CountingStat_UnaffectedByQualificationChange` — counting-stat (W, SO, SV) behavior unchanged
+18. `PitchingERA_SingleSeason_AppliesSingleSeasonQualification` — single-season ERA uses that year's Teams.G
+19. `PitchingLeaderboard_ExplicitMinIp_OverridesDefault` — explicit `minIp=200` should override season-relative default
+
+**Smoke/Golden-Name Tests (hard gate):**
+20. `BattingAVG_CareerLeaders_Top10IncludesHistoricalNames` — page-one career AVG leaderboard must include at least 3 of: Cobb, Hornsby, Williams, Gwynn, Carew (prevents accidental over-qualification that excludes real leaders)
+21. `PitchingERA_CareerLeaders_Top10IncludesHistoricalNames` — page-one career ERA must include at least 2 of: Kershaw, Grove, Johnson, Mathewson (same rationale)
+
+**API Contract Tests (regression safety):**
+22. `BattingAPI_MinAbParameter_StillHonored` — `/Stats/Batting?stat=avg&minAb=500` must return only players with ≥500 AB
+23. `PitchingAPI_MinIpParameter_StillHonored` — `/Stats/Pitching?stat=era&minIp=100` must return only pitchers with ≥100 IP
+24. `BattingAPI_MinAbZero_AppliesNewDefault` — `/Stats/Batting?stat=avg&minAb=0` should apply season-relative default, not literal zero
+
+### Reviewer Gates (Merge Blockers)
+
+**MUST PROVE before merging:**
+1. ✅ **Golden-name smoke test passes** — tests #20 and #21 above must pass to prove we didn't accidentally exclude historically recognized leaders
+2. ✅ **Negro Leagues inclusion verified** — at least one test explicitly proves Gibson/Stearnes/Bell-type players now appear in rate-stat leaderboards
+3. ✅ **Counting-stat regression test passes** — at least one test proves HR/H/W/SO leaderboards unchanged
+4. ✅ **Small-sample exclusion verified** — at least one test proves 1.000 hitters with 1-2 ABs no longer appear on page 1 of AVG leaderboard
+5. ✅ **Explicit minimum parameter honored** — tests #22-24 pass to prove API contract preserved
+
+**SHOULD VERIFY manually (not automated):**
+- Cache invalidation strategy documented (see rollout section below)
+- If `minAb`/`minIp` semantics change, update UI labels and tooltips to match ("Season-qualified" vs "3000 AB")
+
+### Rollout Risk: Cache Invalidation
+
+**Problem:** `IMemoryCache` 24h expiration on:
+- `batting_years`, `batting_leagues`, `pitching_years`, `pitching_leagues` (filter dropdowns) — **LOW RISK**, these don't change with qualification logic
+- `hof_player_ids` (HOF badges) — **LOW RISK**, unrelated to qualification
+- **PlayerCacheService** 24h cache for default Players page — **NOT AFFECTED**, this is a different page
+- **UNKNOWN RISK:** Are the leaderboard **results** themselves cached? Need to check if there's a cache key like `batting_leaders_{stat}_{filters}`.
+
+**Verification needed:**
+1. Grep for `IMemoryCache.Set` or `cache.GetOrCreateAsync` in `Batting.cshtml.cs` and `Pitching.cshtml.cs` to find if leaderboard results are cached
+2. If results ARE cached, either:
+   - **Option A:** Invalidate all leaderboard caches on deploy (requires a cache-clear endpoint or app restart)
+   - **Option B:** Change cache key to include qualification version (e.g., `batting_leaders_v2_{stat}`) so old/new don't collide
+   - **Option C:** Accept 24h stale data post-deploy (simplest but poor UX)
+
+**Test strategy:**
+- **Manual smoke test post-deploy:** Hit `/Stats/Batting?stat=avg` immediately after deploy and verify Josh Gibson appears (if qualified) — this proves cache didn't serve stale pre-fix results
+- **Automated test (if results are cached):** Create a test that warms cache with old logic, deploys new logic, and verifies cache either invalidates or keys differently
+
+### Implementation Recommendations (Not My Domain, But Noted for Parker/Ash)
+
+- **Default minimum UI:** If "No minimum" option is removed for rate stats, update dropdown in `Batting.cshtml` and `Pitching.cshtml` to show "Season-qualified (recommended)" as new default
+- **Season-relative formula:** 3.1 PA per team game is MLB's standard; consider making this configurable per league if Negro Leagues used different thresholds
+- **Multi-team handling:** For players traded mid-season, recommend using the MAXIMUM `Teams.G` across their teams that year (benefits the player, avoids unfair disqualification)
+- **Null Teams.G fallback:** If `Teams.G` is null (shouldn't happen per data check, but defensive), fall back to league-era default (e.g., 154 for pre-1961 AL/NL, 162 for modern, 80 for Negro Leagues)
+
+### Test Data Gaps: NONE FOUND
+
+Existing `database/lahman.db` has all necessary data. No fixture augmentation required.
+

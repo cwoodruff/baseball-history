@@ -213,3 +213,109 @@ Completed PostgreSQL migration documentation and fixed health route ambiguity. D
 ### Handoff Status
 Documentation and routing changes accepted for merge.
 
+## 2026-08-08 Leaderboard Qualification Threshold Investigation
+
+### Investigation Scope
+Data-platform assessment for proposed shift from flat 3000-AB career threshold to season-relative 3.1 PA per team game qualification (MLB batting-title standard).
+
+### Current State: Hardcoded Qualification Thresholds
+- **Batting UI:** `Pages/Stats/Batting.cshtml` line 88 hardcodes `3000` as a dropdown option; `Pages/Stats/Batting.cshtml.cs` line 24 accepts `minAb` parameter with default `0`
+- **Batting API:** `Api/Endpoints/LeaderEndpoints.cs` line 22 accepts `minAb` parameter with default `0`
+- **Pitching:** Similar pattern with `minIp` parameter for innings pitched thresholds (50/100/500/1000)
+- **ViewModel:** `ViewModels/LeaderboardViewModel.cs` lines 16-17 define `MinimumAtBats` and `MinimumInningsPitched` as simple integers
+- **Threshold application:** Both single-season and career modes apply the same filter (`b.Ab >= minAb` for season, `x.AB >= minAb` for career aggregation)
+- No automatic or rate-stat-aware qualification logic exists; qualification is user-selected, not computed from context
+
+### Data Availability: Teams.G and PA Components
+- ✅ **Teams.G exists and is populated:** `Models/Teams.cs` line 20 defines `public short? G { get; set; }` (team games played that season)
+- ✅ **Negro Leagues coverage:** 6 leagues (ECL, EWL, NAL, NN2, NNL, NSL) with 338 team-seasons spanning 1920-1948
+  - Average games per season: 46-72 (vs 154-162 for modern MLB), reflecting shorter schedules and partial record coverage
+  - **No NULL G values** in Negro Leagues teams (verified: 0 nulls across all NL team-seasons)
+  - Team games range: 4-99 (min likely partial/incomplete seasons; max approaching full schedules)
+- ❌ **PA is not a stored column:** Must be derived as `AB + BB + HBP + SF + SH` (all components exist in `Models/Batting.cs` lines 20-40)
+  - All PA components (BB, HBP, SF, SH) are populated for Negro Leagues batting records (verified: 0 nulls)
+  - Sample calculation confirmed feasible via join: `Batting b JOIN Teams t ON b.yearID = t.yearID AND b.teamID = t.teamID`
+
+### Negro Leagues Impact Analysis
+- **Total Negro Leagues players:** 2,348 distinct playerIDs
+- **Players with <3000 career AB:** 2,235 (95% of NL population excluded by current threshold)
+- **Top NL career AB leaders:**
+  - Cool Papa Bell: 4,829 AB (21 seasons) — **above** 3000, but most peers below
+  - Willie Wells: 3,973 AB (21 seasons)
+  - Turkey Stearnes: 3,829 AB (18 seasons)
+  - Newt Allen: 3,721 AB (20 seasons)
+  - Dewey Creacy: 3,517 AB (15 seasons)
+  - Mule Suttles: 3,264 AB (21 seasons)
+  - **Below line:** Ben Taylor (2,993), Oscar Charleston (2,897), Biz Mackey (2,773), Jud Wilson (2,863)
+- **Season-relative qualification (3.1 PA per team game):**
+  - 1,343 qualifying NL player-seasons under proposed threshold
+  - Sample top qualifiers: Bell 1927 (465 PA, 95-game season, threshold 294), McNeil 1923 (439 PA, 95-game season)
+  - Threshold scales appropriately to shorter NL schedules (e.g., 60-game season = 186 PA threshold vs 502 PA for modern 162-game season)
+
+### Rate-Stat Default Behavior Defect (Confirmed)
+- **Surface bug:** Current UI defaults to `minAb=0` ("No minimum"), allowing leaderboards to return 1.000 batting averages with 1-2 AB
+- Verified: 580 batting records exist with perfect 1.000 average (AB = H), predominantly pitchers with 1-2 AB
+- Counting stats (HR, Hits, RBI) self-limit by cumulative totals; rate stats (AVG, OBP, SLG, OPS, ERA, WHIP) do not
+- No current logic differentiates stat type for automatic threshold application
+
+### Query Pattern & Performance Implications
+
+#### Current Approach (Flat Threshold)
+- **Single-season:** Filter `b.Ab >= minAb`, then project/order/paginate (Lines 91-129 in Batting.cshtml.cs)
+- **Career:** GroupBy playerID, aggregate, filter `x.AB >= minAb`, order/paginate, then fetch names for page only (Lines 151-196)
+- No join to Teams table required; qualification is a simple integer comparison on Batting.AB
+
+#### Proposed Approach (Season-Relative 3.1 PA per Team Game)
+Two viable strategies, each with distinct trade-offs:
+
+**Strategy A: Per-Season Qualification in WHERE Clause**
+- **Single-season:** `JOIN Teams t ON b.yearID = t.yearID AND b.teamID = t.teamID WHERE (b.Ab + b.Bb + b.Hbp + COALESCE(b.Sf,0) + COALESCE(b.Sh,0)) >= (3.1 * t.G)`
+  - Adds one join per query (Batting → Teams on composite key)
+  - PA calculation per row (5 column additions + multiplication)
+  - Teams.G already indexed as part of PK (yearID, lgID, teamID)
+  - **Impact:** Minimal — Teams table is small (~3000 rows), join cardinality 1:N, PK lookup is fast
+- **Career aggregation (option 1):** Sum PA per season, filter qualifying seasons, then aggregate qualifying totals
+  - Requires CTE or subquery: first identify qualifying seasons, then aggregate
+  - More complex LINQ/SQL generation
+  - **Impact:** Moderate query complexity increase
+- **Career aggregation (option 2):** Aggregate all seasons, compute "has at least N qualifying seasons" or "average across all seasons with team context"
+  - Still requires join, but aggregation logic stays closer to current shape
+  - May not match MLB batting-title semantics (which are per-season, not career-averaged)
+
+**Strategy B: Precomputed Qualification Flag (Per-Season Materialized)**
+- Add `IsQualified` boolean column to Batting table (or create a cached view/denormalized qualification table)
+- Compute during data load/refresh: `UPDATE Batting SET IsQualified = (PA >= 3.1 * Teams.G)` per season
+- Query filters on `WHERE b.IsQualified = true` (no join, no runtime calculation)
+- **Pros:** Fastest query performance, no join overhead, simple WHERE clause
+- **Cons:** Schema change, data refresh workflow change, cache invalidation required after `lahman.db` reload
+
+### Caching Impact Assessment
+- **Current cache strategy:** 24-hour `IMemoryCache` for filter options (years, leagues, HOF playerIDs); 1-hour response cache for leaderboard results (VaryByHeader="HX-Request")
+- **PlayerCacheService:** Pre-warms Players default page, but does not cache leaderboards
+- **Join overhead vs cache hit rate:** Adding Teams join increases query cost but remains cacheable; 1-hour TTL means computation happens max once/hour per unique filter combination
+- **Proposed threshold adds query parameters:** If "qualification type" becomes a filter (e.g., "3.1 PA/G" vs "flat 3000 AB"), cache key space expands (more unique combinations = more cache misses = more queries)
+- **Recommendation:** Keep qualification logic transparent (always apply 3.1 PA/G for rate stats, always allow user override for counting stats) to avoid cache fragmentation
+
+### Edge Cases & Data Quality Risks
+1. **Multi-team seasons:** 10+ NL examples exist (e.g., Bell 1929: SLS + CAG with 2 stints, combined 392 AB)
+   - Current career aggregation already sums across stints correctly (GroupBy playerID, Sum(AB))
+   - Per-season qualification must handle: does each stint qualify independently, or combined PA vs team with most games?
+   - **MLB rule:** PA counts across all teams in season; qualification uses team with most PA (not team with most games)
+2. **Incomplete Teams.G values:** None found in current data (verified 0 nulls), but future data loads could introduce them
+   - Mitigation: Fall back to league-average games for season if Teams.G IS NULL
+3. **Missing PA components (SF, SH nulls):** Verified 0 nulls in Negro Leagues; older MLB seasons may have nulls
+   - Current code already uses `COALESCE` for safety in calculations (e.g., line 242 in Batting.cshtml.cs)
+4. **Short/partial seasons (e.g., 1981 strike, 2020 COVID):** 3.1 PA/G threshold scales correctly (81-game season = 251 PA threshold)
+5. **Rate-stat ordering with tied values:** Current expression trees have zero-division guards but no deterministic secondary ordering for ties
+   - Existing defect (documented in `.squad/decisions.md` line 817): "Leaderboard ordering has no deterministic tie-break contract"
+
+### Recommendations for Implementation Planning
+1. **Start with Strategy A (computed WHERE clause)** for MVP: join to Teams, calculate PA inline, filter per-season
+   - Defer precomputed flag (Strategy B) unless performance testing shows unacceptable query cost
+2. **Apply automatic qualification to rate stats only:** AVG, OBP, SLG, OPS, ERA, WHIP get 3.1 PA/G (or equivalent IP threshold for pitching)
+   - Leave counting stats (HR, Hits, Wins) with user-selectable thresholds (current behavior)
+3. **Multi-team seasons:** Use combined PA across all stints in a season; compare to team with most PA's Games value (matches MLB batting-title logic)
+4. **Cache invalidation:** No change needed if threshold logic is deterministic; existing 1-hour response cache TTL remains appropriate
+5. **Test Negro Leagues visibility:** Verify Charleston, Gibson, Suttles appear on AVG leaderboard after fix (currently invisible with 3000-AB floor)
+6. **Add deterministic tie-breaker:** When implementing ordering changes, add secondary sort (e.g., by playerID) to fix existing nondeterminism
+
