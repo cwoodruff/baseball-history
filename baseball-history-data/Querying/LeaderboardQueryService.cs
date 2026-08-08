@@ -215,12 +215,16 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
             }
             else if (request.Qualified)
             {
-                // Season-relative qualification: use the computed Threshold (SUM of 3.1 PA
-                // per team game across stints) when available; fall back to a flat 100 PA
-                // floor only when Threshold is null due to missing Teams.G data.
+                // Season-relative qualification: apply the computed Threshold (SUM of 3.1 PA
+                // per team game across stints) as an enhancement OVER a flat 100 PA sanity
+                // floor, never below it. This matters because some (mostly 19th-century or
+                // partial-season) teams have anomalously low Teams.G values in the source
+                // data, which would otherwise let degenerate small-sample careers (e.g. a
+                // handful of AB) qualify with a near-zero computed threshold. Falls back to
+                // the flat floor alone when Threshold is null due to missing Teams.G data.
                 grouped = grouped.Where(x =>
                     x.Threshold.HasValue
-                        ? x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= x.Threshold.Value
+                        ? x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= (x.Threshold.Value > 100 ? x.Threshold.Value : 100)
                         : x.AB + x.BB + (x.HBP ?? 0) + (x.SH ?? 0) + (x.SF ?? 0) >= 100);
             }
             // When request.Qualified is false and no explicit override, no threshold filter is applied.
@@ -496,12 +500,14 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
             }
             else if (request.Qualified)
             {
-                // Season-relative qualification: use the computed Threshold (SUM of 3 outs
-                // per team game across stints) when available; fall back to a flat 30 IP
-                // (90 outs) floor only when Threshold is null due to missing Teams.G data.
+                // Season-relative qualification: apply the computed Threshold (SUM of 3 outs
+                // per team game across stints) as an enhancement OVER a flat 90-out (30 IP)
+                // sanity floor, never below it - see the equivalent batting comment above for
+                // rationale (anomalously low Teams.G values in some source data). Falls back
+                // to the flat floor alone when Threshold is null due to missing Teams.G data.
                 grouped = grouped.Where(x =>
                     x.Threshold.HasValue
-                        ? x.IPouts >= x.Threshold.Value
+                        ? x.IPouts >= (x.Threshold.Value > 90 ? x.Threshold.Value : 90)
                         : x.IPouts >= 90);
             }
             // When request.Qualified is false and no explicit override, no threshold filter is applied.
