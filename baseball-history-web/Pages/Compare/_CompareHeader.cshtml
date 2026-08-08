@@ -2,8 +2,36 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="text-mlb-navy mb-0">Compare Players</h1>
-    @if (Model.Player1 != null || Model.Player2 != null)
-    {
-        <a href="/Compare" class="btn btn-sm btn-outline-secondary" hx-boost="false">Start Over</a>
-    }
+    <div>
+        @if (Model.BothSelected)
+        {
+            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="copy-link-btn"
+                    onclick="copyCompareLink()">
+                <span id="copy-link-text">Copy Link</span>
+            </button>
+        }
+        @if (Model.Player1 != null || Model.Player2 != null)
+        {
+            <a href="/Compare" class="btn btn-sm btn-outline-secondary" hx-boost="false">Start Over</a>
+        }
+    </div>
 </div>
+
+@if (Model.BothSelected)
+{
+    <script>
+        function copyCompareLink() {
+            navigator.clipboard.writeText(window.location.href).then(function() {
+                var btn = document.getElementById('copy-link-text');
+                var originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                }, 1500);
+            }).catch(function(err) {
+                console.error('Failed to copy link:', err);
+                alert('Failed to copy link to clipboard');
+            });
+        }
+    </script>
+}

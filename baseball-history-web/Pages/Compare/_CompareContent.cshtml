@@ -42,9 +42,9 @@
                     var n1 = int.Parse(v1);
                     var n2 = int.Parse(v2);
                     <tr>
-                        <td class="text-end stat-cell fw-bold @(n1 > n2 ? "text-success" : "")">@v1</td>
+                        <td class="text-end stat-cell fw-bold @(n1 > n2 ? "text-success" : "")">@(n1 > n2 && n1 > 0 ? "▲ " : "")@v1</td>
                         <td class="text-center text-muted small">@row.Label</td>
-                        <td class="stat-cell fw-bold @(n2 > n1 ? "text-success" : "")">@v2</td>
+                        <td class="stat-cell fw-bold @(n2 > n1 ? "text-success" : "")">@(n2 > n1 && n2 > 0 ? "▲ " : "")@v2</td>
                     </tr>
                 }
                 <tr>
@@ -110,11 +110,11 @@
                         var p2Better = lowerIsBetter ? v2 < v1 : v2 > v1;
                         <tr>
                             <td class="text-end stat-cell fw-bold @(s1 != null && p1Better ? "text-success" : "")">
-                                @(s1 != null ? row.Fmt(s1) : "—")
+                                @if (s1 != null && p1Better && v1 > 0) { <text>▲ </text> }@(s1 != null ? row.Fmt(s1) : "—")
                             </td>
                             <td class="text-center text-muted small">@row.Label</td>
                             <td class="stat-cell fw-bold @(s2 != null && p2Better ? "text-success" : "")">
-                                @(s2 != null ? row.Fmt(s2) : "—")
+                                @if (s2 != null && p2Better && v2 > 0) { <text>▲ </text> }@(s2 != null ? row.Fmt(s2) : "—")
                             </td>
                         </tr>
                     }
@@ -167,11 +167,11 @@
                         var p2Better = row.LowerBetter ? (v2 < v1 && s2 != null) : (v2 > v1);
                         <tr>
                             <td class="text-end stat-cell fw-bold @(s1 != null && p1Better ? "text-success" : "")">
-                                @(s1 != null ? row.Fmt(s1) : "—")
+                                @if (s1 != null && p1Better && v1 > 0) { <text>▲ </text> }@(s1 != null ? row.Fmt(s1) : "—")
                             </td>
                             <td class="text-center text-muted small">@row.Label</td>
                             <td class="stat-cell fw-bold @(s2 != null && p2Better ? "text-success" : "")">
-                                @(s2 != null ? row.Fmt(s2) : "—")
+                                @if (s2 != null && p2Better && v2 > 0) { <text>▲ </text> }@(s2 != null ? row.Fmt(s2) : "—")
                             </td>
                         </tr>
                     }
