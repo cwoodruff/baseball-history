@@ -11,6 +11,15 @@ else
             <strong>@Model.Title</strong>
             <rhx-badge rhx-variant="neutral">@Model.TotalEntries.ToString("N0") pitchers</rhx-badge>
         </div>
+        @if (Model.IsQualified)
+        {
+            <div class="card-body py-2 bg-light border-bottom">
+                <small class="text-muted">
+                    <strong>Qualification:</strong> Showing pitchers who met the season qualification standard (3.1 plate appearances per team game).
+                    This allows historically significant pitchers from shorter schedules (including Negro Leagues) to appear in rate-stat leaderboards.
+                </small>
+            </div>
+        }
         <div class="table-responsive">
             <table class="table table-baseball table-hover mb-0">
                 <caption class="visually-hidden">@Model.Title</caption>
@@ -164,7 +173,7 @@ else
         if (Model.FromYear.HasValue) queryParams["fromYear"] = Model.FromYear.Value.ToString();
         if (Model.ToYear.HasValue) queryParams["toYear"] = Model.ToYear.Value.ToString();
         if (!string.IsNullOrEmpty(Model.League)) queryParams["league"] = Model.League;
-        if (Model.MinimumInningsPitched > 0) queryParams["minIp"] = Model.MinimumInningsPitched.ToString();
+        if (Model.MinimumInningsPitched != -1) queryParams["minIp"] = Model.MinimumInningsPitched.ToString();
         if (Model.SingleSeason) queryParams["singleSeason"] = "true";
 
         <div class="mt-3">
