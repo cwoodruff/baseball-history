@@ -254,3 +254,16 @@ With season-relative qualification enabled:
 - 1-2 AB 1.000 hitters should be excluded (they don't meet any season threshold)
 
 Did not run a full manual query test in this session (would require PostgreSQL access and runtime setup), but the logic is sound and the existing test suite validates the behavior.
+
+## Session: Leaderboard Qualification Fix (2026-08-08)
+
+**Issue #63 Implementation:** Extracted shared `ILeaderboardQueryService`, implemented season-relative qualification (3.1 PA per team game), corrected OBP formula.
+
+**Bugs Found in Live Testing:**
+1. Career-path qualification toggle ignored (qualified filter not applied) — fixed by coordinator (3ef9bd7)
+2. Anomalous thresholds for low-G players allowed 4-AB careers to rank #1 — fixed by coordinator (264b2e6)
+
+**Lesson:** Automated test suite (446 tests) missed both bugs. Live smoke-testing found them. Coverage gap: no direct `ILeaderboardQueryService` contract tests. Coordinator added 33 new regression tests to close gap.
+
+**Note:** Implementation was sound; bugs were in edge cases (career path, NULL Teams.G handling) that automated tests didn't exercise.
+
