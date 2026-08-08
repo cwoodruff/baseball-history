@@ -1,4 +1,8 @@
 {
   "projectId": "proj-1783549239398-6quhvm",
-  "backlogId": "proj-1783549239398-6quhvm"
+  "backlogId": "proj-1783549239398-6quhvm",
+  "repoIdentity": {
+    "origin": "github.com/cwoodruff/baseball-history",
+    "rootCommit": "4884dd93b61fb1480958a77d11e39c82c95c78fa"
+  }
 }

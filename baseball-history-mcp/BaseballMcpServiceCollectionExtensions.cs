@@ -2,7 +2,7 @@ using System.Reflection;
 using baseball_history_mcp.Configuration;
 using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Querying;
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

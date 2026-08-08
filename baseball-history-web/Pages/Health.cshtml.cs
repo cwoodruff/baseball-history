@@ -1,4 +1,4 @@
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +8,7 @@ public class HealthModel(BaseballDbContext context) : PageModel
 {
     public bool DatabaseHealthy { get; set; }
     public string? ErrorMessage { get; set; }
-    public Models.Teams? SampleTeam { get; set; }
+    public BaseballHistory.Data.Models.Teams? SampleTeam { get; set; }
 
     public async Task OnGetAsync()
     {

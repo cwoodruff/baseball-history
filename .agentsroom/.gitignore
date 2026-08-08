@@ -5,3 +5,4 @@ agents-local.json
 *.migrated.json
 sessions/
 team-runs/
+memory/

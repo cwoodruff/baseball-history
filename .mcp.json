@@ -1,26 +1,5 @@
 {
   "mcpServers": {
-    "baseball-history": {
-      "type": "http",
-      "url": "http://localhost:5190/"
-    },
-    "aspire": {
-      "command": "aspire",
-      "args": [
-        "agent",
-        "mcp"
-      ]
-    },
-    "AgentsRoom-Browser": {
-      "command": "node",
-      "args": [
-        "/Applications/AgentsRoom.app/Contents/Resources/browser-mcp-server.cjs"
-      ],
-      "env": {
-        "AR_BROWSER_BRIDGE_FILE": "/Users/cwoodruff/.agentsroom/browser-bridge.json",
-        "AR_BROWSER_PROJECT_ID": "proj-1783549239398-6quhvm"
-      }
-    },
     "AgentsRoom-MCP": {
       "command": "node",
       "args": [

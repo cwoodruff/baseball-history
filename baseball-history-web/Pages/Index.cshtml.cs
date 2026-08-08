@@ -1,4 +1,4 @@
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

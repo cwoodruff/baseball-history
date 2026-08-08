@@ -3,7 +3,7 @@ using baseball_history_mcp.Configuration;
 using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Resources;
 using baseball_history_mcp.Tools;
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;

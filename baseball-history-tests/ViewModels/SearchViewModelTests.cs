@@ -201,7 +201,7 @@ public class PlayerSummaryTests
     [Fact]
     public void FromPeople_SetsBasicInfo()
     {
-        var person = new baseball_history_web.Models.People
+        var person = new BaseballHistory.Data.Models.People
         {
             PlayerId = "ruthba01",
             NameFirst = "Babe",
@@ -229,7 +229,7 @@ public class PlayerSummaryTests
     [Fact]
     public void FromPeople_WithNullDates_HandlesGracefully()
     {
-        var person = new baseball_history_web.Models.People
+        var person = new BaseballHistory.Data.Models.People
         {
             PlayerId = "test",
             NameFirst = "Test",
@@ -247,7 +247,7 @@ public class PlayerSummaryTests
     [Fact]
     public void FromPeople_WithNullFirstName_HandlesTrim()
     {
-        var person = new baseball_history_web.Models.People
+        var person = new BaseballHistory.Data.Models.People
         {
             PlayerId = "test",
             NameFirst = null,
@@ -262,7 +262,7 @@ public class PlayerSummaryTests
     [Fact]
     public void FromPeople_WithNullStats()
     {
-        var person = new baseball_history_web.Models.People
+        var person = new BaseballHistory.Data.Models.People
         {
             PlayerId = "test",
             NameFirst = "Test",
