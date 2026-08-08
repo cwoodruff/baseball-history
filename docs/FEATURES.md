@@ -225,8 +225,20 @@ View batting statistical leaders with filters.
 | From Year     | Year dropdown           | Start year for range         |
 | To Year       | Year dropdown           | End year for range           |
 | League        | AL, NL, All             | Filter by league             |
-| Min AB        | 0, 100, 500, 1000, 3000 | Minimum at-bats              |
+| Qualified     | Toggle (default ON)     | Season-relative qualification for rate stats |
+| Min AB        | 0, 100, 500, 1000, 3000 | Explicit minimum at-bats (overrides qualification) |
 | Single Season | Checkbox                | Individual seasons vs career |
+
+### Qualification Logic
+
+When the **Qualified** toggle is ON (default), rate-stat leaderboards (AVG, OBP, SLG, OPS) apply a season-relative qualification threshold:
+
+- **Threshold**: Total plate appearances (PA) must equal or exceed **3.1 PA per team-game** across all career stints
+- **Sanity floor**: The threshold cannot drop below **100 PA**, preventing small-sample noise from players with incomplete or anomalous team-game data
+- **Why**: This season-relative approach allows players from shorter-season eras (Negro Leagues with 60-80 game schedules, 19th century) to qualify naturally without arbitrary career totals that would exclude them
+- **Effect**: With qualification enabled, leaders like Ty Cobb, Josh Gibson, Oscar Charleston, Turkey Stearnes, and Cool Papa Bell appear naturally on career batting average leaderboards, alongside modern stars
+
+Turn **Qualified** OFF to see all players including small-sample outliers, or use **Min AB** to set an explicit threshold.
 
 ### Display
 
@@ -260,8 +272,20 @@ View pitching statistical leaders with filters.
 | From Year     | Year dropdown         | Start year for range         |
 | To Year       | Year dropdown         | End year for range           |
 | League        | AL, NL, All           | Filter by league             |
-| Min IP        | 0, 50, 100, 500, 1000 | Minimum innings              |
+| Qualified     | Toggle (default ON)   | Season-relative qualification for rate stats |
+| Min IP        | 0, 50, 100, 500, 1000 | Explicit minimum innings (overrides qualification) |
 | Single Season | Checkbox              | Individual seasons vs career |
+
+### Qualification Logic
+
+When the **Qualified** toggle is ON (default), rate-stat leaderboards (ERA, WHIP, K9, BB9, WPCT) apply a season-relative qualification threshold:
+
+- **Threshold**: Total outs pitched must equal or exceed **3.0 outs per team-game** across all career stints (equivalent to 1 inning per team-game)
+- **Sanity floor**: The threshold cannot drop below **90 outs (30 innings)**, preventing small-sample noise from players with incomplete or anomalous team-game data
+- **Why**: This season-relative approach allows pitchers from shorter-season eras (Negro Leagues, 19th century) to qualify naturally without arbitrary career totals that would exclude them
+- **Effect**: With qualification enabled, the leaderboards surface real career leaders without small-sample outliers dominating the top ranks
+
+Turn **Qualified** OFF to see all pitchers including small-sample outliers, or use **Min IP** to set an explicit threshold.
 
 ### Display
 

@@ -17,6 +17,7 @@ public class LeaderboardViewModel
     public int MinimumAtBats { get; set; } = 0;
     public int MinimumInningsPitched { get; set; } = 0;
     public bool SingleSeason { get; set; }
+    public bool IsQualified { get; set; } = false;
 
     // Results
     public List<BattingLeaderEntry> BattingLeaders { get; set; } = new();

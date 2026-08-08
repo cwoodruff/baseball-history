@@ -91,9 +91,12 @@ and the REST API used in the application.
 | fromYear | int? | null | Start year filter |
 | toYear | int? | null | End year filter |
 | league | string | null | League filter (AL/NL) |
-| minAb | int | 0 | Minimum at-bats |
+| qualified | bool | true | Apply season-relative qualification for rate stats |
+| minAb | int? | null | Explicit minimum at-bats (overrides qualification) |
 | singleSeason | bool | false | Single season vs career |
 | page | int | 1 | Page number |
+
+**Qualification**: When `qualified=true` (default), rate-stat leaderboards (AVG, OBP, SLG, OPS) require total plate appearances ≥ 3.1 PA per team-game across all stints, with a minimum floor of 100 PA. This allows players from shorter-season eras (Negro Leagues, 19th century) to qualify naturally. Set `qualified=false` for all players, or use `minAb` to override.
 
 **Response**: `LeaderboardViewModel` with `BattingLeaders`
 
@@ -110,9 +113,12 @@ and the REST API used in the application.
 | fromYear | int? | null | Start year filter |
 | toYear | int? | null | End year filter |
 | league | string | null | League filter |
-| minIp | int | 0 | Minimum innings pitched |
+| qualified | bool | true | Apply season-relative qualification for rate stats |
+| minIp | int? | null | Explicit minimum innings pitched (overrides qualification) |
 | singleSeason | bool | false | Single season vs career |
 | page | int | 1 | Page number |
+
+**Qualification**: When `qualified=true` (default), rate-stat leaderboards (ERA, WHIP, K9, BB9, WPCT) require total outs pitched ≥ 3.0 outs per team-game across all stints (equivalent to 1 inning per game), with a minimum floor of 90 outs (30 innings). This allows pitchers from shorter-season eras to qualify naturally. Set `qualified=false` for all pitchers, or use `minIp` to override.
 
 **Response**: `LeaderboardViewModel` with `PitchingLeaders`
 
@@ -574,8 +580,8 @@ List endpoints return:
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| GET | `/api/leaders/batting` | Batting leaderboard (`stat`, `fromYear`, `toYear`, `league`, `minAb`, `singleSeason`, `page`, `pageSize`) |
-| GET | `/api/leaders/pitching` | Pitching leaderboard (`stat`, `fromYear`, `toYear`, `league`, `minIp`, `singleSeason`, `page`, `pageSize`) |
+| GET | `/api/leaders/batting` | Batting leaderboard (`stat`, `fromYear`, `toYear`, `league`, `qualified`, `minAb`, `singleSeason`, `page`, `pageSize`) |
+| GET | `/api/leaders/pitching` | Pitching leaderboard (`stat`, `fromYear`, `toYear`, `league`, `qualified`, `minIp`, `singleSeason`, `page`, `pageSize`) |
 
 ### Hall of Fame — `/api/hall-of-fame`
 
