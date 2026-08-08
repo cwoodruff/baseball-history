@@ -30,8 +30,10 @@ The server exposes a deliberately small MCP surface:
    - One team-season snapshot with roster, club batting, and club pitching context
 6. `get_batting_leaders`
    - Career or single-season batting leaderboards
+   - Defaults to season-relative qualification for rate stats (qualified=true)
 7. `get_pitching_leaders`
    - Career or single-season pitching leaderboards
+   - Defaults to season-relative qualification for rate stats (qualified=true)
 8. `list_hall_of_fame_inductees`
    - Bounded Hall of Fame inductee discovery with optional year/category filters
 9. `get_hall_of_fame_voting_history`
