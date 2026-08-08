@@ -95,7 +95,7 @@ public class CompareCareerPitchingStats
     public double Whip => InningsPitched > 0 ? (Walks + Hits) / InningsPitched : 0;
     public string WinLossRecord => $"{Wins}-{Losses}";
     public string FormattedEra => Era.ToString("0.00");
-    public string FormattedWhip => Whip.ToString("0.000");
+    public string FormattedWhip => Whip.ToString("0.00");
 }
 
 public class ComparePostseasonBattingStats
