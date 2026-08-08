@@ -19,19 +19,54 @@
 
 @if (Model.BothSelected)
 {
-    <script>
-        function copyCompareLink() {
-            navigator.clipboard.writeText(window.location.href).then(function() {
-                var btn = document.getElementById('copy-link-text');
-                var originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                }, 1500);
-            }).catch(function(err) {
-                console.error('Failed to copy link:', err);
-                alert('Failed to copy link to clipboard');
-            });
-        }
-    </script>
+    var player1 = ViewContext.HttpContext.Request.Query["player1"].ToString();
+    var player2 = ViewContext.HttpContext.Request.Query["player2"].ToString();
+    var fromYear = ViewContext.HttpContext.Request.Query["fromYear"].ToString();
+    var toYear = ViewContext.HttpContext.Request.Query["toYear"].ToString();
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="/Compare">
+                <input type="hidden" name="player1" value="@player1" />
+                <input type="hidden" name="player2" value="@player2" />
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small">From Year</label>
+                        <input type="number" class="form-control form-control-sm" name="fromYear" 
+                               value="@fromYear" placeholder="All Time" min="1871" max="2024" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">To Year</label>
+                        <input type="number" class="form-control form-control-sm" name="toYear" 
+                               value="@toYear" placeholder="Present" min="1871" max="2024" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-sm btn-primary">Apply Range</button>
+                        @if (!string.IsNullOrEmpty(fromYear) || !string.IsNullOrEmpty(toYear))
+                        {
+                            <a href="/Compare?player1=@player1&player2=@player2" class="btn btn-sm btn-outline-secondary">Clear</a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
 }
+
+<script>
+    function copyCompareLink() {
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            var btn = document.getElementById('copy-link-text');
+            var originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function() {
+                btn.textContent = originalText;
+            }, 1500);
+        }).catch(function(err) {
+            console.error('Failed to copy link:', err);
+            alert('Failed to copy link to clipboard');
+        });
+    }
+</script>
+

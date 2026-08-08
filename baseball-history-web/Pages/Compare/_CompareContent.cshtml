@@ -5,6 +5,12 @@
 {
     var p1 = Model.Player1!;
     var p2 = Model.Player2!;
+    var fromYear = ViewContext.HttpContext.Request.Query["fromYear"].ToString();
+    var toYear = ViewContext.HttpContext.Request.Query["toYear"].ToString();
+    var hasYearRange = !string.IsNullOrEmpty(fromYear) || !string.IsNullOrEmpty(toYear);
+    var yearRangeLabel = hasYearRange
+        ? $"({(string.IsNullOrEmpty(fromYear) ? "All" : fromYear)}-{(string.IsNullOrEmpty(toYear) ? "Present" : toYear)})"
+        : "";
 
     <h3 class="text-center text-mlb-navy mb-4">
         @p1.FullName <span class="text-muted mx-2">vs</span> @p2.FullName
@@ -66,7 +72,24 @@
     {
         <div class="card mb-4">
             <div class="card-header card-header-mlb">
-                <strong>Career Batting</strong>
+                <strong>@(hasYearRange ? $"Batting {yearRangeLabel}" : "Career Batting")</strong>
+                @if (!hasYearRange)
+                {
+                    <span class="float-end">
+                        @if (p1.TotalBattingSeasons > 0)
+                        {
+                            <small class="text-muted me-3">
+                                @p1.FullName: @p1.QualifiedBattingSeasons of @p1.TotalBattingSeasons seasons qualified
+                            </small>
+                        }
+                        @if (p2.TotalBattingSeasons > 0)
+                        {
+                            <small class="text-muted">
+                                @p2.FullName: @p2.QualifiedBattingSeasons of @p2.TotalBattingSeasons seasons qualified
+                            </small>
+                        }
+                    </span>
+                }
             </div>
             <div class="table-responsive">
                 <table class="table table-baseball mb-0">
@@ -129,7 +152,24 @@
     {
         <div class="card mb-4">
             <div class="card-header card-header-mlb">
-                <strong>Career Pitching</strong>
+                <strong>@(hasYearRange ? $"Pitching {yearRangeLabel}" : "Career Pitching")</strong>
+                @if (!hasYearRange)
+                {
+                    <span class="float-end">
+                        @if (p1.TotalPitchingSeasons > 0)
+                        {
+                            <small class="text-muted me-3">
+                                @p1.FullName: @p1.QualifiedPitchingSeasons of @p1.TotalPitchingSeasons seasons qualified
+                            </small>
+                        }
+                        @if (p2.TotalPitchingSeasons > 0)
+                        {
+                            <small class="text-muted">
+                                @p2.FullName: @p2.QualifiedPitchingSeasons of @p2.TotalPitchingSeasons seasons qualified
+                            </small>
+                        }
+                    </span>
+                }
             </div>
             <div class="table-responsive">
                 <table class="table table-baseball mb-0">

@@ -32,6 +32,11 @@ public class ComparePlayer
     public int GoldGloveCount { get; set; }
     public int SilverSluggerCount { get; set; }
 
+    public int QualifiedBattingSeasons { get; set; }
+    public int TotalBattingSeasons { get; set; }
+    public int QualifiedPitchingSeasons { get; set; }
+    public int TotalPitchingSeasons { get; set; }
+
     public List<string> TeamNames { get; set; } = new();
 
     public string Initials
