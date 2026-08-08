@@ -112,3 +112,134 @@ Received assignment of GitHub issue #18 (Salaries page missing dollar sign on sa
 ## Learnings
 
 - Salary displays on the Salaries surface should use an explicit dollar-sign formatter (`$` + `N0`) instead of culture-sensitive `"C0"` so full-page and htmx partial responses render stable USD strings across environments.
+
+## Leaderboard Minimum-Selector Investigation (2026-08-08)
+
+**Context:** User feedback reports that rate-stat leaderboards (AVG, OBP, SLG, ERA, WHIP) default to "No minimum," surfacing small-sample players (e.g., 1.000 BA with 1 AB) instead of qualified leaders like Cobb/Hornsby/Gibson. The future plan is to switch from a career AB floor to season-relative qualification (3.1 PA/team-game), which changes qualification semantics, especially for Negro Leagues players.
+
+### Current UI Structure
+
+**Main Leaderboard Pages:**
+- `/Pages/Stats/Batting.cshtml` and `/Pages/Stats/Pitching.cshtml` — full-page wrappers with filter form (`#filter-form`)
+- `/Pages/Stats/_BattingLeaders.cshtml` and `/Pages/Stats/_PitchingLeaders.cshtml` — partials showing table + pagination
+
+**Minimum Selector Control:**
+- **Location:** Batting/Pitching main pages, inside `#filter-form`, under `<div class="col-md-2">`
+- **Control type:** `<select>` dropdown with `name="minAb"` (batting) or `name="minIp"` (pitching)
+- **Options (Batting):**
+  - `value="0"` → "No minimum" **(currently the default)**
+  - `value="100"` → "100 AB"
+  - `value="500"` → "500 AB"
+  - `value="1000"` → "1000 AB"
+  - `value="3000"` → "3000 AB"
+- **Options (Pitching):**
+  - `value="0"` → "No minimum" **(currently the default)**
+  - `value="50"` → "50 IP"
+  - `value="100"` → "100 IP"
+  - `value="500"` → "500 IP"
+  - `value="1000"` → "1000 IP"
+
+**Server-side mapping:** 
+- `int minAb = 0` / `int minIp = 0` are method parameter defaults in both `.cshtml.cs` PageModels (Batting.cshtml.cs, Pitching.cshtml.cs)
+- "No minimum" = `0` → no filter applied, so all rows with any AB/IP are included
+- No server-side logic currently distinguishes rate stats from counting stats — all stats use the same minimum threshold
+
+### Rate Stats vs. Counting Stats
+
+**Rate stats (require qualification to be meaningful):**
+- Batting: `avg`, `obp`, `slg`, `ops`
+- Pitching: `era`, `whip`, `k9`, `bb9`, `wpct`
+
+**Counting stats (no qualification needed):**
+- Batting: `hr`, `h`, `r`, `rbi`, `sb`, `2b`, `3b`, `tb`, `bb`, `g`, `ab`
+- Pitching: `w`, `so`, `sv`, `cg`, `sho`, `ip`, `l`, `g`, `gs`
+
+Currently **all stats share the same minimum selector** and all default to `minAb=0` / `minIp=0` regardless of whether the selected stat is a rate or counting stat.
+
+### How the UI Detects Stat Type
+
+**No client-side detection** — the stat dropdown triggers an htmx request to the server with `stat=<key>`, and the server-side code handles ordering/display logic:
+- Pitching page already detects ascending vs. descending via `var isAscending = stat.ToLower() is "era" or "whip";`
+- Batting page does not currently flag rate stats explicitly
+
+The same partial (`_BattingLeaders.cshtml` or `_PitchingLeaders.cshtml`) renders all stats, so distinguishing rate vs. counting would need to be either:
+1. **Page-level context** passed into the ViewModel (preferred)
+2. **Client-side conditional rendering** in the partial based on `Model.StatColumn`
+
+### UX Implications of Changing the Default
+
+**If we default rate-stat leaderboards to "Qualified" (season-relative 3.1 PA/team-game):**
+
+**Pros:**
+- Solves the immediate bug: users see Cobb/Hornsby/Gibson on page one, not 1.000 BA players with 1 AB
+- Aligns with MLB standard qualification
+- Season-relative qualification is fairer for Negro Leagues players (who often have fewer career ABs due to incomplete records but still achieved qualified single-season performances)
+
+**Cons:**
+- "No minimum" option still needs to exist for:
+  - Counting-stat leaderboards (HR, Wins, etc.) — which should remain "No minimum" by default
+  - Users who want to see all players including small samples (e.g., curiosity, outlier detection, completionist searches)
+- Changing the default breaks existing URLs/bookmarks that relied on `minAb=0` surfacing rate stats without qualification
+- Season-relative "Qualified" is conceptually different from a fixed AB floor — the UI needs to communicate this clearly
+
+**Proposed UX direction:**
+1. **Stat-aware defaults:** When user selects a rate stat (AVG, OBP, ERA, WHIP), the minimum selector should default to "Qualified" (or a sensible season-relative threshold). When user selects a counting stat (HR, Wins), it stays "No minimum."
+2. **Keep "No minimum" as an option** so users can still view all players.
+3. **Visual indicator for qualification type:** For players who qualify via season-relative standard vs. career total, consider a badge/tooltip that explains *how* they qualified — especially important for Negro Leagues players.
+
+### Visual Indication for Negro Leagues Qualification
+
+**Current state:** The UI already has a HOF badge (`<rhx-badge rhx-variant="warning" rhx-size="sm" class="ms-1">HOF</rhx-badge>`) for Hall of Fame players.
+
+**Proposed addition:** A similar badge/tooltip for qualified players, e.g.:
+- "✓ Qualified" badge (neutral variant)
+- Tooltip: "Qualified via 3.1 PA per team game in 1924 season"
+- Or a footnote below the table explaining the qualification standard in use
+
+This is especially important for Negro Leagues players, where a season-relative standard is more appropriate than a career AB floor (since many Negro League records are incomplete, but single-season data can be complete and authoritative).
+
+### Shared Components
+
+**No dedicated leaderboard components** — the main pages and partials are self-contained. The only reusable components referenced are:
+- `Components/_EmptyState.cshtml` (for "no results" state)
+- `Components/_Pagination.cshtml` (for page navigation)
+- `Components/_LoadingSpinner.cshtml` (htmx loading indicator)
+
+All leaderboard-specific markup is in `_BattingLeaders.cshtml` and `_PitchingLeaders.cshtml`.
+
+### Caching Considerations
+
+**Current caching setup:**
+- Page-level: `[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]`
+- This varies by `HX-Request` header, so full-page and htmx partial responses are cached separately
+- Filter options (years, leagues) are cached in `IMemoryCache` for 24 hours
+
+**Impact of default change:**
+- If we change the default minimum from `0` to a stat-aware value (e.g., "Qualified" for rate stats), the **URL signature changes** (e.g., `?stat=avg&minAb=502` instead of `?stat=avg&minAb=0`)
+- Existing `VaryByHeader="HX-Request"` is sufficient — no new cache keys needed
+- If server-side default logic is added (e.g., "when stat=avg, default minAb to 502 for 3.1 PA/game"), URLs without an explicit `minAb` parameter would resolve to the new default, which is fine for new requests but might surprise users with bookmarks to the old `?stat=avg` (which implicitly meant `minAb=0`)
+
+**Recommendation:** Flag this for Ash/Parker — if default minimum changes, consider:
+1. Adding cache invalidation for leaderboard pages on deploy
+2. Documenting the URL parameter change in release notes
+3. Possibly supporting both old and new URLs via a redirect or compatibility shim
+
+### Files Involved
+
+- `baseball-history-web/Pages/Stats/Batting.cshtml` — batting filter form + minimum selector
+- `baseball-history-web/Pages/Stats/Batting.cshtml.cs` — batting PageModel with `int minAb = 0` default
+- `baseball-history-web/Pages/Stats/Pitching.cshtml` — pitching filter form + minimum selector
+- `baseball-history-web/Pages/Stats/Pitching.cshtml.cs` — pitching PageModel with `int minIp = 0` default
+- `baseball-history-web/Pages/Stats/_BattingLeaders.cshtml` — batting table partial
+- `baseball-history-web/Pages/Stats/_PitchingLeaders.cshtml` — pitching table partial
+- `baseball-history-web/ViewModels/LeaderboardViewModel.cs` — view model with `MinimumAtBats` / `MinimumInningsPitched` properties and stat dictionaries
+
+### Next Steps (for implementation)
+
+1. **Server-side:** Add logic to detect rate stats and set stat-aware default minimums (in `Batting.cshtml.cs` and `Pitching.cshtml.cs`)
+2. **UI:** Update minimum selector to reflect the new default (selected option should match the stat-aware default)
+3. **UI:** Add a "Qualified" option to the minimum selector (alongside existing fixed thresholds) and map it to the season-relative calculation
+4. **UI:** Add visual indicator (badge/tooltip) for qualified players, especially for Negro Leagues players
+5. **Testing:** Ensure htmx partial and full-page responses both reflect the new default
+6. **Caching:** Coordinate with Ash/Parker on cache invalidation and URL compatibility
+

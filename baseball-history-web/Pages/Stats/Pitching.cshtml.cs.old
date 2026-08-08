@@ -1,0 +1,345 @@
+using baseball_history_web.Extensions;
+using BaseballHistory.Data.Models;
+using baseball_history_web.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace baseball_history_web.Pages.Stats;
+
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
+public class PitchingModel(BaseballDbContext context, IMemoryCache cache) : PageModel
+{
+    private static readonly TimeSpan FilterCacheDuration = TimeSpan.FromHours(24);
+    private const int PageSize = 100;
+
+    public LeaderboardViewModel ViewModel { get; set; } = new();
+
+    public async Task<IActionResult> OnGetAsync(
+        string stat = "w",
+        int? fromYear = null,
+        int? toYear = null,
+        string? league = null,
+        int minIp = 0,
+        bool singleSeason = false,
+        [FromQuery] int page = 1)
+    {
+        ViewModel.Type = LeaderboardType.Pitching;
+        ViewModel.StatColumn = stat;
+        ViewModel.StatLabel = LeaderboardStats.PitchingStats.GetValueOrDefault(stat, "Wins");
+        ViewModel.Title = $"Pitching Leaders - {ViewModel.StatLabel}";
+        ViewModel.FromYear = fromYear;
+        ViewModel.ToYear = toYear;
+        ViewModel.League = league;
+        ViewModel.MinimumInningsPitched = minIp;
+        ViewModel.SingleSeason = singleSeason;
+        ViewModel.CurrentPage = page;
+        ViewModel.AvailableStats = LeaderboardStats.PitchingStats;
+
+        // Get available years (cached)
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("pitching_years", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FilterCacheDuration;
+            return await context.Pitching
+                .Select(p => (int)p.YearId)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToListAsync();
+        }))!;
+
+        // Get available leagues (cached)
+        ViewModel.AvailableLeagues = (await cache.GetOrCreateAsync("pitching_leagues", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FilterCacheDuration;
+            return await context.Pitching
+                .Where(p => p.LgId != null)
+                .Select(p => p.LgId!)
+                .Distinct()
+                .OrderBy(l => l)
+                .ToListAsync();
+        }))!;
+
+        // Get Hall of Fame player IDs (cached)
+        var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = FilterCacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => h.PlayerId)
+                .Distinct()
+                .ToHashSetAsync();
+        }))!;
+
+        // Build query
+        var query = context.Pitching
+            .AsQueryable();
+
+        // Apply year filter
+        if (fromYear.HasValue)
+            query = query.Where(p => p.YearId >= fromYear.Value);
+        if (toYear.HasValue)
+            query = query.Where(p => p.YearId <= toYear.Value);
+
+        // Apply league filter
+        if (!string.IsNullOrEmpty(league))
+            query = query.Where(p => p.LgId == league);
+
+        // Convert minIp to outs (IP * 3)
+        var minOuts = minIp * 3;
+
+        var isAscending = stat.ToLower() is "era" or "whip";
+
+        if (singleSeason)
+        {
+            // Single season leaders - sort and paginate in DB
+            var seasonQuery = query
+                .Where(p => (p.Ipouts ?? 0) >= minOuts)
+                .Select(p => new
+                {
+                    p.PlayerId,
+                    PlayerName = (p.Player.NameFirst ?? "") + " " + (p.Player.NameLast ?? ""),
+                    p.YearId,
+                    p.TeamId,
+                    TeamName = p.Team.Name,
+                    G = p.G ?? 0,
+                    GS = p.Gs ?? 0,
+                    W = p.W ?? 0,
+                    L = p.L ?? 0,
+                    SV = p.Sv ?? 0,
+                    CG = p.Cg ?? 0,
+                    SHO = p.Sho ?? 0,
+                    IPOuts = p.Ipouts ?? 0,
+                    H = p.H ?? 0,
+                    ER = p.Er ?? 0,
+                    HR = p.Hr ?? 0,
+                    BB = p.Bb ?? 0,
+                    SO = p.So ?? 0
+                });
+
+            ViewModel.TotalEntries = await seasonQuery.CountAsync();
+            ViewModel.TotalPages = (int)Math.Ceiling((double)ViewModel.TotalEntries / PageSize);
+            ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
+
+            var orderedQuery = ApplyPitchingOrder(seasonQuery, stat, isAscending);
+
+            var seasonData = await orderedQuery
+                .Skip((ViewModel.CurrentPage - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
+
+            ViewModel.PitchingLeaders = seasonData
+                .Select((p, i) => new PitchingLeaderEntry
+                {
+                    Rank = (ViewModel.CurrentPage - 1) * PageSize + i + 1,
+                    PlayerId = p.PlayerId,
+                    PlayerName = p.PlayerName,
+                    Year = p.YearId,
+                    TeamId = p.TeamId,
+                    TeamName = p.TeamName,
+                    Games = p.G,
+                    GamesStarted = p.GS,
+                    Wins = p.W,
+                    Losses = p.L,
+                    Saves = p.SV,
+                    CompleteGames = p.CG,
+                    Shutouts = p.SHO,
+                    InningsPitched = p.IPOuts / 3.0,
+                    Hits = p.H,
+                    EarnedRuns = p.ER,
+                    HomeRuns = p.HR,
+                    Walks = p.BB,
+                    Strikeouts = p.SO,
+                    IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId)
+                })
+                .ToList();
+        }
+        else
+        {
+            // Career leaders - aggregate, sort, and paginate in DB
+            var careerQuery = query
+                .GroupBy(p => p.PlayerId)
+                .Select(g => new
+                {
+                    PlayerId = g.Key,
+                    G = g.Sum(p => p.G ?? 0),
+                    GS = g.Sum(p => p.Gs ?? 0),
+                    W = g.Sum(p => p.W ?? 0),
+                    L = g.Sum(p => p.L ?? 0),
+                    SV = g.Sum(p => p.Sv ?? 0),
+                    CG = g.Sum(p => p.Cg ?? 0),
+                    SHO = g.Sum(p => p.Sho ?? 0),
+                    IPOuts = g.Sum(p => p.Ipouts ?? 0),
+                    H = g.Sum(p => p.H ?? 0),
+                    ER = g.Sum(p => p.Er ?? 0),
+                    HR = g.Sum(p => p.Hr ?? 0),
+                    BB = g.Sum(p => p.Bb ?? 0),
+                    SO = g.Sum(p => p.So ?? 0)
+                })
+                .Where(x => x.IPOuts >= minOuts);
+
+            ViewModel.TotalEntries = await careerQuery.CountAsync();
+            ViewModel.TotalPages = (int)Math.Ceiling((double)ViewModel.TotalEntries / PageSize);
+            ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
+
+            var orderedCareerQuery = ApplyPitchingOrder(careerQuery, stat, isAscending);
+
+            var careerData = await orderedCareerQuery
+                .Skip((ViewModel.CurrentPage - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
+
+            // Get player names only for the current page
+            var playerIds = careerData.Select(c => c.PlayerId).ToList();
+            var players = await context.People
+                .Where(p => playerIds.Contains(p.PlayerId))
+                .ToDictionaryAsync(p => p.PlayerId, p => (p.NameFirst ?? "") + " " + (p.NameLast ?? ""));
+
+            ViewModel.PitchingLeaders = careerData
+                .Select((p, i) => new PitchingLeaderEntry
+                {
+                    Rank = (ViewModel.CurrentPage - 1) * PageSize + i + 1,
+                    PlayerId = p.PlayerId,
+                    PlayerName = players.GetValueOrDefault(p.PlayerId, p.PlayerId),
+                    Games = p.G,
+                    GamesStarted = p.GS,
+                    Wins = p.W,
+                    Losses = p.L,
+                    Saves = p.SV,
+                    CompleteGames = p.CG,
+                    Shutouts = p.SHO,
+                    InningsPitched = p.IPOuts / 3.0,
+                    Hits = p.H,
+                    EarnedRuns = p.ER,
+                    HomeRuns = p.HR,
+                    Walks = p.BB,
+                    Strikeouts = p.SO,
+                    IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId)
+                })
+                .ToList();
+        }
+
+        if (Request.IsHtmxNonBoostedRequest())
+        {
+            return Partial("_PitchingLeaders", ViewModel);
+        }
+
+        return Page();
+    }
+
+    private static IOrderedQueryable<T> ApplyPitchingOrder<T>(IQueryable<T> query, string stat, bool ascending) where T : class
+    {
+        // For ERA/WHIP, lower is better (ascending); all others descending
+        if (ascending)
+        {
+            return (query, stat.ToLower()) switch
+            {
+                (IQueryable<T> q, "era") => q.OrderBy(DynEraExpr<T>()),
+                (IQueryable<T> q, "whip") => q.OrderBy(DynWhipExpr<T>()),
+                (IQueryable<T> q, _) => q.OrderBy(DynExpr<T>("W"))
+            };
+        }
+
+        return (query, stat.ToLower()) switch
+        {
+            (IQueryable<T> q, "w" or "wins") => q.OrderByDescending(DynExpr<T>("W")),
+            (IQueryable<T> q, "l" or "losses") => q.OrderByDescending(DynExpr<T>("L")),
+            (IQueryable<T> q, "so" or "strikeouts") => q.OrderByDescending(DynExpr<T>("SO")),
+            (IQueryable<T> q, "sv" or "saves") => q.OrderByDescending(DynExpr<T>("SV")),
+            (IQueryable<T> q, "cg" or "completegames") => q.OrderByDescending(DynExpr<T>("CG")),
+            (IQueryable<T> q, "sho" or "shutouts") => q.OrderByDescending(DynExpr<T>("SHO")),
+            (IQueryable<T> q, "ip" or "inningspitched") => q.OrderByDescending(DynExpr<T>("IPOuts")),
+            (IQueryable<T> q, "g" or "games") => q.OrderByDescending(DynExpr<T>("G")),
+            (IQueryable<T> q, "gs" or "gamesstarted") => q.OrderByDescending(DynExpr<T>("GS")),
+            (IQueryable<T> q, "hr") => q.OrderByDescending(DynExpr<T>("HR")),
+            (IQueryable<T> q, "bb" or "walks") => q.OrderByDescending(DynExpr<T>("BB")),
+            (IQueryable<T> q, "k9" or "strikeoutsper9") => q.OrderByDescending(DynK9Expr<T>()),
+            (IQueryable<T> q, "bb9" or "walksper9") => q.OrderBy(DynBb9Expr<T>()),
+            (IQueryable<T> q, "wpct" or "winningpercentage") => q.OrderByDescending(DynWpctExpr<T>()),
+            (IQueryable<T> q, _) => q.OrderByDescending(DynExpr<T>("W"))
+        };
+    }
+
+    private static System.Linq.Expressions.Expression<Func<T, int>> DynExpr<T>(string propName)
+    {
+        var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var prop = System.Linq.Expressions.Expression.Property(param, propName);
+        var converted = System.Linq.Expressions.Expression.Convert(prop, typeof(int));
+        return System.Linq.Expressions.Expression.Lambda<Func<T, int>>(converted, param);
+    }
+
+    private static System.Linq.Expressions.Expression<Func<T, double>> DynEraExpr<T>()
+    {
+        // ERA = (ER * 9.0) / (IPOuts / 3.0) = (ER * 27.0) / IPOuts
+        var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var er = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "ER"), typeof(double));
+        var ipouts = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "IPOuts"), typeof(double));
+        var twentySeven = System.Linq.Expressions.Expression.Constant(27.0);
+        var num = System.Linq.Expressions.Expression.Multiply(er, twentySeven);
+        var zero = System.Linq.Expressions.Expression.Constant(0.0);
+        var denomIsZero = System.Linq.Expressions.Expression.Equal(ipouts, zero);
+        var division = System.Linq.Expressions.Expression.Divide(num, ipouts);
+        var body = System.Linq.Expressions.Expression.Condition(denomIsZero, System.Linq.Expressions.Expression.Constant(double.MaxValue), division);
+        return System.Linq.Expressions.Expression.Lambda<Func<T, double>>(body, param);
+    }
+
+    private static System.Linq.Expressions.Expression<Func<T, double>> DynWhipExpr<T>()
+    {
+        // WHIP = (BB + H) / (IPOuts / 3.0) = (BB + H) * 3.0 / IPOuts
+        var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var bb = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "BB"), typeof(double));
+        var h = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "H"), typeof(double));
+        var ipouts = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "IPOuts"), typeof(double));
+        var three = System.Linq.Expressions.Expression.Constant(3.0);
+        var num = System.Linq.Expressions.Expression.Multiply(System.Linq.Expressions.Expression.Add(bb, h), three);
+        var zero = System.Linq.Expressions.Expression.Constant(0.0);
+        var denomIsZero = System.Linq.Expressions.Expression.Equal(ipouts, zero);
+        var division = System.Linq.Expressions.Expression.Divide(num, ipouts);
+        var body = System.Linq.Expressions.Expression.Condition(denomIsZero, System.Linq.Expressions.Expression.Constant(double.MaxValue), division);
+        return System.Linq.Expressions.Expression.Lambda<Func<T, double>>(body, param);
+    }
+
+    private static System.Linq.Expressions.Expression<Func<T, double>> DynK9Expr<T>()
+    {
+        // K/9 = (SO * 9.0) / (IPOuts / 3.0) = (SO * 27.0) / IPOuts
+        var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var so = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "SO"), typeof(double));
+        var ipouts = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "IPOuts"), typeof(double));
+        var twentySeven = System.Linq.Expressions.Expression.Constant(27.0);
+        var num = System.Linq.Expressions.Expression.Multiply(so, twentySeven);
+        var zero = System.Linq.Expressions.Expression.Constant(0.0);
+        var denomIsZero = System.Linq.Expressions.Expression.Equal(ipouts, zero);
+        var division = System.Linq.Expressions.Expression.Divide(num, ipouts);
+        var body = System.Linq.Expressions.Expression.Condition(denomIsZero, zero, division);
+        return System.Linq.Expressions.Expression.Lambda<Func<T, double>>(body, param);
+    }
+
+    private static System.Linq.Expressions.Expression<Func<T, double>> DynBb9Expr<T>()
+    {
+        // BB/9 = (BB * 9.0) / (IPOuts / 3.0) = (BB * 27.0) / IPOuts
+        var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var bb = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "BB"), typeof(double));
+        var ipouts = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "IPOuts"), typeof(double));
+        var twentySeven = System.Linq.Expressions.Expression.Constant(27.0);
+        var num = System.Linq.Expressions.Expression.Multiply(bb, twentySeven);
+        var zero = System.Linq.Expressions.Expression.Constant(0.0);
+        var denomIsZero = System.Linq.Expressions.Expression.Equal(ipouts, zero);
+        var division = System.Linq.Expressions.Expression.Divide(num, ipouts);
+        var body = System.Linq.Expressions.Expression.Condition(denomIsZero, zero, division);
+        return System.Linq.Expressions.Expression.Lambda<Func<T, double>>(body, param);
+    }
+
+    private static System.Linq.Expressions.Expression<Func<T, double>> DynWpctExpr<T>()
+    {
+        // WPct = W / (W + L)
+        var param = System.Linq.Expressions.Expression.Parameter(typeof(T), "x");
+        var w = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "W"), typeof(double));
+        var l = System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Property(param, "L"), typeof(double));
+        var denom = System.Linq.Expressions.Expression.Add(w, l);
+        var zero = System.Linq.Expressions.Expression.Constant(0.0);
+        var denomIsZero = System.Linq.Expressions.Expression.Equal(denom, zero);
+        var division = System.Linq.Expressions.Expression.Divide(w, denom);
+        var body = System.Linq.Expressions.Expression.Condition(denomIsZero, zero, division);
+        return System.Linq.Expressions.Expression.Lambda<Func<T, double>>(body, param);
+    }
+}

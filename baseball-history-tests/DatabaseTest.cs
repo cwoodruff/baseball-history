@@ -1,4 +1,4 @@
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_tests;

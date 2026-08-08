@@ -1,10 +1,9 @@
 using System.IO.Compression;
 using baseball_history_web.Api;
-using baseball_history_web.Models;
 using baseball_history_web.Services;
+using BaseballHistory.Data;
 using htmxRazor.Infrastructure;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,10 +17,7 @@ if (string.IsNullOrWhiteSpace(connectionString) || connectionString.Contains('<'
         "ConnectionStrings:Lahman must be set via user-secrets, environment variables, or Azure App Service configuration.");
 }
 
-builder.Services.AddDbContext<BaseballDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsqlOptions => npgsqlOptions.EnableRetryOnFailure())
-        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
-
+builder.Services.AddDataServices(connectionString);
 builder.Services.AddMemoryCache();
 builder.Services.AddResponseCompression(options =>
 {

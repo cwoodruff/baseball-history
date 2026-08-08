@@ -1,4 +1,4 @@
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 

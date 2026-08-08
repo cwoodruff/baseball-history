@@ -1,5 +1,5 @@
 using baseball_history_web.Api.Dtos;
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 

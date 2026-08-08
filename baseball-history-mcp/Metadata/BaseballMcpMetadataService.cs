@@ -1,7 +1,7 @@
 using System.Text.Json;
 using baseball_history_mcp.Configuration;
-using baseball_history_mcp.Querying;
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
+using BaseballHistory.Data.Querying;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -40,9 +40,19 @@ public sealed class BaseballMcpMetadataService(
 
     private static readonly IReadOnlyList<SupportedStatCategory> SupportedCategories =
     [
-        new("batting", SupportsCareer: true, SupportsSingleSeason: true, LeaderboardStatCatalog.GetBattingMetadata()),
-        new("pitching", SupportsCareer: true, SupportsSingleSeason: true, LeaderboardStatCatalog.GetPitchingMetadata())
+        new("batting", SupportsCareer: true, SupportsSingleSeason: true, GetBattingMetadata()),
+        new("pitching", SupportsCareer: true, SupportsSingleSeason: true, GetPitchingMetadata())
     ];
+
+    private static IReadOnlyList<SupportedStatDefinition> GetBattingMetadata() =>
+        LeaderboardStatCatalog.GetBattingStats()
+            .Select(def => new SupportedStatDefinition(def.Key, def.Label, def.Aliases, def.SortDirection, ""))
+            .ToList();
+
+    private static IReadOnlyList<SupportedStatDefinition> GetPitchingMetadata() =>
+        LeaderboardStatCatalog.GetPitchingStats()
+            .Select(def => new SupportedStatDefinition(def.Key, def.Label, def.Aliases, def.SortDirection, ""))
+            .ToList();
 
     private static readonly IReadOnlyList<ServerResourceLink> ResourceLinks =
     [

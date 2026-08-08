@@ -1,4 +1,5 @@
 using baseball_history_mcp.Querying;
+using BaseballHistory.Data.Querying;
 using Microsoft.Extensions.Options;
 
 namespace baseball_history_mcp.Configuration;
@@ -27,10 +28,18 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
             throw new BaseballMcpUsageException("minAtBats must be zero or greater.");
         }
 
+        var statDef = LeaderboardStatCatalog.GetBattingStat(request.Stat);
+        if (statDef == null)
+        {
+            throw new BaseballMcpUsageException($"Unsupported batting stat '{request.Stat}'.");
+        }
+
         return request with
         {
-            Stat = LeaderboardStatCatalog.NormalizeBattingStat(request.Stat).Key,
-            League = NormalizeLeague(request.League)
+            Stat = statDef.Key,
+            League = NormalizeLeague(request.League),
+            Page = Math.Max(1, request.Page),
+            PageSize = Math.Clamp(request.PageSize, 1, options.Value.Limits.LeaderboardPageSizeMax)
         };
     }
 
@@ -43,10 +52,18 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
             throw new BaseballMcpUsageException("minInningsPitched must be zero or greater.");
         }
 
+        var statDef = LeaderboardStatCatalog.GetPitchingStat(request.Stat);
+        if (statDef == null)
+        {
+            throw new BaseballMcpUsageException($"Unsupported pitching stat '{request.Stat}'.");
+        }
+
         return request with
         {
-            Stat = LeaderboardStatCatalog.NormalizePitchingStat(request.Stat).Key,
-            League = NormalizeLeague(request.League)
+            Stat = statDef.Key,
+            League = NormalizeLeague(request.League),
+            Page = Math.Max(1, request.Page),
+            PageSize = Math.Clamp(request.PageSize, 1, options.Value.Limits.LeaderboardPageSizeMax)
         };
     }
 

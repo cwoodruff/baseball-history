@@ -2,7 +2,8 @@ using baseball_history_mcp;
 using baseball_history_mcp.Configuration;
 using baseball_history_mcp.Metadata;
 using baseball_history_mcp.Querying;
-using baseball_history_web.Models;
+using BaseballHistory.Data.Models;
+using BaseballHistory.Data.Querying;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -307,11 +308,10 @@ public class BaseballReadServiceTests
     private static ILeaderboardReadService CreateLeaderboardReadService(int leaderboardPageSizeMax = 100)
     {
         var factory = new TestDbContextFactory();
-        var cache = new MemoryCache(new MemoryCacheOptions());
-        var options = CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax);
-        var requestPolicy = CreateRequestPolicy(options);
-        var hallOfFame = new HallOfFameReadService(factory, cache, requestPolicy, options);
-        return new LeaderboardReadService(factory, hallOfFame, requestPolicy);
+        var requestPolicy = CreateRequestPolicy(CreateOptions(leaderboardPageSizeMax: leaderboardPageSizeMax));
+        var context = factory.CreateDbContext();
+        var queryService = new LeaderboardQueryService(context);
+        return new LeaderboardReadService(queryService, requestPolicy);
     }
 
     private static IHallOfFameReadService CreateHallOfFameReadService(
