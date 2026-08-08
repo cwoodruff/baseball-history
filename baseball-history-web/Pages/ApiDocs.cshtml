@@ -155,14 +155,18 @@
                             <tr><td><code>fromYear</code></td><td>int</td><td>&mdash;</td><td>Start year</td></tr>
                             <tr><td><code>toYear</code></td><td>int</td><td>&mdash;</td><td>End year</td></tr>
                             <tr><td><code>league</code></td><td>string</td><td>&mdash;</td><td>League filter (AL, NL)</td></tr>
-                            <tr><td><code>minAb</code></td><td>int</td><td>0</td><td>Minimum at-bats</td></tr>
+                            <tr><td><code>qualified</code></td><td>bool</td><td>true</td><td>Apply season-relative qualification for rate stats (AVG, OBP, SLG, OPS); ignored for counting stats</td></tr>
+                            <tr><td><code>minAb</code></td><td>int</td><td>&mdash;</td><td>Explicit minimum at-bats (overrides qualification)</td></tr>
                             <tr><td><code>singleSeason</code></td><td>bool</td><td>false</td><td>Single season vs. career totals</td></tr>
                             <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
                             <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
                         </tbody>
                     </table>
-                    <p><strong>Example:</strong> Top single-season home run totals since 2000:</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/batting?stat=hr&amp;singleSeason=true&amp;fromYear=2000"</code></pre>
+                    <p><strong>Qualification for rate stats:</strong> When <code>qualified=true</code> (default), the threshold is computed relative to each player's career games played: total plate appearances must equal or exceed 3.1 PA per team-game across all stints, with a minimum floor of 100 PA. This season-relative logic allows players from shorter-season eras (Negro Leagues, 19th century) to qualify naturally without needing arbitrary career totals. Set <code>qualified=false</code> to see all players including small-sample outliers, or provide an explicit <code>minAb</code> value to override automatic qualification.</p>
+                    <p><strong>Example:</strong> Career batting average leaders (qualified):</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/batting?stat=avg&amp;qualified=true"</code></pre>
+                    <p><strong>Example:</strong> Career batting average, all players (no qualification):</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/batting?stat=avg&amp;qualified=false"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -175,13 +179,17 @@
                             <tr><td><code>fromYear</code></td><td>int</td><td>&mdash;</td><td>Start year</td></tr>
                             <tr><td><code>toYear</code></td><td>int</td><td>&mdash;</td><td>End year</td></tr>
                             <tr><td><code>league</code></td><td>string</td><td>&mdash;</td><td>League filter (AL, NL)</td></tr>
-                            <tr><td><code>minIp</code></td><td>int</td><td>0</td><td>Minimum innings pitched</td></tr>
+                            <tr><td><code>qualified</code></td><td>bool</td><td>true</td><td>Apply season-relative qualification for rate stats (ERA, WHIP, K9, BB9, WPCT); ignored for counting stats</td></tr>
+                            <tr><td><code>minIp</code></td><td>int</td><td>&mdash;</td><td>Explicit minimum innings pitched (overrides qualification)</td></tr>
                             <tr><td><code>singleSeason</code></td><td>bool</td><td>false</td><td>Single season vs. career totals</td></tr>
                             <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
                             <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
                         </tbody>
                     </table>
-                    <p><strong>Example:</strong> Career strikeout leaders with at least 1000 IP:</p>
+                    <p><strong>Qualification for rate stats:</strong> When <code>qualified=true</code> (default), the threshold is computed relative to each player's career games played: total outs pitched must equal or exceed 3.0 outs per team-game across all stints (equivalent to 1 inning per game), with a minimum floor of 90 outs (30 innings). This season-relative logic allows pitchers from shorter-season eras to qualify naturally without needing arbitrary career inning totals. Set <code>qualified=false</code> to see all pitchers including small-sample outliers, or provide an explicit <code>minIp</code> value to override automatic qualification.</p>
+                    <p><strong>Example:</strong> Career ERA leaders (qualified):</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/pitching?stat=era&amp;qualified=true"</code></pre>
+                    <p><strong>Example:</strong> Career strikeout leaders with explicit minimum of 1000 IP:</p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/pitching?stat=so&amp;minIp=1000"</code></pre>
                 </div>
             </section>

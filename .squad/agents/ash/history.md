@@ -450,3 +450,46 @@ All 446 automated tests passed, yet the live API contradicted acceptance criteri
 2. Edge cases (tiny samples, null data)
 3. Acceptance criteria from the original issue (e.g., "no 1-AB 1.000 entries")
 
+
+## Session: Leaderboard Qualification Fix (2026-08-08)
+
+**Issue #65 Implementation:** API documentation and MCP tool description updates for `qualified` parameter.
+
+**Bug Fixes (Requested by Coordinator):**
+1. DI Wiring Defect (Commit 763d673): `ILeaderboardQueryService` not registered in MCP container — added `AddDataServices()` call, changed `ILeaderboardReadService` lifetime to Scoped
+2. NULL-Handling Defect (Commit 59033e2): Career qualification threshold coalesced NULL to 0, disabling filter — fixed with ternary operator, added 100 PA / 30 IP safety floor
+
+**Concurrent Agent Collision:** Initial work on shared checkout collided with Dallas and Lambert. Work was entirely lost (squad/65 had zero commits). Coordinator created isolated worktree at `../baseball-history-65` and had Ash redo work there cleanly.
+
+**Lesson:** Shared checkout + concurrent agents = work loss. Isolated worktrees prevent collisions. `.squad/config.json` now has `worktrees: true` for future sessions.
+
+**Note:** NULL-guard fix uses defensive ternary operator in aggregation (translates to SQL CASE). Hard minimum (100 PA / 30 IP) acts as secondary guard against edge-case low-G thresholds.
+
+
+## Learnings
+
+### 2026-08-08: Documentation-Only Sessions
+
+**Context:** Documented the shipped leaderboard qualification feature (PRs #76-79 already merged to main).
+
+**Key insight:** When updating documentation for shipped platform behavior, read the implementation constants directly from source code instead of guessing or inferring from context. For this task:
+- Read `QualificationRules.cs` for exact constants: `BattingPlateAppearancesPerGame = 3.1m`, `PitchingOutsPerGame = 3.0m`
+- Read `LeaderboardQueryService.cs` for sanity floors: 100 PA for batting, 90 outs (30 IP) for pitching
+- Used plain language ("season-relative threshold") while preserving technical precision for API consumers
+
+**Documentation scope discipline:**
+- Updated living documentation (ApiDocs, McpDocs, API.md, FEATURES.md, MCP-SERVER-PLAN.md)
+- Deliberately skipped historical design specs (`docs/superpowers/specs/2026-07-21-leaderboard-qualification-design.md`) — point-in-time artifacts, not living docs
+- Verified ARCHITECTURE.md and DATABASE.md didn't mention old qualification logic (grep check) before skipping them
+
+**Voice/formatting preservation:**
+- Matched existing Razor page structure (parameter tables, rhx-badge markup)
+- Matched existing markdown heading levels and list styles
+- Preserved each doc's existing technical level (API consumers vs. feature overview)
+
+**Validation approach:**
+- Ran McpDocsPageTests after markup changes (both tests passed)
+- No ApiDocsPageTests exist; visually inspected HTML diff for correctness
+- Testing Razor page rendering (not query behavior) is sufficient for doc-only changes
+
+**Future note:** For documentation tasks involving query logic or cache behavior, always cross-reference the actual implementation to ensure documented constants/thresholds match runtime behavior.

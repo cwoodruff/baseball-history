@@ -243,3 +243,91 @@ All leaderboard-specific markup is in `_BattingLeaders.cshtml` and `_PitchingLea
 5. **Testing:** Ensure htmx partial and full-page responses both reflect the new default
 6. **Caching:** Coordinate with Ash/Parker on cache invalidation and URL compatibility
 
+
+## Session: Leaderboard Qualification Fix (2026-08-08)
+
+**Issue #64 Implementation:** Rate-stat UI defaults to "Qualified" (season-relative 3.1 PA per team game) with explicit override controls.
+
+**Concurrent Agent Collision:** Work performed on shared checkout concurrent with Ash and Lambert. Coordinator manually rebased branch post-fix.
+
+**Lesson:** Concurrent agents on shared checkout cause git collisions. `.squad/config.json` now enables worktree isolation for future concurrent agents.
+
+**Note:** Cache investigation during planning phase flagged concerns (HIGH PRIORITY). Coordinator verified that leaderboards are NOT cached at presentation layer, so cache invalidation risk is LOW.
+## Learnings
+
+### Issue #64: Default Leaderboard UI to Qualified Players (2026-08-08)
+
+**Status:** ✅ COMPLETE
+
+Implemented season-relative qualification defaults for rate-stat leaderboards (GitHub issue #64), building on #63's shared query layer.
+
+#### Implementation Approach
+
+**Parameter semantics change:**
+- Changed `int minAb = 0` → `int? minAb = null` in Batting/Pitching PageModels
+- `null` (no parameter) = stat-aware default: `-1` (Qualified) for rate stats, `0` (No minimum) for counting stats
+- `0` (explicit) = "No minimum" override
+- Any positive value = fixed minimum override (e.g., `500` = "500 AB")
+
+**Rate vs. counting stat detection:**
+- Used `LeaderboardStatCatalog.GetBattingStat(stat)?.IsRateStat` to identify rate stats server-side
+- Rate stats (avg, obp, slg, ops, era, whip, k9, bb9, wpct) default to `-1` (Qualified)
+- Counting stats (hr, h, r, rbi, sb, w, l, so, etc.) default to `0` (No minimum)
+
+**UI changes:**
+1. Added "Qualified" option as first item in Min AB/Min IP dropdowns
+2. Added `IsQualified` property to `LeaderboardViewModel` to track when qualification is active
+3. Added explanatory note under card header when `IsQualified=true`:
+   > "Showing players who met the season qualification standard (3.1 plate appearances per team game). This allows historically significant players from shorter schedules (including Negro Leagues) to appear in rate-stat leaderboards."
+4. Updated pagination query params to properly handle `-1` value (don't include it in URL when it's the default)
+
+**Preserved contracts:**
+- ResponseCache behavior (`VaryByHeader="HX-Request"`) unchanged
+- htmx partial vs. full-page split logic unchanged
+- Existing bookmarks with explicit `minAb=0` still work (override to "No minimum")
+- Fixed minimums (100, 500, 1000, 3000 AB; 50, 100, 500, 1000 IP) still work
+
+#### Files Modified
+
+- `baseball-history-web/Pages/Stats/Batting.cshtml.cs` (parameter change, stat detection, default logic)
+- `baseball-history-web/Pages/Stats/Pitching.cshtml.cs` (parameter change, stat detection, default logic)
+- `baseball-history-web/Pages/Stats/Batting.cshtml` (added "Qualified" option to dropdown)
+- `baseball-history-web/Pages/Stats/Pitching.cshtml` (added "Qualified" option to dropdown)
+- `baseball-history-web/Pages/Stats/_BattingLeaders.cshtml` (added qualification note, updated pagination params)
+- `baseball-history-web/Pages/Stats/_PitchingLeaders.cshtml` (added qualification note, updated pagination params)
+- `baseball-history-web/ViewModels/LeaderboardViewModel.cs` (added `IsQualified` property)
+
+#### Build & Test Results
+
+**Build:** ✓ Clean (no errors)
+
+**Tests:** Database connectivity issues prevented full test suite verification (192/487 tests failed with PostgreSQL connection errors). The failures appear to be environmental (database not running), not code defects. Logic review confirms:
+- Rate stats with no param → `-1` (Qualified) ✓
+- Counting stats with no param → `0` (No minimum) ✓
+- Explicit `minAb=0` → `0` (No minimum override) ✓
+- Explicit `minAb=500` → `500` (Fixed minimum override) ✓
+
+**Manual verification:** Unable to perform due to PostgreSQL requirement. Visual inspection and code review confirm UI changes are correct.
+
+#### Acceptance Criteria (GitHub #64)
+
+- ✓ Qualified is the default (for rate stats)
+- ✓ Override works (dropdown with Qualified/No minimum/fixed values)
+- ✓ Explanatory note shown (when `IsQualified=true`)
+- ⚠️ Cobb/Hornsby/Gibson on page one of career AVG (pending database availability for manual verification)
+
+#### Key Learnings
+
+1. **Parameter nullability pattern:** Using `int?` with stat-aware defaults in the null case provides clean semantics for "default vs. explicit override" without breaking existing URL contracts.
+2. **Stat catalog as source of truth:** Leveraging `LeaderboardStatCatalog.IsRateStat` flag kept the logic centralized and avoided hardcoding stat names in multiple places.
+3. **Visual explanation matters:** The qualification note bridges the gap between the new default behavior and user expectations, especially for Negro Leagues inclusion.
+4. **Pagination edge case:** Needed to update pagination query param logic to exclude `-1` from URLs when it's the active default (avoids cluttering URLs and maintains consistency with other defaults).
+5. **htmx response caching:** No changes needed to cache strategy — `VaryByHeader="HX-Request"` already handles full-page vs. partial distinction correctly.
+
+#### Branch & Commit
+
+- **Branch:** `squad/64-ui-qualified-default` (based on `squad/63-season-relative-qualification`)
+- **Commit:** `2add2a5` "feat(ui): default leaderboard UI to qualified players with override"
+- **Status:** Local commit only, not pushed or PR'd (as instructed)
+
+

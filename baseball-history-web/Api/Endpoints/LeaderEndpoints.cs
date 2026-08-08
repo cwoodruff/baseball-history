@@ -8,14 +8,18 @@ public static class LeaderEndpoints
 {
     public static void Map(RouteGroupBuilder group)
     {
-        group.MapGet("/batting", GetBattingLeaders).WithSummary("Batting leaderboard (career or single-season)");
-        group.MapGet("/pitching", GetPitchingLeaders).WithSummary("Pitching leaderboard (career or single-season)");
+        group.MapGet("/batting", GetBattingLeaders)
+            .WithSummary("Batting leaderboard (career or single-season)")
+            .WithDescription("Returns batting leaderboard. qualified=true (default) applies season-relative qualification (~3.1 PA per team game); qualified=false disables it; explicit minAb overrides qualified entirely.");
+        group.MapGet("/pitching", GetPitchingLeaders)
+            .WithSummary("Pitching leaderboard (career or single-season)")
+            .WithDescription("Returns pitching leaderboard. qualified=true (default) applies season-relative qualification (~1 IP per team game); qualified=false disables it; explicit minIp overrides qualified entirely.");
     }
 
     private static async Task<IResult> GetBattingLeaders(
         ILeaderboardQueryService leaderboardService,
         string stat = "hr", int? fromYear = null, int? toYear = null,
-        string? league = null, int? minAb = null, bool singleSeason = false,
+        string? league = null, bool qualified = true, int? minAb = null, bool singleSeason = false,
         int page = 1, int pageSize = 50)
     {
         pageSize = Math.Clamp(pageSize, 1, 100);
@@ -26,7 +30,7 @@ public static class LeaderEndpoints
             ToYear: toYear,
             League: league,
             SingleSeason: singleSeason,
-            Qualified: !minAb.HasValue,  // If explicit minAb is provided, don't use qualification
+            Qualified: minAb.HasValue ? false : qualified,  // Explicit minAb overrides qualified
             MinAtBats: minAb,
             MinInningsPitched: null,
             Page: page,
@@ -66,7 +70,7 @@ public static class LeaderEndpoints
     private static async Task<IResult> GetPitchingLeaders(
         ILeaderboardQueryService leaderboardService,
         string stat = "w", int? fromYear = null, int? toYear = null,
-        string? league = null, int? minIp = null, bool singleSeason = false,
+        string? league = null, bool qualified = true, int? minIp = null, bool singleSeason = false,
         int page = 1, int pageSize = 50)
     {
         pageSize = Math.Clamp(pageSize, 1, 100);
@@ -77,7 +81,7 @@ public static class LeaderEndpoints
             ToYear: toYear,
             League: league,
             SingleSeason: singleSeason,
-            Qualified: !minIp.HasValue,  // If explicit minIp is provided, don't use qualification
+            Qualified: minIp.HasValue ? false : qualified,  // Explicit minIp overrides qualified
             MinAtBats: null,
             MinInningsPitched: minIp,
             Page: page,
