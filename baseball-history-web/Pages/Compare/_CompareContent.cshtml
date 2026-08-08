@@ -1,22 +1,164 @@
 @using baseball_history_web.ViewModels
+@using System.Text.Json
 @model CompareViewModel
 
 @if (Model.BothSelected)
 {
-    var p1 = Model.Player1!;
-    var p2 = Model.Player2!;
+    var players = Model.SelectedPlayers;
     var fromYear = ViewContext.HttpContext.Request.Query["fromYear"].ToString();
     var toYear = ViewContext.HttpContext.Request.Query["toYear"].ToString();
     var hasYearRange = !string.IsNullOrEmpty(fromYear) || !string.IsNullOrEmpty(toYear);
     var yearRangeLabel = hasYearRange
         ? $"({(string.IsNullOrEmpty(fromYear) ? "All" : fromYear)}-{(string.IsNullOrEmpty(toYear) ? "Present" : toYear)})"
         : "";
+    
+    var playerNames = players.Select(p => p.FullName).ToList();
 
     <h3 class="text-center text-mlb-navy mb-4">
-        @p1.FullName <span class="text-muted mx-2">vs</span> @p2.FullName
+        @Html.Raw(string.Join(" <span class='text-muted mx-2'>vs</span> ", playerNames))
     </h3>
 
-    <!-- Awards & Honors -->
+    @* Comparison Chart *@
+    @if (Model.HasBatters || Model.HasPitchers)
+    {
+        // Prepare chart data: normalized comparison across all players
+        var chartLabels = new List<string>();
+        var chartDatasets = new List<object>();
+        var chartColors = new[] { "#2c3e6b", "#c62d42", "#2d8b5e", "#c6a12d" };
+        
+        // Build batting chart data
+        if (Model.HasBatters)
+        {
+            chartLabels.AddRange(new[] { "AVG", "OBP", "SLG", "HR Rate", "RBI Rate" });
+        }
+        
+        // Build pitching chart data
+        if (Model.HasPitchers)
+        {
+            chartLabels.AddRange(new[] { "ERA (inv)", "WHIP (inv)", "K/9", "W%" });
+        }
+        
+        for (int i = 0; i < players.Count; i++)
+        {
+            var player = players[i];
+            var dataPoints = new List<double?>();
+            
+            if (Model.HasBatters)
+            {
+                var stats = player.BattingStats;
+                if (stats != null)
+                {
+                    dataPoints.Add(stats.BattingAverage);
+                    dataPoints.Add(stats.OnBasePercentage);
+                    dataPoints.Add(stats.SluggingPercentage);
+                    dataPoints.Add(stats.AtBats > 0 ? stats.HomeRuns / (double)stats.AtBats * 100 : 0);
+                    dataPoints.Add(stats.AtBats > 0 ? stats.Rbi / (double)stats.AtBats * 100 : 0);
+                }
+                else
+                {
+                    dataPoints.AddRange(new double?[] { null, null, null, null, null });
+                }
+            }
+            
+            if (Model.HasPitchers)
+            {
+                var stats = player.PitchingStats;
+                if (stats != null)
+                {
+                    // Invert ERA and WHIP (lower is better, so show inverted for visual consistency)
+                    dataPoints.Add(stats.Era > 0 ? 10 - Math.Min(stats.Era, 10) : 0);
+                    dataPoints.Add(stats.Whip > 0 ? 3 - Math.Min(stats.Whip, 3) : 0);
+                    dataPoints.Add(stats.InningsPitched > 0 ? stats.Strikeouts / stats.InningsPitched * 9 : 0);
+                    var totalGames = stats.Wins + stats.Losses;
+                    dataPoints.Add(totalGames > 0 ? stats.Wins / (double)totalGames * 100 : 0);
+                }
+                else
+                {
+                    dataPoints.AddRange(new double?[] { null, null, null, null });
+                }
+            }
+            
+            chartDatasets.Add(new
+            {
+                label = player.FullName,
+                data = dataPoints,
+                borderColor = chartColors[i],
+                backgroundColor = chartColors[i] + "33",
+                borderWidth = 2
+            });
+        }
+        
+        var chartData = new
+        {
+            labels = chartLabels,
+            datasets = chartDatasets
+        };
+        
+        var chartDataJson = JsonSerializer.Serialize(chartData);
+        var playerNamesJson = JsonSerializer.Serialize(playerNames);
+        
+        <div class="card mb-4">
+            <div class="card-header card-header-mlb">
+                <strong>Visual Comparison</strong>
+            </div>
+            <div class="card-body">
+                <canvas id="comparison-chart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+        
+        <script>
+            (function() {
+                window.comparePlayerNames = @Html.Raw(playerNamesJson);
+                window.compareChartData = @Html.Raw(chartDataJson);
+                
+                // Destroy existing chart if present (for htmx swaps)
+                if (window.comparisonChartInstance) {
+                    window.comparisonChartInstance.destroy();
+                }
+                
+                // Initialize Chart.js if available
+                if (typeof Chart !== 'undefined') {
+                    var ctx = document.getElementById('comparison-chart');
+                    if (ctx) {
+                        window.comparisonChartInstance = new Chart(ctx, {
+                            type: 'bar',
+                            data: window.compareChartData,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        position: 'top'
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                var label = context.dataset.label || '';
+                                                if (label) {
+                                                    label += ': ';
+                                                }
+                                                if (context.parsed.y !== null) {
+                                                    label += context.parsed.y.toFixed(3);
+                                                }
+                                                return label;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            })();
+        </script>
+    }
+
+    @* Awards & Honors Table *@
     <div class="card mb-4">
         <div class="card-header card-header-mlb">
             <strong>Awards &amp; Honors</strong>
@@ -25,49 +167,53 @@
             <table class="table table-baseball mb-0">
                 <thead>
                 <tr>
-                    <th class="text-end" style="width: 40%;">@p1.FullName</th>
-                    <th class="text-center" style="width: 20%;">Category</th>
-                    <th style="width: 40%;">@p2.FullName</th>
+                    <th class="text-center" style="width: @(100 / (players.Count + 1))%;">Category</th>
+                    @foreach (var player in players)
+                    {
+                        <th class="text-center" style="width: @(100 / (players.Count + 1))%;">@player.FullName</th>
+                    }
                 </tr>
                 </thead>
                 <tbody>
                 @{
-                    var awardRows = new (string Label, Func<ComparePlayer, string> Getter)[]
+                    var awardRows = new (string Label, Func<ComparePlayer, int> Getter)[]
                     {
-                        ("All-Star Selections", p => p.AllStarCount.ToString()),
-                        ("MVP Awards", p => p.MvpCount.ToString()),
-                        ("Gold Gloves", p => p.GoldGloveCount.ToString()),
-                        ("Silver Sluggers", p => p.SilverSluggerCount.ToString()),
-                        ("Total Awards", p => p.AwardCount.ToString())
+                        ("All-Star Selections", p => p.AllStarCount),
+                        ("MVP Awards", p => p.MvpCount),
+                        ("Gold Gloves", p => p.GoldGloveCount),
+                        ("Silver Sluggers", p => p.SilverSluggerCount),
+                        ("Total Awards", p => p.AwardCount)
                     };
                 }
                 @foreach (var row in awardRows)
                 {
-                    var v1 = row.Getter(p1);
-                    var v2 = row.Getter(p2);
-                    var n1 = int.Parse(v1);
-                    var n2 = int.Parse(v2);
+                    var values = players.Select(p => row.Getter(p)).ToList();
+                    var maxVal = values.Max();
                     <tr>
-                        <td class="text-end stat-cell fw-bold @(n1 > n2 ? "text-success" : "")">@(n1 > n2 && n1 > 0 ? "▲ " : "")@v1</td>
                         <td class="text-center text-muted small">@row.Label</td>
-                        <td class="stat-cell fw-bold @(n2 > n1 ? "text-success" : "")">@(n2 > n1 && n2 > 0 ? "▲ " : "")@v2</td>
+                        @foreach (var val in values)
+                        {
+                            <td class="text-center stat-cell fw-bold @(val == maxVal && val > 0 ? "text-success" : "")">
+                                @(val == maxVal && val > 0 ? "▲ " : "")@val
+                            </td>
+                        }
                     </tr>
                 }
                 <tr>
-                    <td class="text-end">
-                        @if (p1.IsInHallOfFame) { <span class="hof-badge">HOF</span> } else { <span class="text-muted">&mdash;</span> }
-                    </td>
                     <td class="text-center text-muted small">Hall of Fame</td>
-                    <td>
-                        @if (p2.IsInHallOfFame) { <span class="hof-badge">HOF</span> } else { <span class="text-muted">&mdash;</span> }
-                    </td>
+                    @foreach (var player in players)
+                    {
+                        <td class="text-center">
+                            @if (player.IsInHallOfFame) { <span class="hof-badge">HOF</span> } else { <span class="text-muted">&mdash;</span> }
+                        </td>
+                    }
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Batting Comparison -->
+    @* Batting Comparison *@
     @if (Model.HasBatters)
     {
         <div class="card mb-4">
@@ -75,18 +221,10 @@
                 <strong>@(hasYearRange ? $"Batting {yearRangeLabel}" : "Career Batting")</strong>
                 @if (!hasYearRange)
                 {
-                    <span class="float-end">
-                        @if (p1.TotalBattingSeasons > 0)
+                    <span class="float-end small text-muted">
+                        @foreach (var player in players.Where(p => p.TotalBattingSeasons > 0))
                         {
-                            <small class="text-muted me-3">
-                                @p1.FullName: @p1.QualifiedBattingSeasons of @p1.TotalBattingSeasons seasons qualified
-                            </small>
-                        }
-                        @if (p2.TotalBattingSeasons > 0)
-                        {
-                            <small class="text-muted">
-                                @p2.FullName: @p2.QualifiedBattingSeasons of @p2.TotalBattingSeasons seasons qualified
-                            </small>
+                            <span class="me-3">@player.FullName: @player.QualifiedBattingSeasons of @player.TotalBattingSeasons qualified</span>
                         }
                     </span>
                 }
@@ -95,50 +233,52 @@
                 <table class="table table-baseball mb-0">
                     <thead>
                     <tr>
-                        <th class="text-end" style="width: 40%;">@p1.FullName</th>
-                        <th class="text-center" style="width: 20%;">Stat</th>
-                        <th style="width: 40%;">@p2.FullName</th>
+                        <th class="text-center" style="width: @(100 / (players.Count + 1))%;">Stat</th>
+                        @foreach (var player in players)
+                        {
+                            <th class="text-center" style="width: @(100 / (players.Count + 1))%;">@player.FullName</th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
                     @{
-                        var battingRows = new (string Label, Func<CompareCareerBattingStats, string> Fmt, Func<CompareCareerBattingStats, double> Val)[]
+                        var battingRows = new (string Label, Func<CompareCareerBattingStats, string> Fmt, Func<CompareCareerBattingStats, double> Val, bool LowerBetter)[]
                         {
-                            ("Games", s => s.Games.ToString("N0"), s => s.Games),
-                            ("At Bats", s => s.AtBats.ToString("N0"), s => s.AtBats),
-                            ("Runs", s => s.Runs.ToString("N0"), s => s.Runs),
-                            ("Hits", s => s.Hits.ToString("N0"), s => s.Hits),
-                            ("Doubles", s => s.Doubles.ToString("N0"), s => s.Doubles),
-                            ("Triples", s => s.Triples.ToString("N0"), s => s.Triples),
-                            ("Home Runs", s => s.HomeRuns.ToString("N0"), s => s.HomeRuns),
-                            ("RBI", s => s.Rbi.ToString("N0"), s => s.Rbi),
-                            ("Stolen Bases", s => s.StolenBases.ToString("N0"), s => s.StolenBases),
-                            ("Walks", s => s.Walks.ToString("N0"), s => s.Walks),
-                            ("Strikeouts", s => s.Strikeouts.ToString("N0"), s => s.Strikeouts),
-                            ("AVG", s => s.FormattedAvg, s => s.BattingAverage),
-                            ("OBP", s => s.FormattedObp, s => s.OnBasePercentage),
-                            ("SLG", s => s.FormattedSlg, s => s.SluggingPercentage),
-                            ("OPS", s => s.FormattedOps, s => s.Ops)
+                            ("Games", s => s.Games.ToString("N0"), s => s.Games, false),
+                            ("At Bats", s => s.AtBats.ToString("N0"), s => s.AtBats, false),
+                            ("Runs", s => s.Runs.ToString("N0"), s => s.Runs, false),
+                            ("Hits", s => s.Hits.ToString("N0"), s => s.Hits, false),
+                            ("Doubles", s => s.Doubles.ToString("N0"), s => s.Doubles, false),
+                            ("Triples", s => s.Triples.ToString("N0"), s => s.Triples, false),
+                            ("Home Runs", s => s.HomeRuns.ToString("N0"), s => s.HomeRuns, false),
+                            ("RBI", s => s.Rbi.ToString("N0"), s => s.Rbi, false),
+                            ("Stolen Bases", s => s.StolenBases.ToString("N0"), s => s.StolenBases, false),
+                            ("Walks", s => s.Walks.ToString("N0"), s => s.Walks, false),
+                            ("Strikeouts", s => s.Strikeouts.ToString("N0"), s => s.Strikeouts, true),
+                            ("AVG", s => s.FormattedAvg, s => s.BattingAverage, false),
+                            ("OBP", s => s.FormattedObp, s => s.OnBasePercentage, false),
+                            ("SLG", s => s.FormattedSlg, s => s.SluggingPercentage, false),
+                            ("OPS", s => s.FormattedOps, s => s.Ops, false)
                         };
                     }
                     @foreach (var row in battingRows)
                     {
-                        var s1 = p1.BattingStats;
-                        var s2 = p2.BattingStats;
-                        var v1 = s1 != null ? row.Val(s1) : 0;
-                        var v2 = s2 != null ? row.Val(s2) : 0;
-                        // For strikeouts, lower is better
-                        var lowerIsBetter = row.Label == "Strikeouts";
-                        var p1Better = lowerIsBetter ? v1 < v2 : v1 > v2;
-                        var p2Better = lowerIsBetter ? v2 < v1 : v2 > v1;
+                        var stats = players.Select(p => p.BattingStats).ToList();
+                        var values = stats.Select(s => s != null ? row.Val(s) : 0).ToList();
+                        var bestVal = row.LowerBetter
+                            ? values.Where(v => v > 0).DefaultIfEmpty(0).Min()
+                            : values.Max();
                         <tr>
-                            <td class="text-end stat-cell fw-bold @(s1 != null && p1Better ? "text-success" : "")">
-                                @if (s1 != null && p1Better && v1 > 0) { <text>▲ </text> }@(s1 != null ? row.Fmt(s1) : "—")
-                            </td>
                             <td class="text-center text-muted small">@row.Label</td>
-                            <td class="stat-cell fw-bold @(s2 != null && p2Better ? "text-success" : "")">
-                                @if (s2 != null && p2Better && v2 > 0) { <text>▲ </text> }@(s2 != null ? row.Fmt(s2) : "—")
-                            </td>
+                            @for (int i = 0; i < players.Count; i++)
+                            {
+                                var stat = stats[i];
+                                var val = values[i];
+                                var isBest = stat != null && ((row.LowerBetter && val == bestVal && val > 0) || (!row.LowerBetter && val == bestVal && val > 0));
+                                <td class="text-center stat-cell fw-bold @(isBest ? "text-success" : "")">
+                                    @if (isBest) { <text>▲ </text> }@(stat != null ? row.Fmt(stat) : "—")
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>
@@ -147,7 +287,7 @@
         </div>
     }
 
-    <!-- Pitching Comparison -->
+    @* Pitching Comparison *@
     @if (Model.HasPitchers)
     {
         <div class="card mb-4">
@@ -155,18 +295,10 @@
                 <strong>@(hasYearRange ? $"Pitching {yearRangeLabel}" : "Career Pitching")</strong>
                 @if (!hasYearRange)
                 {
-                    <span class="float-end">
-                        @if (p1.TotalPitchingSeasons > 0)
+                    <span class="float-end small text-muted">
+                        @foreach (var player in players.Where(p => p.TotalPitchingSeasons > 0))
                         {
-                            <small class="text-muted me-3">
-                                @p1.FullName: @p1.QualifiedPitchingSeasons of @p1.TotalPitchingSeasons seasons qualified
-                            </small>
-                        }
-                        @if (p2.TotalPitchingSeasons > 0)
-                        {
-                            <small class="text-muted">
-                                @p2.FullName: @p2.QualifiedPitchingSeasons of @p2.TotalPitchingSeasons seasons qualified
-                            </small>
+                            <span class="me-3">@player.FullName: @player.QualifiedPitchingSeasons of @player.TotalPitchingSeasons qualified</span>
                         }
                     </span>
                 }
@@ -175,9 +307,11 @@
                 <table class="table table-baseball mb-0">
                     <thead>
                     <tr>
-                        <th class="text-end" style="width: 40%;">@p1.FullName</th>
-                        <th class="text-center" style="width: 20%;">Stat</th>
-                        <th style="width: 40%;">@p2.FullName</th>
+                        <th class="text-center" style="width: @(100 / (players.Count + 1))%;">Stat</th>
+                        @foreach (var player in players)
+                        {
+                            <th class="text-center" style="width: @(100 / (players.Count + 1))%;">@player.FullName</th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -199,20 +333,22 @@
                     }
                     @foreach (var row in pitchingRows)
                     {
-                        var s1 = p1.PitchingStats;
-                        var s2 = p2.PitchingStats;
-                        var v1 = s1 != null ? row.Val(s1) : 0;
-                        var v2 = s2 != null ? row.Val(s2) : 0;
-                        var p1Better = row.LowerBetter ? (v1 < v2 && s1 != null) : (v1 > v2);
-                        var p2Better = row.LowerBetter ? (v2 < v1 && s2 != null) : (v2 > v1);
+                        var stats = players.Select(p => p.PitchingStats).ToList();
+                        var values = stats.Select(s => s != null ? row.Val(s) : 0).ToList();
+                        var bestVal = row.LowerBetter
+                            ? values.Where(v => v > 0).DefaultIfEmpty(0).Min()
+                            : values.Max();
                         <tr>
-                            <td class="text-end stat-cell fw-bold @(s1 != null && p1Better ? "text-success" : "")">
-                                @if (s1 != null && p1Better && v1 > 0) { <text>▲ </text> }@(s1 != null ? row.Fmt(s1) : "—")
-                            </td>
                             <td class="text-center text-muted small">@row.Label</td>
-                            <td class="stat-cell fw-bold @(s2 != null && p2Better ? "text-success" : "")">
-                                @if (s2 != null && p2Better && v2 > 0) { <text>▲ </text> }@(s2 != null ? row.Fmt(s2) : "—")
-                            </td>
+                            @for (int i = 0; i < players.Count; i++)
+                            {
+                                var stat = stats[i];
+                                var val = values[i];
+                                var isBest = stat != null && ((row.LowerBetter && val == bestVal && val > 0) || (!row.LowerBetter && val == bestVal && val > 0));
+                                <td class="text-center stat-cell fw-bold @(isBest ? "text-success" : "")">
+                                    @if (isBest) { <text>▲ </text> }@(stat != null ? row.Fmt(stat) : "—")
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>
@@ -221,6 +357,7 @@
         </div>
     }
 
+    @* Postseason Batting *@
     @if (Model.HasPostseasonBatting)
     {
         <div class="card mb-4">
@@ -231,9 +368,11 @@
                 <table class="table table-baseball mb-0">
                     <thead>
                     <tr>
-                        <th class="text-end" style="width: 40%;">@p1.FullName</th>
-                        <th class="text-center" style="width: 20%;">Stat</th>
-                        <th style="width: 40%;">@p2.FullName</th>
+                        <th class="text-center" style="width: @(100 / (players.Count + 1))%;">Stat</th>
+                        @foreach (var player in players)
+                        {
+                            <th class="text-center" style="width: @(100 / (players.Count + 1))%;">@player.FullName</th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -250,20 +389,20 @@
                     }
                     @foreach (var row in postseasonBattingRows)
                     {
-                        var s1 = p1.PostseasonBattingStats;
-                        var s2 = p2.PostseasonBattingStats;
-                        var v1 = s1 != null ? row.Val(s1) : 0;
-                        var v2 = s2 != null ? row.Val(s2) : 0;
-                        var p1Better = v1 > v2;
-                        var p2Better = v2 > v1;
+                        var stats = players.Select(p => p.PostseasonBattingStats).ToList();
+                        var values = stats.Select(s => s != null ? row.Val(s) : 0).ToList();
+                        var bestVal = values.Max();
                         <tr>
-                            <td class="text-end stat-cell fw-bold @(s1 != null && p1Better ? "text-success" : "")">
-                                @if (s1 != null && p1Better && v1 > 0) { <text>▲ </text> }@(s1 != null ? row.Fmt(s1) : "—")
-                            </td>
                             <td class="text-center text-muted small">@row.Label</td>
-                            <td class="stat-cell fw-bold @(s2 != null && p2Better ? "text-success" : "")">
-                                @if (s2 != null && p2Better && v2 > 0) { <text>▲ </text> }@(s2 != null ? row.Fmt(s2) : "—")
-                            </td>
+                            @for (int i = 0; i < players.Count; i++)
+                            {
+                                var stat = stats[i];
+                                var val = values[i];
+                                var isBest = stat != null && val == bestVal && val > 0;
+                                <td class="text-center stat-cell fw-bold @(isBest ? "text-success" : "")">
+                                    @if (isBest) { <text>▲ </text> }@(stat != null ? row.Fmt(stat) : "—")
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>
@@ -272,6 +411,7 @@
         </div>
     }
 
+    @* Postseason Pitching *@
     @if (Model.HasPostseasonPitching)
     {
         <div class="card mb-4">
@@ -282,9 +422,11 @@
                 <table class="table table-baseball mb-0">
                     <thead>
                     <tr>
-                        <th class="text-end" style="width: 40%;">@p1.FullName</th>
-                        <th class="text-center" style="width: 20%;">Stat</th>
-                        <th style="width: 40%;">@p2.FullName</th>
+                        <th class="text-center" style="width: @(100 / (players.Count + 1))%;">Stat</th>
+                        @foreach (var player in players)
+                        {
+                            <th class="text-center" style="width: @(100 / (players.Count + 1))%;">@player.FullName</th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -302,20 +444,22 @@
                     }
                     @foreach (var row in postseasonPitchingRows)
                     {
-                        var s1 = p1.PostseasonPitchingStats;
-                        var s2 = p2.PostseasonPitchingStats;
-                        var v1 = s1 != null ? row.Val(s1) : 0;
-                        var v2 = s2 != null ? row.Val(s2) : 0;
-                        var p1Better = row.LowerBetter ? (v1 < v2 && s1 != null) : (v1 > v2);
-                        var p2Better = row.LowerBetter ? (v2 < v1 && s2 != null) : (v2 > v1);
+                        var stats = players.Select(p => p.PostseasonPitchingStats).ToList();
+                        var values = stats.Select(s => s != null ? row.Val(s) : 0).ToList();
+                        var bestVal = row.LowerBetter
+                            ? values.Where(v => v > 0).DefaultIfEmpty(0).Min()
+                            : values.Max();
                         <tr>
-                            <td class="text-end stat-cell fw-bold @(s1 != null && p1Better ? "text-success" : "")">
-                                @if (s1 != null && p1Better && v1 > 0) { <text>▲ </text> }@(s1 != null ? row.Fmt(s1) : "—")
-                            </td>
                             <td class="text-center text-muted small">@row.Label</td>
-                            <td class="stat-cell fw-bold @(s2 != null && p2Better ? "text-success" : "")">
-                                @if (s2 != null && p2Better && v2 > 0) { <text>▲ </text> }@(s2 != null ? row.Fmt(s2) : "—")
-                            </td>
+                            @for (int i = 0; i < players.Count; i++)
+                            {
+                                var stat = stats[i];
+                                var val = values[i];
+                                var isBest = stat != null && ((row.LowerBetter && val == bestVal && val > 0) || (!row.LowerBetter && val == bestVal && val > 0));
+                                <td class="text-center stat-cell fw-bold @(isBest ? "text-success" : "")">
+                                    @if (isBest) { <text>▲ </text> }@(stat != null ? row.Fmt(stat) : "—")
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>
@@ -324,6 +468,7 @@
         </div>
     }
 
+    @* Fielding (no cross-player highlighting as positions differ) *@
     @if (Model.HasFielding)
     {
         <div class="card mb-4">
@@ -334,9 +479,11 @@
                 <table class="table table-baseball mb-0">
                     <thead>
                     <tr>
-                        <th class="text-end" style="width: 40%;">@p1.FullName</th>
-                        <th class="text-center" style="width: 20%;">Stat</th>
-                        <th style="width: 40%;">@p2.FullName</th>
+                        <th class="text-center" style="width: @(100 / (players.Count + 1))%;">Stat</th>
+                        @foreach (var player in players)
+                        {
+                            <th class="text-center" style="width: @(100 / (players.Count + 1))%;">@player.FullName</th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -354,12 +501,14 @@
                     }
                     @foreach (var row in fieldingRows)
                     {
-                        var s1 = p1.FieldingStats;
-                        var s2 = p2.FieldingStats;
+                        var stats = players.Select(p => p.FieldingStats).ToList();
                         <tr>
-                            <td class="text-end stat-cell fw-bold">@(s1 != null ? row.Fmt(s1) : "—")</td>
                             <td class="text-center text-muted small">@row.Label</td>
-                            <td class="stat-cell fw-bold">@(s2 != null ? row.Fmt(s2) : "—")</td>
+                            @for (int i = 0; i < players.Count; i++)
+                            {
+                                var stat = stats[i];
+                                <td class="text-center stat-cell fw-bold">@(stat != null ? row.Fmt(stat) : "—")</td>
+                            }
                         </tr>
                     }
                     </tbody>

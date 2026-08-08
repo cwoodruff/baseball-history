@@ -19,6 +19,8 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
     [BindProperty(SupportsGet = true)] public string? Player1 { get; set; }
     [BindProperty(SupportsGet = true)] public string? Player2 { get; set; }
+    [BindProperty(SupportsGet = true)] public string? Player3 { get; set; }
+    [BindProperty(SupportsGet = true)] public string? Player4 { get; set; }
     [BindProperty(SupportsGet = true)] public int? FromYear { get; set; }
     [BindProperty(SupportsGet = true)] public int? ToYear { get; set; }
 
@@ -32,6 +34,12 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         if (!string.IsNullOrWhiteSpace(Player2))
             ViewModel.Player2 = await LoadPlayer(Player2.Trim(), hofPlayerIds);
 
+        if (!string.IsNullOrWhiteSpace(Player3))
+            ViewModel.Player3 = await LoadPlayer(Player3.Trim(), hofPlayerIds);
+
+        if (!string.IsNullOrWhiteSpace(Player4))
+            ViewModel.Player4 = await LoadPlayer(Player4.Trim(), hofPlayerIds);
+
         // Return partial view for htmx requests
         if (Request.IsHtmxNonBoostedRequest())
         {
@@ -44,16 +52,23 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
     public async Task<IActionResult> OnGetSearchAsync(string? q, int side = 1)
     {
         if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
-            return Partial("_CompareSearchResults", (new List<PlayerSummary>(), side, Player1, Player2));
+            return Partial("_CompareSearchResults", (new List<PlayerSummary>(), side, Player1, Player2, Player3, Player4));
 
         var searchTerm = q.Trim().ToLower();
 
+        // Collect already-selected player IDs to exclude from results
+        var selectedPlayerIds = new[] { Player1, Player2, Player3, Player4 }
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Select(p => p!.Trim())
+            .ToHashSet();
+
         var players = await context.People
             .Where(p =>
-                (p.NameFirst != null && p.NameFirst.ToLower().Contains(searchTerm)) ||
+                !selectedPlayerIds.Contains(p.PlayerId) &&
+                ((p.NameFirst != null && p.NameFirst.ToLower().Contains(searchTerm)) ||
                 (p.NameLast != null && p.NameLast.ToLower().Contains(searchTerm)) ||
                 (p.NameFirst != null && p.NameLast != null &&
-                 (p.NameFirst.ToLower() + " " + p.NameLast.ToLower()).Contains(searchTerm)))
+                 (p.NameFirst.ToLower() + " " + p.NameLast.ToLower()).Contains(searchTerm))))
             .OrderByDescending(p => (p.Battings.Sum(b => (int?)b.Hr) ?? 0) + (p.Pitchings.Sum(pi => (int?)pi.W) ?? 0))
             .ThenBy(p => p.NameLast)
             .Take(8)
@@ -73,7 +88,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId)
         }).ToList();
 
-        return Partial("_CompareSearchResults", (results, side, Player1, Player2));
+        return Partial("_CompareSearchResults", (results, side, Player1, Player2, Player3, Player4));
     }
 
     private async Task<ComparePlayer?> LoadPlayer(string playerId, HashSet<string> hofPlayerIds)
