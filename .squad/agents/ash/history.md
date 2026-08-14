@@ -493,3 +493,56 @@ All 446 automated tests passed, yet the live API contradicted acceptance criteri
 - Testing Razor page rendering (not query behavior) is sufficient for doc-only changes
 
 **Future note:** For documentation tasks involving query logic or cache behavior, always cross-reference the actual implementation to ensure documented constants/thresholds match runtime behavior.
+
+
+## Session: Azure Subscription Migration Planning (2026-08-13)
+
+**Task:** Produced comprehensive planning document for migrating baseball-history Azure footprint to new subscription `f4f157e5-b609-48af-a029-21d4ef53b805`. Planning only — no state changes, no file edits, no az commands executed.
+
+**Key Findings:**
+1. **Orphaned Secrets:** Repo contains 5 Azure secrets, but only 1 (`AZUREAPPSERVICE_PUBLISHPROFILE_E21EDEC1FA3B4E079F18B39DBEFCF737`) is actively used by `main_baseball-history.yml`. The other 4 (OIDC-style `CLIENTID`, `SUBSCRIPTIONID`, `TENANTID`, plus a second publish profile) are NOT referenced by any workflow — likely leftover from prior migration attempt or decommissioned resource.
+
+2. **No IaC in Repo:** Zero bicep, terraform, or azure.yaml files exist. Infrastructure was provisioned manually/via portal. Aspire AppHost is local dev orchestration only (per repo conventions), with no Azure resource provisioning code.
+
+3. **Publish Profile → OIDC Migration Opportunity:** Migration is ideal time to consolidate to OIDC-based GitHub Actions auth (using service principal + federated credentials) and clean up orphaned secrets. Security benefits: no long-lived credentials, Azure AD audit trail, no rotation burden.
+
+4. **Connection String Anti-Pattern:** `appsettings.json` has committed PostgreSQL connection string (password redacted). Per `.squad/decisions.md` (Parker's Postgres migration decision), runtime config should come from App Service settings or Key Vault, NOT committed files. Flagged for Chris to confirm Key Vault usage.
+
+5. **Aspire Scope Ambiguity:** "Update Aspire" could mean:
+   - **Minimal (Recommended):** Update local dev `user-secrets` to point at new Azure Postgres post-migration
+   - **Expanded (Future):** Adopt Aspire's Azure provisioning model (`azd`, `Aspire.Hosting.Azure.PostgreSQL`) for IaC-driven deployments
+   - Recommended minimal scope for this migration; document expanded scope as post-migration team decision.
+
+**Recommended Migration Approach:**
+- Web App: Recreate in new subscription + redeploy via GitHub Actions (clean slate, fits existing workflow)
+- Database: `pg_dump` + `pg_restore` (simple, reliable, acceptable for <10GB databases)
+- Auth: Migrate to OIDC (security + consolidation win)
+- Downtime: ~60-75 minutes estimated
+
+**Plan Structure:**
+1. Pre-migration inventory (capture current state — Chris must run az CLI commands)
+2. Target subscription setup (resource group, RBAC, service principal for OIDC)
+3. Web App migration (provision + redeploy + GitHub Actions/secrets update)
+4. PostgreSQL migration (provision + dump/restore + connection string update)
+5. Cutover sequencing & rollback plan (minimize downtime, safety triggers)
+6. Validation checklist (health checks, DB integrity, cache warm-up, HTMX behavior)
+7. Risks & open questions (critical unknowns Chris must confirm before execution)
+
+**Critical Unknowns (Requires Chris's Input):**
+- Current subscription ID & resource group name
+- Current database size (affects migration method/downtime)
+- Acceptable downtime window
+- Custom domain / TLS certificate configuration
+- Key Vault / Managed Identity usage
+- Application Insights / monitoring configuration
+- High availability / backup requirements
+
+**Deliverables:**
+- Full migration plan (Sections 1-12) written as final output for Chris
+- Decision inbox file: `.squad/decisions/inbox/ash-azure-migration-plan.md` for open questions (Aspire IaC adoption, Key Vault strategy, multi-env future)
+
+**Learnings:**
+- **Subscription migrations require thorough current-state inventory before planning execution steps** — can't assume anything about existing resources without az CLI inspection.
+- **GitHub secrets hygiene matters** — unused/orphaned secrets accumulate over time and obscure what's actually in use. Migration is a forcing function for cleanup.
+- **Aspire's dual identity (local orchestration vs. Azure provisioning)** creates ambiguity in "update Aspire" requests. Always clarify scope: dev experience vs. deployment model vs. IaC adoption.
+- **Platform owner role includes migration sequencing** — not just "what to migrate" but "in what order, with what rollback triggers, and what validation gates." Downtime estimation requires understanding cache warm-up behavior (`PlayerCacheService`), HTMX partial rendering, and EF Core query patterns.
