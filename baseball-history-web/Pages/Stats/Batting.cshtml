@@ -4,9 +4,11 @@
     ViewData["Title"] = "Batting Leaders";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-2">
     <h1 class="text-mlb-navy mb-0">Batting Leaders</h1>
 </div>
+
+@await Html.PartialAsync("Components/_DataScopeNote")
 
 <!-- Filters -->
 <div class="position-relative" hx-indicator="#loading-indicator">
