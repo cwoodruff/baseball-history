@@ -144,6 +144,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             FirstName = p.NameFirst,
             LastName = p.NameLast,
             FullName = $"{p.NameFirst} {p.NameLast}".Trim(),
+            IsPartialRecord = PlayerRecordFacts.IsPartialName(p.NameFirst),
             BirthYear = p.BirthYear,
             DebutYear = p.DebutYear?.Year.ToString(),
             FinalYear = p.FinalYear?.Year.ToString(),

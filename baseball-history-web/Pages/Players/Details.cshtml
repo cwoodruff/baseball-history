@@ -15,6 +15,10 @@
             <div class="text-uppercase small fw-semibold text-muted mb-2">Player</div>
             <h1 class="mb-0">
                 @Model.Player.FullName
+                @if (Model.Player.IsPartialRecord)
+                {
+                    @await Html.PartialAsync("Components/_PartialRecordBadge", false)
+                }
                 @if (Model.Player.IsInHallOfFame)
                 {
                     <a class="hof-badge ms-2 text-decoration-none"

@@ -10,7 +10,8 @@ public sealed record PlayerListItem(
     int? TotalGames,
     int? TotalHits,
     int? TotalHomeRuns,
-    string? LastTeamId);
+    string? LastTeamId,
+    bool IsPartialRecord = false);
 
 public sealed record PlayerDetail(
     string PlayerId,
@@ -32,7 +33,8 @@ public sealed record PlayerDetail(
     int? HofInductionYear,
     CareerBattingDto? CareerBatting,
     CareerPitchingDto? CareerPitching,
-    IReadOnlyList<PlayerTeamDto> Teams);
+    IReadOnlyList<PlayerTeamDto> Teams,
+    bool IsPartialRecord = false);
 
 public sealed record CareerBattingDto(
     int Games, int AtBats, int Runs, int Hits, int Doubles, int Triples,

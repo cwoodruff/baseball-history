@@ -619,6 +619,32 @@ a:hover {
 }
 
 /* --------------------------------------------------------------------------
+   Partial-Record Badge (historically incomplete records, issue #71)
+   -------------------------------------------------------------------------- */
+.partial-record-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background-color: #f8f1e0;
+    color: #7a5d10;
+    border: 1px solid #e0cf9e;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: help;
+    vertical-align: middle;
+}
+
+.partial-record-marker {
+    color: #a07c1c;
+    font-weight: 700;
+    margin-left: 0.15rem;
+    cursor: help;
+}
+
+/* --------------------------------------------------------------------------
    Footer
    -------------------------------------------------------------------------- */
 .footer-mlb {

@@ -128,6 +128,37 @@ Detailed player information displayed in a modal overlay.
 
 ---
 
+## Partial-Record Badge
+
+Cross-cutting annotation for historically incomplete player records
+([#71](https://github.com/cwoodruff/baseball-history/issues/71)).
+
+453 players carry only a fragment of a name — 413 with no first name at all
+(mostly segregation-era Black baseball, some 19th-century) and 40 with a bare
+initial like "W. Cobb". These records are flagged rather than smoothed over:
+incompleteness is presented as a historical fact of how box scores survived.
+
+### Detection
+
+A player is a partial record when `nameFirst` is empty or a single initial
+(`PlayerRecordFacts.IsPartialName`). Missing birth data alone does not
+trigger the badge.
+
+### Display
+
+- **"Partial record" chip**: player page header, player modal header,
+  comparison player cards
+- **Dagger marker (†)**: player browser cards, search results (global and
+  compare search)
+- Both carry an explanation via tooltip and `aria-label`; the copy lives in
+  `PlayerRecordFacts.PartialRecordExplanation`
+
+### API
+
+Player list and detail endpoints include an `isPartialRecord` boolean.
+
+---
+
 ## Team Browser
 
 **URL**: `/Teams`

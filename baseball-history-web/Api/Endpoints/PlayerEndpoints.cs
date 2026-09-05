@@ -68,7 +68,8 @@ public static class PlayerEndpoints
             p.TotalGames > 0 ? p.TotalGames : null,
             p.TotalHits > 0 ? p.TotalHits : null,
             p.TotalHR > 0 ? p.TotalHR : null,
-            p.LastTeam
+            p.LastTeam,
+            PlayerRecordFacts.IsPartialName(p.NameFirst)
         )).ToList();
 
         return Results.Ok(PagedResponse.Create(data, page, pageSize, totalCount));
@@ -222,7 +223,8 @@ public static class PlayerEndpoints
             person.Height, person.Weight, person.Bats, person.Throws,
             birthDate, person.BirthCity, person.BirthState, person.BirthCountry, deathDate,
             person.Debut?.Year, person.FinalGame?.Year,
-            isHof, hofYear, careerBatting, careerPitching, teams));
+            isHof, hofYear, careerBatting, careerPitching, teams,
+            PlayerRecordFacts.IsPartialName(person.NameFirst)));
     }
 
     private static async Task<IResult> GetPlayerBatting(string playerId, BaseballDbContext context)

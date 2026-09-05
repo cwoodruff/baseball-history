@@ -1,3 +1,4 @@
+using baseball_history_web.Services;
 using BaseballHistory.Data.Models;
 
 namespace baseball_history_web.ViewModels;
@@ -74,6 +75,10 @@ public class PlayerSummary
     public string FullName { get; set; } = null!;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+
+    // Only a surname or initial survived the source record (see PlayerRecordFacts)
+    public bool IsPartialRecord { get; set; }
+
     public string? BirthYear { get; set; }
     public string? DebutYear { get; set; }
     public string? FinalYear { get; set; }
@@ -93,6 +98,7 @@ public class PlayerSummary
             FirstName = person.NameFirst,
             LastName = person.NameLast,
             FullName = $"{person.NameFirst} {person.NameLast}".Trim(),
+            IsPartialRecord = PlayerRecordFacts.IsPartialName(person.NameFirst),
             BirthYear = person.BirthYear,
             DebutYear = person.Debut?.Year.ToString(),
             FinalYear = person.FinalGame?.Year.ToString(),

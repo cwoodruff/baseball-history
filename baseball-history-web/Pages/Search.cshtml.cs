@@ -1,5 +1,6 @@
 using baseball_history_web.Extensions;
 using BaseballHistory.Data.Models;
+using baseball_history_web.Services;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -91,6 +92,7 @@ public class SearchModel(BaseballDbContext context, IMemoryCache cache) : PageMo
         {
             Id = p.PlayerId,
             Title = $"{p.NameFirst} {p.NameLast}".Trim(),
+            IsPartialRecord = PlayerRecordFacts.IsPartialName(p.NameFirst),
             Subtitle = p.Debut.HasValue
                 ? $"{p.Debut.Value.Year} - {p.FinalGame?.Year.ToString() ?? "Present"}"
                 : null,

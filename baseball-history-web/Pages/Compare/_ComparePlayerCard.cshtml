@@ -28,6 +28,10 @@
                     @player.FullName
                 </a>
             </h4>
+            @if (player.IsPartialRecord)
+            {
+                <div class="mb-1">@await Html.PartialAsync("Components/_PartialRecordBadge", false)</div>
+            }
             @if (player.IsInHallOfFame)
             {
                 <div class="mb-1"><span class="hof-badge">HOF @player.HofInductionYear</span></div>

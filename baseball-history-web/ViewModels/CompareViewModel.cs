@@ -28,6 +28,10 @@ public class ComparePlayer
 {
     public string PlayerId { get; set; } = null!;
     public string FullName { get; set; } = null!;
+
+    // Only a surname or initial survived the source record (see PlayerRecordFacts)
+    public bool IsPartialRecord { get; set; }
+
     public string? Bats { get; set; }
     public string? Throws { get; set; }
     public string? BirthDate { get; set; }

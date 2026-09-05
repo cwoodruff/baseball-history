@@ -35,6 +35,10 @@
     <div>
         <div class="fw-bold text-dark">
             @Model.Result.Title
+            @if (Model.Result.IsPartialRecord)
+            {
+                @await Html.PartialAsync("Components/_PartialRecordBadge", true)
+            }
             @if (Model.Result.IsInHallOfFame)
             {
                 <span class="hof-badge ms-1">HOF</span>

@@ -30,6 +30,10 @@
             <div class="card-body">
                 <h6 class="card-title mb-1">
                     @Model.FullName
+                    @if (Model.IsPartialRecord)
+                    {
+                        @await Html.PartialAsync("Components/_PartialRecordBadge", true)
+                    }
                     @if (Model.IsInHallOfFame)
                     {
                         <span class="hof-badge ms-1" title="Hall of Fame">HOF</span>

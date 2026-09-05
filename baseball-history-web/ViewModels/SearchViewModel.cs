@@ -33,6 +33,9 @@ public class SearchResult
     public string? TeamId { get; set; } // For team colors
     public bool IsInHallOfFame { get; set; }
 
+    // Players only: surname or initial is all that survived (see PlayerRecordFacts)
+    public bool IsPartialRecord { get; set; }
+
     public string Url => Type switch
     {
         SearchResultType.Player => $"/Players/Details/{Id}",

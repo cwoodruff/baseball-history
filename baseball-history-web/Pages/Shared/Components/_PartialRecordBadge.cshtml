@@ -1,0 +1,21 @@
+@* Partial-record badge (issue #71)
+   Usage: @await Html.PartialAsync("Components/_PartialRecordBadge", compact)
+   compact=false renders the "Partial record" chip (page/modal headers, cards);
+   compact=true renders a superscript dagger for dense list rows.
+   Render only when the model's IsPartialRecord is true.
+*@
+
+@model bool
+
+@if (Model)
+{
+    <sup class="partial-record-marker"
+         title="@baseball_history_web.Services.PlayerRecordFacts.PartialRecordExplanation"
+         aria-label="@baseball_history_web.Services.PlayerRecordFacts.PartialRecordExplanation">&dagger;</sup>
+}
+else
+{
+    <span class="partial-record-badge ms-2"
+          title="@baseball_history_web.Services.PlayerRecordFacts.PartialRecordExplanation"
+          aria-label="@baseball_history_web.Services.PlayerRecordFacts.PartialRecordExplanation">Partial record</span>
+}

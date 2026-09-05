@@ -1,4 +1,5 @@
 using baseball_history_web.Extensions;
+using baseball_history_web.Services;
 using BaseballHistory.Data.Models;
 using baseball_history_web.ViewModels;
 using BaseballHistory.Data.Querying;
@@ -83,6 +84,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             FirstName = p.NameFirst,
             LastName = p.NameLast,
             FullName = $"{p.NameFirst} {p.NameLast}".Trim(),
+            IsPartialRecord = PlayerRecordFacts.IsPartialName(p.NameFirst),
             DebutYear = p.Debut?.Year.ToString(),
             FinalYear = p.FinalGame?.Year.ToString(),
             IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId)
@@ -115,6 +117,7 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         {
             PlayerId = person.PlayerId,
             FullName = $"{person.NameFirst} {person.NameLast}".Trim(),
+            IsPartialRecord = PlayerRecordFacts.IsPartialName(person.NameFirst),
             Bats = person.Bats,
             Throws = person.Throws,
             Debut = person.Debut?.Year.ToString(),

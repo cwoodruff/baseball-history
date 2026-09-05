@@ -31,6 +31,10 @@
                hx-boost="false">
                 <div>
                     <strong>@player.FullName</strong>
+                    @if (player.IsPartialRecord)
+                    {
+                        @await Html.PartialAsync("Components/_PartialRecordBadge", true)
+                    }
                     @if (player.IsInHallOfFame)
                     {
                         <span class="hof-badge ms-1">HOF</span>

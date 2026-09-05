@@ -1,3 +1,4 @@
+using baseball_history_web.Services;
 using BaseballHistory.Data.Models;
 
 namespace baseball_history_web.ViewModels;
@@ -13,6 +14,9 @@ public class PlayerDetailViewModel
     public string? GivenName { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+
+    // Only a surname or initial survived the source record (see PlayerRecordFacts)
+    public bool IsPartialRecord { get; set; }
 
     // Physical attributes
     public string? Height { get; set; }
@@ -153,6 +157,7 @@ public class PlayerDetailViewModel
             LastName = person.NameLast,
             GivenName = person.NameGiven,
             FullName = $"{person.NameFirst} {person.NameLast}".Trim(),
+            IsPartialRecord = PlayerRecordFacts.IsPartialName(person.NameFirst),
             Height = person.Height,
             Weight = person.Weight,
             Bats = person.Bats,

@@ -100,6 +100,7 @@ public class PlayerCacheService(IServiceProvider serviceProvider, IMemoryCache c
                     FirstName = p.NameFirst,
                     LastName = p.NameLast,
                     FullName = $"{p.NameFirst} {p.NameLast}".Trim(),
+                    IsPartialRecord = PlayerRecordFacts.IsPartialName(p.NameFirst),
                     DebutYear = p.DebutYear?.Year.ToString(),
                     FinalYear = p.FinalYear?.Year.ToString(),
                     IsInHallOfFame = hofPlayerIds.Contains(p.PlayerId),

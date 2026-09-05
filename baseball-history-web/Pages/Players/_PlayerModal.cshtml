@@ -12,6 +12,10 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="playerModalLabel">
                     @Model.FullName
+                    @if (Model.IsPartialRecord)
+                    {
+                        @await Html.PartialAsync("Components/_PartialRecordBadge", false)
+                    }
                     @if (Model.IsInHallOfFame)
                     {
                         <a class="hof-badge ms-2 text-decoration-none"
