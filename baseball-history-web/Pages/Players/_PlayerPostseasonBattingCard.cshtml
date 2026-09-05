@@ -1,0 +1,72 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@if (Model.PostseasonBattingSeasons.Any())
+{
+    var totals = Model.PostseasonBattingTotals!;
+
+    <div class="card mb-3">
+        <div class="card-header card-header-mlb">
+            <strong>Postseason Batting</strong>
+        </div>
+        <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-sm table-baseball mb-0">
+                <caption class="visually-hidden">Postseason batting statistics for @Model.FullName</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Year</th>
+                    <th scope="col">Round</th>
+                    <th scope="col">Team</th>
+                    <th class="text-end" scope="col">G</th>
+                    <th class="text-end" scope="col">AB</th>
+                    <th class="text-end" scope="col">H</th>
+                    <th class="text-end" scope="col">HR</th>
+                    <th class="text-end" scope="col">RBI</th>
+                    <th class="text-end" scope="col">AVG</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="fw-bold">
+                    <td colspan="3">Career</td>
+                    <td class="text-end stat-cell">@totals.Games</td>
+                    <td class="text-end stat-cell">@totals.AtBats</td>
+                    <td class="text-end stat-cell">@totals.Hits</td>
+                    <td class="text-end stat-cell">@totals.HomeRuns</td>
+                    <td class="text-end stat-cell">@totals.Rbi</td>
+                    <td class="text-end stat-cell">@totals.FormattedAvg</td>
+                </tr>
+                @foreach (var season in Model.PostseasonBattingSeasons)
+                {
+                    <tr data-team="@season.TeamId">
+                        <td>@season.Year</td>
+                        <td>
+                            <a href="/Postseason?year=@season.Year"
+                               title="View the @season.Year postseason">
+                                @season.RoundName
+                            </a>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(season.TeamId) && !string.IsNullOrEmpty(season.LgId))
+                            {
+                                <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                                   title="View the @season.Year @(season.TeamName ?? season.TeamId) season">
+                                    @(season.TeamName ?? season.TeamId)
+                                </a>
+                            }
+                            else
+                            {
+                                @(season.TeamName ?? season.TeamId)
+                            }
+                        </td>
+                        <td class="text-end stat-cell">@season.Games</td>
+                        <td class="text-end stat-cell">@season.AtBats</td>
+                        <td class="text-end stat-cell">@season.Hits</td>
+                        <td class="text-end stat-cell">@season.HomeRuns</td>
+                        <td class="text-end stat-cell">@season.Rbi</td>
+                        <td class="text-end stat-cell">@season.FormattedAvg</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

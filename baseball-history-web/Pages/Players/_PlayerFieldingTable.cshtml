@@ -1,0 +1,93 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@{
+    var byPosition = Model.FieldingByPosition;
+}
+
+<div class="card mb-3">
+    <div class="card-header card-header-mlb">
+        <strong>Career Fielding by Position</strong>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-baseball mb-0">
+            <caption class="visually-hidden">Career fielding totals by position for @Model.FullName</caption>
+            <thead>
+            <tr>
+                <th scope="col">Pos</th>
+                <th class="text-end" scope="col">G</th>
+                <th class="text-end" scope="col">PO</th>
+                <th class="text-end" scope="col">A</th>
+                <th class="text-end" scope="col">E</th>
+                <th class="text-end" scope="col">DP</th>
+                <th class="text-end" scope="col">FPct</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var pos in byPosition)
+            {
+                <tr>
+                    <td>@pos.Position</td>
+                    <td class="text-end stat-cell">@pos.Games.ToString("N0")</td>
+                    <td class="text-end stat-cell">@pos.Putouts.ToString("N0")</td>
+                    <td class="text-end stat-cell">@pos.Assists.ToString("N0")</td>
+                    <td class="text-end stat-cell">@pos.Errors.ToString("N0")</td>
+                    <td class="text-end stat-cell">@pos.DoublePlays.ToString("N0")</td>
+                    <td class="text-end stat-cell">@pos.FormattedPct</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header card-header-mlb">
+        <strong>Fielding Season by Season</strong>
+    </div>
+    <div class="table-responsive" style="max-height: 400px;">
+        <table class="table table-sm table-baseball mb-0">
+            <caption class="visually-hidden">Season-by-season fielding statistics for @Model.FullName</caption>
+            <thead>
+            <tr>
+                <th scope="col">Year</th>
+                <th scope="col">Team</th>
+                <th scope="col">Pos</th>
+                <th class="text-end" scope="col">G</th>
+                <th class="text-end" scope="col">PO</th>
+                <th class="text-end" scope="col">A</th>
+                <th class="text-end" scope="col">E</th>
+                <th class="text-end" scope="col">DP</th>
+                <th class="text-end" scope="col">FPct</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var season in Model.FieldingSeasons)
+            {
+                <tr data-team="@season.TeamId">
+                    <td>@season.Year</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(season.TeamId) && !string.IsNullOrEmpty(season.LgId))
+                        {
+                            <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                               title="View the @season.Year @(season.TeamName ?? season.TeamId) season">
+                                @(season.TeamName ?? season.TeamId)
+                            </a>
+                        }
+                        else
+                        {
+                            @(season.TeamName ?? season.TeamId)
+                        }
+                    </td>
+                    <td>@season.Position</td>
+                    <td class="text-end stat-cell">@season.Games</td>
+                    <td class="text-end stat-cell">@season.Putouts</td>
+                    <td class="text-end stat-cell">@season.Assists</td>
+                    <td class="text-end stat-cell">@season.Errors</td>
+                    <td class="text-end stat-cell">@season.DoublePlays</td>
+                    <td class="text-end stat-cell">@season.FormattedPct</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

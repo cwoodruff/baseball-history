@@ -107,8 +107,9 @@
                 {
                     <div class="mb-2">
                         <span class="stat-badge stat-badge-primary">
-                            @Model.AllStarAppearances.Count x All-Star
+                            @Model.AllStarSelectionCount x All-Star
                         </span>
+                        <div class="small text-muted mt-1">@Model.AllStarYearRanges</div>
                     </div>
                 }
                 @foreach (var award in Model.Awards.Take(10))

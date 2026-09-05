@@ -242,6 +242,105 @@ public class PlayerDetailService(BaseballDbContext context)
             GameNum = int.TryParse(a.GameNum, out var gameNum) ? gameNum : 0
         }).ToList();
 
+        // Get season-by-season fielding records; PO/A/E/DP are string columns
+        // that can be empty, so pull raw values and parse in memory
+        var fieldingRows = await context.Fielding
+            .Where(f => f.PlayerId == id)
+            .OrderByDescending(f => f.YearId)
+            .ThenBy(f => f.Pos)
+            .Select(f => new
+            {
+                f.YearId, f.TeamId, TeamName = f.Team.Name, f.LgId, f.Pos,
+                Games = f.G ?? 0, f.Po, f.A, f.E, f.Dp
+            })
+            .ToListAsync();
+
+        player.FieldingSeasons = fieldingRows.Select(f => new SeasonFieldingRecord
+        {
+            Year = f.YearId,
+            TeamId = f.TeamId,
+            TeamName = f.TeamName,
+            LgId = f.LgId,
+            Position = f.Pos,
+            Games = f.Games,
+            Putouts = LahmanNumbers.ParseIntOrZero(f.Po),
+            Assists = LahmanNumbers.ParseIntOrZero(f.A),
+            Errors = LahmanNumbers.ParseIntOrZero(f.E),
+            DoublePlays = LahmanNumbers.ParseIntOrZero(f.Dp)
+        }).ToList();
+
+        // Get postseason batting lines; SO is a string column, and rounds sort
+        // in playoff chronology (WC -> DS -> CS -> WS), not alphabetically
+        var postBattingRows = await context.BattingPost
+            .Where(b => b.PlayerId == id)
+            .Select(b => new
+            {
+                b.YearId, b.Round, b.TeamId, TeamName = b.Team.Name, b.LgId,
+                G = b.G ?? 0, Ab = b.Ab ?? 0, R = b.R ?? 0, H = b.H ?? 0,
+                Doubles = b._2b ?? 0, Triples = b._3b ?? 0, Hr = b.Hr ?? 0,
+                Rbi = b.Rbi ?? 0, Sb = b.Sb ?? 0, Bb = b.Bb ?? 0, b.So
+            })
+            .ToListAsync();
+
+        player.PostseasonBattingSeasons = postBattingRows
+            .OrderByDescending(b => b.YearId)
+            .ThenBy(b => PostseasonViewModel.RoundChronologicalRank(b.Round))
+            .Select(b => new PostseasonBattingRecord
+            {
+                Year = b.YearId,
+                Round = b.Round,
+                TeamId = b.TeamId,
+                TeamName = b.TeamName,
+                LgId = b.LgId,
+                Games = b.G,
+                AtBats = b.Ab,
+                Runs = b.R,
+                Hits = b.H,
+                Doubles = b.Doubles,
+                Triples = b.Triples,
+                HomeRuns = b.Hr,
+                Rbi = b.Rbi,
+                StolenBases = b.Sb,
+                Walks = b.Bb,
+                Strikeouts = LahmanNumbers.ParseIntOrZero(b.So)
+            })
+            .ToList();
+
+        // Get postseason pitching lines
+        var postPitchingRows = await context.PitchingPost
+            .Where(p => p.PlayerId == id)
+            .Select(p => new
+            {
+                p.YearId, p.Round, TeamId = p.TeamId ?? "", TeamName = p.Team != null ? p.Team.Name : null,
+                LgId = p.LgId ?? "", G = p.G ?? 0, Gs = p.Gs ?? 0, W = p.W ?? 0, L = p.L ?? 0,
+                Sv = p.Sv ?? 0, Ipouts = p.Ipouts ?? 0, H = p.H ?? 0, Er = p.Er ?? 0,
+                Bb = p.Bb ?? 0, So = p.So ?? 0
+            })
+            .ToListAsync();
+
+        player.PostseasonPitchingSeasons = postPitchingRows
+            .OrderByDescending(p => p.YearId)
+            .ThenBy(p => PostseasonViewModel.RoundChronologicalRank(p.Round))
+            .Select(p => new PostseasonPitchingRecord
+            {
+                Year = p.YearId,
+                Round = p.Round,
+                TeamId = p.TeamId,
+                TeamName = p.TeamName,
+                LgId = p.LgId,
+                Games = p.G,
+                GamesStarted = p.Gs,
+                Wins = p.W,
+                Losses = p.L,
+                Saves = p.Sv,
+                InningsPitched = p.Ipouts / 3.0,
+                Hits = p.H,
+                EarnedRuns = p.Er,
+                Walks = p.Bb,
+                Strikeouts = p.So
+            })
+            .ToList();
+
         return player;
     }
 }

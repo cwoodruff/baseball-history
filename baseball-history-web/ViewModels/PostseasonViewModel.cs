@@ -23,6 +23,32 @@ public class PostseasonViewModel
         ["NWDIV"] = "NL Division Series"
     };
 
+    // Player postseason rows use numbered round codes (ALDS1, NLWC2) that the
+    // series table does not; strip the trailing digit before the name lookup.
+    public static string RoundDisplayName(string round)
+    {
+        if (RoundNames.TryGetValue(round, out var name))
+            return name;
+
+        var trimmed = round.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+        return RoundNames.GetValueOrDefault(trimmed, round);
+    }
+
+    // Playoff chronology for sorting rounds within a year: Wild Card ->
+    // Division Series -> Championship Series -> World Series.
+    public static int RoundChronologicalRank(string round)
+    {
+        var trimmed = round.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+        return trimmed switch
+        {
+            "ALWC" or "NLWC" => 0,
+            "ALDS" or "NLDS" or "AEDIV" or "AWDIV" or "NEDIV" or "NWDIV" => 1,
+            "ALCS" or "NLCS" or "CS" => 2,
+            "WS" => 3,
+            _ => 4
+        };
+    }
+
     public int TotalSeries { get; set; }
     public int CurrentPage { get; set; } = 1;
     public int TotalPages { get; set; }

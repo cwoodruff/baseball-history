@@ -49,10 +49,97 @@ public class PlayerDetailViewModel
     // Season-by-season records
     public List<SeasonBattingRecord> BattingSeasons { get; set; } = new();
     public List<SeasonPitchingRecord> PitchingSeasons { get; set; } = new();
+    public List<SeasonFieldingRecord> FieldingSeasons { get; set; } = new();
+
+    // Postseason records
+    public List<PostseasonBattingRecord> PostseasonBattingSeasons { get; set; } = new();
+    public List<PostseasonPitchingRecord> PostseasonPitchingSeasons { get; set; } = new();
+
+    public bool HasPostseason => PostseasonBattingSeasons.Count > 0 || PostseasonPitchingSeasons.Count > 0;
+
+    // Career fielding totals per position, main position first
+    public List<CareerFieldingRecord> FieldingByPosition => FieldingSeasons
+        .GroupBy(f => f.Position)
+        .Select(g => new CareerFieldingRecord
+        {
+            Position = g.Key,
+            Games = g.Sum(f => f.Games),
+            Putouts = g.Sum(f => f.Putouts),
+            Assists = g.Sum(f => f.Assists),
+            Errors = g.Sum(f => f.Errors),
+            DoublePlays = g.Sum(f => f.DoublePlays)
+        })
+        .OrderByDescending(f => f.Games)
+        .ToList();
+
+    public CareerBattingStats? PostseasonBattingTotals => PostseasonBattingSeasons.Count == 0
+        ? null
+        : new CareerBattingStats
+        {
+            Games = PostseasonBattingSeasons.Sum(s => s.Games),
+            AtBats = PostseasonBattingSeasons.Sum(s => s.AtBats),
+            Runs = PostseasonBattingSeasons.Sum(s => s.Runs),
+            Hits = PostseasonBattingSeasons.Sum(s => s.Hits),
+            Doubles = PostseasonBattingSeasons.Sum(s => s.Doubles),
+            Triples = PostseasonBattingSeasons.Sum(s => s.Triples),
+            HomeRuns = PostseasonBattingSeasons.Sum(s => s.HomeRuns),
+            Rbi = PostseasonBattingSeasons.Sum(s => s.Rbi),
+            StolenBases = PostseasonBattingSeasons.Sum(s => s.StolenBases),
+            Walks = PostseasonBattingSeasons.Sum(s => s.Walks),
+            Strikeouts = PostseasonBattingSeasons.Sum(s => s.Strikeouts)
+        };
+
+    public CareerPitchingStats? PostseasonPitchingTotals => PostseasonPitchingSeasons.Count == 0
+        ? null
+        : new CareerPitchingStats
+        {
+            Games = PostseasonPitchingSeasons.Sum(s => s.Games),
+            GamesStarted = PostseasonPitchingSeasons.Sum(s => s.GamesStarted),
+            Wins = PostseasonPitchingSeasons.Sum(s => s.Wins),
+            Losses = PostseasonPitchingSeasons.Sum(s => s.Losses),
+            Saves = PostseasonPitchingSeasons.Sum(s => s.Saves),
+            InningsPitched = PostseasonPitchingSeasons.Sum(s => s.InningsPitched),
+            Hits = PostseasonPitchingSeasons.Sum(s => s.Hits),
+            EarnedRuns = PostseasonPitchingSeasons.Sum(s => s.EarnedRuns),
+            Walks = PostseasonPitchingSeasons.Sum(s => s.Walks),
+            Strikeouts = PostseasonPitchingSeasons.Sum(s => s.Strikeouts)
+        };
 
     // Awards and honors
     public List<AwardRecord> Awards { get; set; } = new();
     public List<AllStarRecord> AllStarAppearances { get; set; } = new();
+
+    // 1959-1962 had two All-Star Games per year; selections count seasons,
+    // not games, matching the Compare page.
+    public int AllStarSelectionCount => AllStarAppearances.Select(a => a.Year).Distinct().Count();
+
+    // Selection years compressed into ranges, e.g. "1936–1942, 1946–1951"
+    public string AllStarYearRanges
+    {
+        get
+        {
+            var years = AllStarAppearances.Select(a => (int)a.Year).Distinct().OrderBy(y => y).ToList();
+            if (years.Count == 0) return "";
+
+            var parts = new List<string>();
+            var start = years[0];
+            var prev = years[0];
+
+            foreach (var year in years.Skip(1))
+            {
+                if (year != prev + 1)
+                {
+                    parts.Add(start == prev ? $"{start}" : $"{start}–{prev}");
+                    start = year;
+                }
+
+                prev = year;
+            }
+
+            parts.Add(start == prev ? $"{start}" : $"{start}–{prev}");
+            return string.Join(", ", parts);
+        }
+    }
 
     // Teams played for
     public List<TeamRecord> Teams { get; set; } = new();
@@ -192,6 +279,7 @@ public class CareerPitchingStats
     public string FormattedEra => Era.ToString("0.00");
     public string FormattedWhip => Whip.ToString("0.00");
     public string WinLossRecord => $"{Wins}-{Losses}";
+    public string FormattedInningsPitched => $"{(int)InningsPitched}.{(int)((InningsPitched - (int)InningsPitched) * 3)}";
 }
 
 /// <summary>
@@ -288,6 +376,103 @@ public class AllStarRecord
     public string LgId { get; set; } = null!;
     public string TeamId { get; set; } = null!;
     public int GameNum { get; set; }
+}
+
+/// <summary>
+/// Single season fielding record at one position
+/// </summary>
+public class SeasonFieldingRecord
+{
+    public short Year { get; set; }
+    public string TeamId { get; set; } = null!;
+    public string? TeamName { get; set; }
+    public string LgId { get; set; } = null!;
+    public string Position { get; set; } = null!;
+    public int Games { get; set; }
+    public int Putouts { get; set; }
+    public int Assists { get; set; }
+    public int Errors { get; set; }
+    public int DoublePlays { get; set; }
+
+    public double FieldingPercentage => (Putouts + Assists + Errors) > 0
+        ? (double)(Putouts + Assists) / (Putouts + Assists + Errors)
+        : 0;
+
+    public string FormattedPct => FieldingPercentage.ToString(".000").TrimStart('0');
+}
+
+/// <summary>
+/// Career fielding totals at one position
+/// </summary>
+public class CareerFieldingRecord
+{
+    public string Position { get; set; } = null!;
+    public int Games { get; set; }
+    public int Putouts { get; set; }
+    public int Assists { get; set; }
+    public int Errors { get; set; }
+    public int DoublePlays { get; set; }
+
+    public double FieldingPercentage => (Putouts + Assists + Errors) > 0
+        ? (double)(Putouts + Assists) / (Putouts + Assists + Errors)
+        : 0;
+
+    public string FormattedPct => FieldingPercentage.ToString(".000").TrimStart('0');
+}
+
+/// <summary>
+/// Postseason batting line for one year and round
+/// </summary>
+public class PostseasonBattingRecord
+{
+    public short Year { get; set; }
+    public string Round { get; set; } = null!;
+    public string TeamId { get; set; } = null!;
+    public string? TeamName { get; set; }
+    public string LgId { get; set; } = null!;
+    public int Games { get; set; }
+    public int AtBats { get; set; }
+    public int Runs { get; set; }
+    public int Hits { get; set; }
+    public int Doubles { get; set; }
+    public int Triples { get; set; }
+    public int HomeRuns { get; set; }
+    public int Rbi { get; set; }
+    public int StolenBases { get; set; }
+    public int Walks { get; set; }
+    public int Strikeouts { get; set; }
+
+    public string RoundName => PostseasonViewModel.RoundDisplayName(Round);
+    public double BattingAverage => AtBats > 0 ? (double)Hits / AtBats : 0;
+    public string FormattedAvg => BattingAverage.ToString(".000").TrimStart('0');
+}
+
+/// <summary>
+/// Postseason pitching line for one year and round
+/// </summary>
+public class PostseasonPitchingRecord
+{
+    public short Year { get; set; }
+    public string Round { get; set; } = null!;
+    public string TeamId { get; set; } = null!;
+    public string? TeamName { get; set; }
+    public string LgId { get; set; } = null!;
+    public int Games { get; set; }
+    public int GamesStarted { get; set; }
+    public int Wins { get; set; }
+    public int Losses { get; set; }
+    public int Saves { get; set; }
+    public double InningsPitched { get; set; }
+    public int Hits { get; set; }
+    public int EarnedRuns { get; set; }
+    public int Walks { get; set; }
+    public int Strikeouts { get; set; }
+
+    public string RoundName => PostseasonViewModel.RoundDisplayName(Round);
+    public double Era => InningsPitched > 0 ? (EarnedRuns * 9.0) / InningsPitched : 0;
+    public string FormattedEra => Era.ToString("0.00");
+    public string FormattedInningsPitched => $"{(int)InningsPitched}.{(int)((InningsPitched - (int)InningsPitched) * 3)}";
+    public string WinLossRecord => $"{Wins}-{Losses}";
 }
 
 /// <summary>

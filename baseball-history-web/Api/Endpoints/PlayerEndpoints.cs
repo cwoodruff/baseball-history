@@ -1,4 +1,5 @@
 using baseball_history_web.Api.Dtos;
+using baseball_history_web.Services;
 using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -281,19 +282,14 @@ public static class PlayerEndpoints
             .Select(f => new SeasonFieldingDto(
                 f.YearId, f.TeamId, f.LgId, f.Pos,
                 f.Games,
-                ParseIntOrZero(f.Po),
-                ParseIntOrZero(f.A),
-                ParseIntOrZero(f.E),
-                ParseIntOrZero(f.Dp)))
+                LahmanNumbers.ParseIntOrZero(f.Po),
+                LahmanNumbers.ParseIntOrZero(f.A),
+                LahmanNumbers.ParseIntOrZero(f.E),
+                LahmanNumbers.ParseIntOrZero(f.Dp)))
             .ToList();
 
         return Results.Ok(seasons);
     }
-
-    private static int ParseIntOrZero(string? value) =>
-        int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
-            ? parsed
-            : 0;
 
     private static async Task<IResult> GetPlayerAwards(string playerId, BaseballDbContext context)
     {

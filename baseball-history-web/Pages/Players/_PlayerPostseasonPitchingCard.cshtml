@@ -1,0 +1,72 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@if (Model.PostseasonPitchingSeasons.Any())
+{
+    var totals = Model.PostseasonPitchingTotals!;
+
+    <div class="card mb-3">
+        <div class="card-header card-header-mlb">
+            <strong>Postseason Pitching</strong>
+        </div>
+        <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-sm table-baseball mb-0">
+                <caption class="visually-hidden">Postseason pitching statistics for @Model.FullName</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Year</th>
+                    <th scope="col">Round</th>
+                    <th scope="col">Team</th>
+                    <th class="text-end" scope="col">G</th>
+                    <th class="text-end" scope="col">W-L</th>
+                    <th class="text-end" scope="col">SV</th>
+                    <th class="text-end" scope="col">IP</th>
+                    <th class="text-end" scope="col">SO</th>
+                    <th class="text-end" scope="col">ERA</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="fw-bold">
+                    <td colspan="3">Career</td>
+                    <td class="text-end stat-cell">@totals.Games</td>
+                    <td class="text-end stat-cell">@totals.WinLossRecord</td>
+                    <td class="text-end stat-cell">@totals.Saves</td>
+                    <td class="text-end stat-cell">@totals.FormattedInningsPitched</td>
+                    <td class="text-end stat-cell">@totals.Strikeouts</td>
+                    <td class="text-end stat-cell">@totals.FormattedEra</td>
+                </tr>
+                @foreach (var season in Model.PostseasonPitchingSeasons)
+                {
+                    <tr data-team="@season.TeamId">
+                        <td>@season.Year</td>
+                        <td>
+                            <a href="/Postseason?year=@season.Year"
+                               title="View the @season.Year postseason">
+                                @season.RoundName
+                            </a>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(season.TeamId) && !string.IsNullOrEmpty(season.LgId))
+                            {
+                                <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                                   title="View the @season.Year @(season.TeamName ?? season.TeamId) season">
+                                    @(season.TeamName ?? season.TeamId)
+                                </a>
+                            }
+                            else
+                            {
+                                @(season.TeamName ?? season.TeamId)
+                            }
+                        </td>
+                        <td class="text-end stat-cell">@season.Games</td>
+                        <td class="text-end stat-cell">@season.WinLossRecord</td>
+                        <td class="text-end stat-cell">@season.Saves</td>
+                        <td class="text-end stat-cell">@season.FormattedInningsPitched</td>
+                        <td class="text-end stat-cell">@season.Strikeouts</td>
+                        <td class="text-end stat-cell">@season.FormattedEra</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

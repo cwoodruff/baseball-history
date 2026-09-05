@@ -107,7 +107,8 @@ Detailed player information displayed in a modal overlay.
     - Years with each team
 
 3. **Honors**
-    - All-Star appearance count
+    - All-Star selection count (seasons, not games — 1959–1962 held two
+      All-Star Games per year) with selection years shown as ranges
     - Awards list (MVP, Cy Young, etc.)
 
 4. **Career Batting** (if applicable)
@@ -116,8 +117,14 @@ Detailed player information displayed in a modal overlay.
 5. **Career Pitching** (if applicable)
     - W-L, ERA, Games, SO, SV, WHIP
 
-6. **Season by Season**
-    - Year-by-year batting statistics table
+6. **Stats Tabs** (each tab appears only when the player has data for it;
+   pitchers see Pitching first)
+    - **Batting**: year-by-year batting statistics
+    - **Pitching**: year-by-year pitching statistics
+    - **Fielding**: career totals by position, then season-by-season
+      records (G, PO, A, E, DP, fielding percentage)
+    - **Postseason**: batting and pitching lines per year and round with
+      career totals; rounds link to the Postseason browser
 
 ---
 

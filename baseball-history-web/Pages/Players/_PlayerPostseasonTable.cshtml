@@ -1,0 +1,17 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@{
+    // Pitchers read their pitching lines first
+    var pitchingFirst = Model.IsPitcher;
+}
+
+@if (pitchingFirst)
+{
+    @await Html.PartialAsync("_PlayerPostseasonPitchingCard", Model)
+    @await Html.PartialAsync("_PlayerPostseasonBattingCard", Model)
+}
+else
+{
+    @await Html.PartialAsync("_PlayerPostseasonBattingCard", Model)
+    @await Html.PartialAsync("_PlayerPostseasonPitchingCard", Model)
+}

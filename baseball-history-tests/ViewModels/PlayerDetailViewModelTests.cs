@@ -256,11 +256,71 @@ public class PlayerDetailViewModelTests
         Assert.Empty(vm.BattingSeasons);
         Assert.NotNull(vm.PitchingSeasons);
         Assert.Empty(vm.PitchingSeasons);
+        Assert.NotNull(vm.FieldingSeasons);
+        Assert.Empty(vm.FieldingSeasons);
+        Assert.NotNull(vm.PostseasonBattingSeasons);
+        Assert.Empty(vm.PostseasonBattingSeasons);
+        Assert.NotNull(vm.PostseasonPitchingSeasons);
+        Assert.Empty(vm.PostseasonPitchingSeasons);
         Assert.NotNull(vm.Awards);
         Assert.Empty(vm.Awards);
         Assert.NotNull(vm.AllStarAppearances);
         Assert.Empty(vm.AllStarAppearances);
         Assert.NotNull(vm.Teams);
         Assert.Empty(vm.Teams);
+    }
+
+    [Fact]
+    public void AllStarSelectionCount_CountsSeasonsNotGames()
+    {
+        // 1959-1962 had two All-Star Games per year
+        var vm = new PlayerDetailViewModel
+        {
+            PlayerId = "test",
+            AllStarAppearances =
+            [
+                new AllStarRecord { Year = 1959, LgId = "NL", TeamId = "ML1", GameNum = 1 },
+                new AllStarRecord { Year = 1959, LgId = "NL", TeamId = "ML1", GameNum = 2 },
+                new AllStarRecord { Year = 1960, LgId = "NL", TeamId = "ML1", GameNum = 1 },
+                new AllStarRecord { Year = 1960, LgId = "NL", TeamId = "ML1", GameNum = 2 },
+                new AllStarRecord { Year = 1963, LgId = "NL", TeamId = "ML1", GameNum = 0 }
+            ]
+        };
+
+        Assert.Equal(3, vm.AllStarSelectionCount);
+    }
+
+    [Fact]
+    public void AllStarYearRanges_CompressesRunsAndPreservesGaps()
+    {
+        var vm = new PlayerDetailViewModel
+        {
+            PlayerId = "test",
+            AllStarAppearances = new[] { 1936, 1937, 1938, 1939, 1940, 1941, 1942, 1946, 1947, 1948, 1949, 1950, 1951 }
+                .Select(y => new AllStarRecord { Year = (short)y, LgId = "AL", TeamId = "BOS" })
+                .ToList()
+        };
+
+        Assert.Equal("1936–1942, 1946–1951", vm.AllStarYearRanges);
+    }
+
+    [Fact]
+    public void AllStarYearRanges_SingleYearIsNotARange()
+    {
+        var vm = new PlayerDetailViewModel
+        {
+            PlayerId = "test",
+            AllStarAppearances = [new AllStarRecord { Year = 1985, LgId = "AL", TeamId = "NYA" }]
+        };
+
+        Assert.Equal("1985", vm.AllStarYearRanges);
+    }
+
+    [Fact]
+    public void AllStarYearRanges_EmptyWhenNoAppearances()
+    {
+        var vm = new PlayerDetailViewModel { PlayerId = "test" };
+
+        Assert.Equal("", vm.AllStarYearRanges);
     }
 }

@@ -1,0 +1,62 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@{
+    // Tabs appear only for sections with data; pitchers read pitching first
+    var tabs = new List<(string Key, string Title, string Partial)>();
+
+    if (Model.IsPitcher && Model.PitchingSeasons.Any())
+    {
+        tabs.Add(("pitching", "Pitching", "_PlayerPitchingSeasonsTable"));
+    }
+
+    if (Model.BattingSeasons.Any())
+    {
+        tabs.Add(("batting", "Batting", "_PlayerBattingSeasonsTable"));
+    }
+
+    if (!Model.IsPitcher && Model.PitchingSeasons.Any())
+    {
+        tabs.Add(("pitching", "Pitching", "_PlayerPitchingSeasonsTable"));
+    }
+
+    if (Model.FieldingSeasons.Any())
+    {
+        tabs.Add(("fielding", "Fielding", "_PlayerFieldingTable"));
+    }
+
+    if (Model.HasPostseason)
+    {
+        tabs.Add(("postseason", "Postseason", "_PlayerPostseasonTable"));
+    }
+}
+
+@if (tabs.Count == 1)
+{
+    @await Html.PartialAsync(tabs[0].Partial, Model)
+}
+else if (tabs.Count > 1)
+{
+    <ul class="nav nav-tabs mb-2" id="seasonsTabs-@Model.PlayerId" role="tablist">
+        @for (var i = 0; i < tabs.Count; i++)
+        {
+            var tab = tabs[i];
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(i == 0 ? "active" : "")" id="@(tab.Key)-tab-@Model.PlayerId"
+                        data-bs-toggle="tab" data-bs-target="#@(tab.Key)-@Model.PlayerId" type="button" role="tab"
+                        aria-controls="@(tab.Key)-@Model.PlayerId" aria-selected="@(i == 0 ? "true" : "false")">
+                    @tab.Title
+                </button>
+            </li>
+        }
+    </ul>
+    <div class="tab-content" id="seasonsTabContent-@Model.PlayerId">
+        @for (var i = 0; i < tabs.Count; i++)
+        {
+            var tab = tabs[i];
+            <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="@(tab.Key)-@Model.PlayerId" role="tabpanel"
+                 aria-labelledby="@(tab.Key)-tab-@Model.PlayerId">
+                @await Html.PartialAsync(tab.Partial, Model)
+            </div>
+        }
+    </div>
+}
