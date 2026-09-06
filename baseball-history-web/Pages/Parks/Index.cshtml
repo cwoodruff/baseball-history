@@ -1,0 +1,17 @@
+@page
+@model baseball_history_web.Pages.Parks.IndexModel
+@{
+    ViewData["Title"] = "Ballparks";
+}
+
+<h1 class="text-mlb-navy mb-4">Ballparks</h1>
+
+@* hx-indicator is inherited by every htmx control inside (search, state filter, pagination) *@
+<div class="position-relative" hx-indicator="#parks-loading">
+    <div id="parks-loading" class="htmx-indicator loading-overlay">
+        @await Html.PartialAsync("Components/_LoadingSpinner", "Loading ballparks...")
+    </div>
+    <div id="parks-content">
+        @await Html.PartialAsync("_ParksContent", Model.ViewModel)
+    </div>
+</div>

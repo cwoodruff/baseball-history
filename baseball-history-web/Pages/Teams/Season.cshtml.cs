@@ -66,6 +66,13 @@ public class SeasonModel(BaseballDbContext context) : PageModel
 
         Team = TeamSeasonViewModel.FromRecord(team);
 
+        // Primary home park for the season (a team can split home games across parks)
+        Team.ParkKey = await context.HomeGames
+            .Where(h => h.Teamkey == teamId && h.Leaguekey == lgId && h.Yearkey == year)
+            .OrderByDescending(h => h.Games)
+            .Select(h => h.Parkkey)
+            .FirstOrDefaultAsync();
+
         // Get Hall of Fame player IDs
         var hofPlayerIds = await context.HallOfFame
             .Where(h => h.Inducted == "Y")

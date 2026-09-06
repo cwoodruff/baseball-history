@@ -77,7 +77,15 @@
                     @if (!string.IsNullOrEmpty(Model.ParkName))
                     {
                         <div class="col-md-6">
-                            <strong>Home Park:</strong> @Model.ParkName
+                            <strong>Home Park:</strong>
+                            @if (!string.IsNullOrEmpty(Model.ParkKey))
+                            {
+                                <a href="/Parks/@Model.ParkKey" class="text-decoration-none">@Model.ParkName</a>
+                            }
+                            else
+                            {
+                                @Model.ParkName
+                            }
                         </div>
                     }
                     @if (Model.Attendance.HasValue)

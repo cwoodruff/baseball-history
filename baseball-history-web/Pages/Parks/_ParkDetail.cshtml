@@ -1,0 +1,227 @@
+@using System.Text.Json
+@model baseball_history_web.ViewModels.ParkDetailViewModel
+
+<div class="card mb-4">
+    <div class="card-header card-header-mlb">
+        <h1 class="h3 mb-0">@Model.ParkName</h1>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            @if (!string.IsNullOrEmpty(Model.Location))
+            {
+                <div class="col-md-6 mb-2">
+                    <strong>Location:</strong> @Model.Location
+                </div>
+            }
+            @if (Model.AliasNames.Count > 0)
+            {
+                <div class="col-md-6 mb-2">
+                    <strong>Also known as:</strong> @string.Join(", ", Model.AliasNames)
+                </div>
+            }
+        </div>
+        @if (Model.Seasons.Count > 0)
+        {
+            <hr/>
+            <div class="row text-center">
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-mlb-navy">@Model.YearsActive</div>
+                    <small class="text-muted">Years Active</small>
+                </div>
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-mlb-navy">@Model.SeasonCount</div>
+                    <small class="text-muted">Seasons</small>
+                </div>
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-mlb-navy">@Model.Tenants.Count</div>
+                    <small class="text-muted">Home Team@(Model.Tenants.Count == 1 ? "" : "s")</small>
+                </div>
+                <div class="col-md-2 col-4 mb-3">
+                    <div class="h3 mb-0 text-mlb-navy">@Model.TotalGames.ToString("N0")</div>
+                    <small class="text-muted">Home Games</small>
+                </div>
+                @if (Model.HasAttendanceData)
+                {
+                    <div class="col-md-2 col-4 mb-3">
+                        <div class="h3 mb-0 text-mlb-navy">@Model.TotalAttendance.ToString("N0")</div>
+                        <small class="text-muted">Total Attendance</small>
+                    </div>
+                    @if (Model.PeakAttendanceYear is { } peak)
+                    {
+                        <div class="col-md-2 col-4 mb-3">
+                            <div class="h3 mb-0 text-mlb-navy">@peak.Year</div>
+                            <small class="text-muted">Peak Year (@peak.FormattedAttendance)</small>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.Seasons.Count == 0)
+{
+    @await Html.PartialAsync("Components/_EmptyState", baseball_history_web.ViewModels.EmptyStateModel.NoParkSeasons())
+}
+else
+{
+    @if (Model.HasAttendanceData)
+    {
+        var attendanceByYear = Model.AttendanceByYear;
+        var chartData = new
+        {
+            labels = attendanceByYear.Select(a => (int)a.Year).ToList(),
+            datasets = new[]
+            {
+                new
+                {
+                    label = "Season Attendance",
+                    data = attendanceByYear.Select(a => a.Attendance).ToList(),
+                    borderColor = "#0C2340",
+                    backgroundColor = "#0C234033",
+                    borderWidth = 2,
+                    fill = true,
+                    pointRadius = 2,
+                    tension = 0.2
+                }
+            }
+        };
+        var chartDataJson = JsonSerializer.Serialize(chartData);
+
+        <div class="card mb-4">
+            <div class="card-header card-header-mlb">
+                <strong>Attendance History</strong>
+            </div>
+            <div class="card-body">
+                <canvas id="park-attendance-chart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+
+        <script>
+            (function() {
+                window.parkAttendanceChartData = @Html.Raw(chartDataJson);
+
+                function renderParkAttendanceChart() {
+                    // Destroy existing chart if present (for htmx swaps)
+                    if (window.parkAttendanceChartInstance) {
+                        window.parkAttendanceChartInstance.destroy();
+                    }
+
+                    var ctx = document.getElementById('park-attendance-chart');
+                    if (typeof Chart !== 'undefined' && ctx) {
+                        window.parkAttendanceChartInstance = new Chart(ctx, {
+                            type: 'line',
+                            data: window.parkAttendanceChartData,
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return context.parsed.y !== null
+                                                    ? context.parsed.y.toLocaleString() + ' fans'
+                                                    : '';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // Chart.js is loaded with `defer`, so it may not exist yet on a full
+                // page load; deferred scripts finish before DOMContentLoaded fires.
+                if (typeof Chart !== 'undefined') {
+                    renderParkAttendanceChart();
+                } else {
+                    document.addEventListener('DOMContentLoaded', renderParkAttendanceChart);
+                }
+            })();
+        </script>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Home Teams</strong>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th scope="col">Team</th>
+                    <th scope="col">League</th>
+                    <th scope="col" class="text-end">Years</th>
+                    <th scope="col" class="text-end">Seasons</th>
+                    <th scope="col" class="text-end">Home Games</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var tenant in Model.Tenants)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Teams/Season/@tenant.TeamId/@tenant.LgId/@tenant.LastYear"
+                               class="text-decoration-none fw-semibold">@tenant.TeamName</a>
+                        </td>
+                        <td>@tenant.LgId</td>
+                        <td class="text-end stat-cell">@tenant.YearsActive</td>
+                        <td class="text-end stat-cell">@tenant.SeasonCount</td>
+                        <td class="text-end stat-cell">@tenant.TotalGames.ToString("N0")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Season History</strong>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th scope="col">Year</th>
+                    <th scope="col">Team</th>
+                    <th scope="col">League</th>
+                    <th scope="col" class="text-end">Games</th>
+                    <th scope="col" class="text-end">Openings</th>
+                    <th scope="col" class="text-end">Attendance</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var season in Model.Seasons)
+                {
+                    <tr>
+                        <td class="stat-cell">@season.Year</td>
+                        <td>
+                            <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                               class="text-decoration-none">@(season.TeamName ?? season.TeamId)</a>
+                        </td>
+                        <td>@season.LgId</td>
+                        <td class="text-end stat-cell">@(season.Games?.ToString() ?? "—")</td>
+                        <td class="text-end stat-cell">@(season.Openings?.ToString() ?? "—")</td>
+                        <td class="text-end stat-cell">@season.FormattedAttendance</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
