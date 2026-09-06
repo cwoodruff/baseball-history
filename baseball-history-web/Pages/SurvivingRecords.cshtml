@@ -1,0 +1,139 @@
+@page "/SurvivingRecords"
+@model SurvivingRecordsModel
+@{
+    ViewData["Title"] = "The Surviving Record";
+}
+
+<div class="row justify-content-center g-4">
+    <div class="col-xl-10">
+        @await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
+        {
+            Title = "The Surviving Record",
+            Subtitle = "Why some careers in this database are fragments — and why the fragments are worth showing.",
+            Eyebrow = "History"
+        })
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>Why some players are only a surname</h2>
+                    <p>
+                        This database holds 413 players with no recorded first name — eight of them known
+                        only as Smith — and dozens more known by a bare initial. They appear throughout the
+                        site with a <span class="partial-record-badge">Partial record</span> badge. They are
+                        not data-entry errors. Each one played professional baseball, appeared in a box score
+                        that survived, and left nothing else behind that researchers have yet found. Most
+                        debuted between 1910 and 1949, in the segregated Black leagues; a smaller group dates
+                        to the 1870s&ndash;1900s, when even the white professional game kept uneven books.
+                    </p>
+                    <p class="mb-0">
+                        A player's record surviving, in other words, was never neutral. It depended on who
+                        wrote the games down, which newspapers printed them, and whose archives were kept.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>A record kept by weekly newspapers</h2>
+                    <p>
+                        The National and American Leagues had daily press coverage in every city and, for
+                        most of their history, central statistical bureaus tallying every game. Black
+                        baseball had neither. Big-city dailies rarely printed Negro Leagues box scores;
+                        the record fell mostly to the Black press &mdash; papers like the
+                        <em>Chicago Defender</em> and <em>Pittsburgh Courier</em> &mdash; which published
+                        weekly, not daily. A box score might run days after the game, without first names,
+                        or not at all.
+                    </p>
+                    <p class="mb-0">
+                        League schedules were also only part of the season. Teams sustained themselves by
+                        barnstorming &mdash; exhibition games, town-team challenges, winter play in Cuba and
+                        Mexico &mdash; and none of that entered a league ledger. The official schedule ran
+                        roughly 60&ndash;80 league games; the men on the field often played twice that many.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>What the fragments mean: Josh Gibson</h2>
+                    <p>
+                        Josh Gibson's Hall of Fame plaque credits him with "almost 800 home runs" across
+                        all competition &mdash; league games, exhibitions, and barnstorming tours together.
+                        The documented league record in this database credits him with
+                        <a href="/Players/gibsojo99">197 home runs and a .364 average across 1930&ndash;1946</a>.
+                        Both numbers are honest; they measure different things. The plaque counts a career
+                        as it was lived. The database counts the fraction of it that surviving box scores
+                        can prove.
+                    </p>
+                    <p class="mb-0">
+                        That gap is the surviving-record problem in one player: the greatest documented
+                        totals of the Negro Leagues systematically <em>understate</em> the careers behind
+                        them, because the seasons were short and much of the play was never league-recorded.
+                        Comparing a Negro Leagues counting stat against a 154-game AL/NL season head-to-head
+                        misreads what the number represents.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>The reconstruction, still underway</h2>
+                    <p>
+                        What survives today exists because researchers rebuilt it game by game. The
+                        <a href="https://www.seamheads.com/NegroLgs/" target="_blank" rel="noopener">Seamheads
+                        Negro Leagues Database</a>, led by Gary Ashwill and colleagues, reconstructs season
+                        lines from digitized newspaper box scores &mdash; and totals still shift as more
+                        papers are scanned and more games are found. In December 2020, Major League Baseball
+                        recognized seven Negro Leagues (1920&ndash;1948) as major leagues, and in 2024 it
+                        folded the reconstructed statistics into its official records, where Gibson's career
+                        batting average now stands as the all-time mark.
+                    </p>
+                    <p class="mb-0">
+                        You can see the reconstruction's moving edge on this site: different editions of the
+                        data disagree in small ways &mdash; an average a few points apart, a season found or
+                        refined &mdash; not because anyone is wrong, but because the count is still being
+                        taken, a century later.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>How this site presents it</h2>
+                    <p>
+                        We show the documented record as it stands &mdash; raw totals,
+                        <a href="/About#data-scope">not context-adjusted</a> &mdash; and mark its gaps
+                        instead of smoothing them over. Players for whom only a partial name survived carry
+                        the badge that brought you here. Treat every segregation-era total as a floor, not
+                        a measure: the record that survived is the least these players did.
+                    </p>
+                    <p class="mb-0">
+                        Further reading: the
+                        <a href="https://www.seamheads.com/NegroLgs/" target="_blank" rel="noopener">Seamheads Negro Leagues Database</a>,
+                        the <a href="https://nlbm.com/" target="_blank" rel="noopener">Negro Leagues Baseball Museum</a>,
+                        and <a href="https://sabr.org/research/" target="_blank" rel="noopener">SABR's research collections</a>.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>

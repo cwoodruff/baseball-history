@@ -21,6 +21,7 @@ History application.
 | Postseason         | Playoff series results                | `/Postseason`                   |
 | Salary Explorer    | Player salary data and team payrolls  | `/Salaries`                     |
 | Search             | Global search                         | `/Search`                       |
+| Surviving Records  | Segregation-era record survival story | `/SurvivingRecords`             |
 | API Documentation  | REST API reference                    | `/ApiDocs`                      |
 | REST API           | JSON API (30+ endpoints)              | `/api/*`                        |
 
@@ -147,7 +148,9 @@ trigger the badge.
 ### Display
 
 - **"Partial record" chip**: player page header, player modal header,
-  comparison player cards
+  comparison player cards; links to `/SurvivingRecords`, the feature page
+  on why these records survived as fragments
+  ([#72](https://github.com/cwoodruff/baseball-history/issues/72))
 - **Dagger marker (†)**: player browser cards, search results (global and
   compare search)
 - Both carry an explanation via tooltip and `aria-label`; the copy lives in
