@@ -1,0 +1,150 @@
+@page "/Licensing"
+@model LicensingModel
+@{
+    ViewData["Title"] = "Data Licensing & Attribution";
+}
+
+<div class="row justify-content-center g-4">
+    <div class="col-xl-10">
+        @await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
+        {
+            Title = "Data Licensing & Attribution",
+            Subtitle = "What the data and code are licensed under, whose work this site is built on, and how to credit it downstream.",
+            Eyebrow = "Project"
+        })
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>At a glance</h2>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>License / terms</th>
+                                <th>Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Application code</td>
+                                <td><a href="https://github.com/cwoodruff/baseball-history/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></td>
+                                <td>Chris Woodruff and contributors</td>
+                            </tr>
+                            <tr>
+                                <td>Baseball statistics (1871&ndash;2025)</td>
+                                <td><a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a></td>
+                                <td>Lahman Baseball Database (Sean Lahman; distributed by SABR)</td>
+                            </tr>
+                            <tr>
+                                <td>Negro Leagues statistics</td>
+                                <td>See below</td>
+                                <td>Seamheads Negro Leagues Database (Gary Ashwill and researchers), via SABR</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>What the MIT license covers &mdash; and what it doesn't</h2>
+                    <p>
+                        The source code of this project &mdash; the web application, the REST API, the MCP
+                        server, and everything else in the
+                        <a href="https://github.com/cwoodruff/baseball-history" target="_blank" rel="noopener">GitHub repository</a>
+                        &mdash; is released under the <a href="https://github.com/cwoodruff/baseball-history/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.
+                        You may use, modify, and redistribute the code freely with attribution.
+                    </p>
+                    <p class="mb-0">
+                        <strong>The MIT license does not cover the data.</strong> The baseball statistics
+                        served by this site, its API, and its MCP server belong to their respective sources
+                        and carry their own terms, described below. Cloning the repository gives you the
+                        code, not the database; anything you build that redistributes the data must satisfy
+                        the data licenses, not just MIT.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>The Lahman Baseball Database</h2>
+                    <p>
+                        The core statistics come from the
+                        <a href="https://sabr.org/lahman-database/" target="_blank" rel="noopener">Lahman Baseball Database</a>,
+                        created and maintained by Sean Lahman and contributors since 1994 and now distributed
+                        by the Society for American Baseball Research (SABR). It is available under the
+                        <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">Creative Commons
+                        Attribution-ShareAlike 3.0 Unported License</a>: you may share and adapt the data,
+                        provided you credit the source and license any derivative data under the same terms.
+                    </p>
+                    <div class="alert alert-warning mb-0">
+                        <strong>[PENDING &mdash; do not publish until filled]</strong> Paste the substance of
+                        SABR's written redistribution confirmation here (from the
+                        <a href="https://github.com/cwoodruff/baseball-history/issues/67" target="_blank" rel="noopener">#67</a>
+                        correspondence): what SABR confirmed about re-serving the data through this site,
+                        the public API, and the MCP server, and any conditions attached.
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>Negro Leagues data &mdash; the Seamheads Negro Leagues Database</h2>
+                    <p>
+                        The Negro Leagues statistics in the Lahman database are licensed from the
+                        <a href="https://www.seamheads.com/NegroLgs/" target="_blank" rel="noopener">Seamheads Negro Leagues Database</a>,
+                        the reconstruction project led by Gary Ashwill with a team of researchers who have
+                        rebuilt these records box score by box score from digitized newspapers. This site
+                        would have nothing to show for these players without that work &mdash; and as our
+                        <a href="/SurvivingRecords">Surviving Records</a> page explains, the reconstruction
+                        is still underway.
+                    </p>
+                    <div class="alert alert-warning mb-0">
+                        <strong>[PENDING &mdash; do not publish until filled]</strong> Paste the terms from the
+                        Seamheads / Gary Ashwill correspondence here (from
+                        <a href="https://github.com/cwoodruff/baseball-history/issues/68" target="_blank" rel="noopener">#68</a>):
+                        the permission or conditions granted for re-serving the Negro Leagues rows through
+                        the site, API, and MCP server, and the attribution wording they asked for.
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section>
+                    <h2>If you build on this data</h2>
+                    <p>
+                        Data obtained through this site's API or MCP server inherits the source terms.
+                        At minimum:
+                    </p>
+                    <ul class="mb-0">
+                        <li>Credit the <strong>Lahman Baseball Database</strong> (Sean Lahman / SABR) and
+                            license derivative data CC BY-SA 3.0.</li>
+                        <li>Credit the <strong>Seamheads Negro Leagues Database</strong> for any use of
+                            Negro Leagues statistics.</li>
+                        <li>Don't present the data as complete or context-adjusted &mdash; see the
+                            <a href="/About#data-scope">data scope statement</a>.</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
