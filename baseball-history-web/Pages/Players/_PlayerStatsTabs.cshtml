@@ -28,6 +28,11 @@
     {
         tabs.Add(("postseason", "Postseason", "_PlayerPostseasonTable"));
     }
+
+    if (Model.HasManagerialCareer)
+    {
+        tabs.Add(("managing", "Managing", "_PlayerManagingTable"));
+    }
 }
 
 @if (tabs.Count == 1)

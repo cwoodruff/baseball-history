@@ -14,47 +14,50 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
     private const int PageSize = 50;
 
+    private sealed record WinnerRow(
+        string PlayerId, string PlayerName, string AwardId, int YearId, string LgId, string? Notes);
+
+    private sealed record VoteRow(
+        string PlayerId, string PlayerName, short? PointsWon, short? PointsMax, string? VotesFirst);
+
     public AwardVotingViewModel ViewModel { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(
-        string? award = null, int? year = null, string? league = null, [FromQuery] int page = 1)
+        string? award = null, int? year = null, string? league = null,
+        [FromQuery] string? scope = null, [FromQuery] int page = 1)
     {
+        var managers = scope == "managers";
+        ViewModel.Scope = managers ? "managers" : "players";
         ViewModel.SelectedAward = award;
         ViewModel.SelectedYear = year;
         ViewModel.SelectedLeague = league;
         ViewModel.CurrentPage = page;
 
-        // Get available awards (cached with namespace prefix)
-        ViewModel.AvailableAwards = (await cache.GetOrCreateAsync("awards_names", async entry =>
+        // Available filter values (cached per scope with namespace prefix)
+        ViewModel.AvailableAwards = (await cache.GetOrCreateAsync($"awards_names_{ViewModel.Scope}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-            return await context.AwardsPlayers
-                .Select(a => a.AwardId)
-                .Distinct()
-                .OrderBy(a => a)
-                .ToListAsync();
+            return managers
+                ? await context.AwardsManagers.Select(a => a.AwardId).Distinct().OrderBy(a => a).ToListAsync()
+                : await context.AwardsPlayers.Select(a => a.AwardId).Distinct().OrderBy(a => a).ToListAsync();
         }))!;
 
-        // Get available years (cached with namespace prefix)
-        ViewModel.AvailableYears = (await cache.GetOrCreateAsync("awards_years", async entry =>
+        ViewModel.AvailableYears = (await cache.GetOrCreateAsync($"awards_years_{ViewModel.Scope}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-            return await context.AwardsPlayers
-                .Select(a => a.YearId)
-                .Distinct()
-                .OrderByDescending(y => y)
-                .ToListAsync();
+            return managers
+                ? await context.AwardsManagers.Select(a => (int)a.YearId).Distinct().OrderByDescending(y => y)
+                    .ToListAsync()
+                : await context.AwardsPlayers.Select(a => a.YearId).Distinct().OrderByDescending(y => y)
+                    .ToListAsync();
         }))!;
 
-        // Get available leagues (cached with namespace prefix)
-        ViewModel.AvailableLeagues = (await cache.GetOrCreateAsync("awards_leagues", async entry =>
+        ViewModel.AvailableLeagues = (await cache.GetOrCreateAsync($"awards_leagues_{ViewModel.Scope}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-            return await context.AwardsPlayers
-                .Select(a => a.LgId)
-                .Distinct()
-                .OrderBy(l => l)
-                .ToListAsync();
+            return managers
+                ? await context.AwardsManagers.Select(a => a.LgId).Distinct().OrderBy(l => l).ToListAsync()
+                : await context.AwardsPlayers.Select(a => a.LgId).Distinct().OrderBy(l => l).ToListAsync();
         }))!;
 
         // Get Hall of Fame player IDs (cached)
@@ -72,44 +75,89 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         var votingKeys = new HashSet<string>();
         if (!string.IsNullOrEmpty(award) || year.HasValue)
         {
-            var votingQuery = context.AwardsSharePlayers.AsQueryable();
-            if (!string.IsNullOrEmpty(award)) votingQuery = votingQuery.Where(a => a.AwardId == award);
-            if (year.HasValue) votingQuery = votingQuery.Where(a => a.YearId == year.Value);
-            if (!string.IsNullOrEmpty(league)) votingQuery = votingQuery.Where(a => a.LgId == league);
+            if (managers)
+            {
+                var votingQuery = context.AwardsShareManagers.AsQueryable();
+                if (!string.IsNullOrEmpty(award)) votingQuery = votingQuery.Where(a => a.AwardId == award);
+                if (year.HasValue) votingQuery = votingQuery.Where(a => a.YearId == year.Value);
+                if (!string.IsNullOrEmpty(league)) votingQuery = votingQuery.Where(a => a.LgId == league);
 
-            votingKeys = (await votingQuery
-                .Select(a => a.AwardId + "|" + a.YearId + "|" + a.LgId)
-                .Distinct()
-                .ToListAsync())
-                .ToHashSet();
+                votingKeys = (await votingQuery
+                        .Select(a => a.AwardId + "|" + a.YearId + "|" + a.LgId)
+                        .Distinct()
+                        .ToListAsync())
+                    .ToHashSet();
+            }
+            else
+            {
+                var votingQuery = context.AwardsSharePlayers.AsQueryable();
+                if (!string.IsNullOrEmpty(award)) votingQuery = votingQuery.Where(a => a.AwardId == award);
+                if (year.HasValue) votingQuery = votingQuery.Where(a => a.YearId == year.Value);
+                if (!string.IsNullOrEmpty(league)) votingQuery = votingQuery.Where(a => a.LgId == league);
+
+                votingKeys = (await votingQuery
+                        .Select(a => a.AwardId + "|" + a.YearId + "|" + a.LgId)
+                        .Distinct()
+                        .ToListAsync())
+                    .ToHashSet();
+            }
         }
 
-        // Build winners query
-        var query = context.AwardsPlayers.AsQueryable();
-        if (!string.IsNullOrEmpty(award)) query = query.Where(a => a.AwardId == award);
-        if (year.HasValue) query = query.Where(a => a.YearId == year.Value);
-        if (!string.IsNullOrEmpty(league)) query = query.Where(a => a.LgId == league);
+        // Build winners query (the player and manager award tables are separate
+        // entity types, so each scope pages over its own query)
+        List<WinnerRow> winnersData;
+        if (managers)
+        {
+            var query = context.AwardsManagers.AsQueryable();
+            if (!string.IsNullOrEmpty(award)) query = query.Where(a => a.AwardId == award);
+            if (year.HasValue) query = query.Where(a => a.YearId == year.Value);
+            if (!string.IsNullOrEmpty(league)) query = query.Where(a => a.LgId == league);
 
-        ViewModel.TotalEntries = await query.CountAsync();
-        ViewModel.TotalPages = (int)Math.Ceiling((double)ViewModel.TotalEntries / PageSize);
-        ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
+            ViewModel.TotalEntries = await query.CountAsync();
+            ViewModel.TotalPages = (int)Math.Ceiling((double)ViewModel.TotalEntries / PageSize);
+            ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
 
-        var winnersData = await query
-            .OrderByDescending(a => a.YearId)
-            .ThenBy(a => a.AwardId)
-            .ThenBy(a => a.LgId)
-            .Skip((ViewModel.CurrentPage - 1) * PageSize)
-            .Take(PageSize)
-            .Select(a => new
-            {
-                a.PlayerId,
-                PlayerName = (a.Player.NameFirst ?? "") + " " + (a.Player.NameLast ?? ""),
-                a.AwardId,
-                a.YearId,
-                a.LgId,
-                a.Notes
-            })
-            .ToListAsync();
+            winnersData = await query
+                .OrderByDescending(a => a.YearId)
+                .ThenBy(a => a.AwardId)
+                .ThenBy(a => a.LgId)
+                .Skip((ViewModel.CurrentPage - 1) * PageSize)
+                .Take(PageSize)
+                .Select(a => new WinnerRow(
+                    a.PlayerId,
+                    (a.Player.NameFirst ?? "") + " " + (a.Player.NameLast ?? ""),
+                    a.AwardId,
+                    a.YearId,
+                    a.LgId,
+                    a.Notes))
+                .ToListAsync();
+        }
+        else
+        {
+            var query = context.AwardsPlayers.AsQueryable();
+            if (!string.IsNullOrEmpty(award)) query = query.Where(a => a.AwardId == award);
+            if (year.HasValue) query = query.Where(a => a.YearId == year.Value);
+            if (!string.IsNullOrEmpty(league)) query = query.Where(a => a.LgId == league);
+
+            ViewModel.TotalEntries = await query.CountAsync();
+            ViewModel.TotalPages = (int)Math.Ceiling((double)ViewModel.TotalEntries / PageSize);
+            ViewModel.CurrentPage = Math.Clamp(page, 1, Math.Max(1, ViewModel.TotalPages));
+
+            winnersData = await query
+                .OrderByDescending(a => a.YearId)
+                .ThenBy(a => a.AwardId)
+                .ThenBy(a => a.LgId)
+                .Skip((ViewModel.CurrentPage - 1) * PageSize)
+                .Take(PageSize)
+                .Select(a => new WinnerRow(
+                    a.PlayerId,
+                    (a.Player.NameFirst ?? "") + " " + (a.Player.NameLast ?? ""),
+                    a.AwardId,
+                    a.YearId,
+                    a.LgId,
+                    a.Notes))
+                .ToListAsync();
+        }
 
         ViewModel.Winners = winnersData.Select(a => new AwardWinnerEntry
         {
@@ -126,18 +174,38 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
         // If a specific award+year+league is selected and has voting data, load the race
         if (!string.IsNullOrEmpty(award) && year.HasValue && !string.IsNullOrEmpty(league))
         {
-            var votes = await context.AwardsSharePlayers
-                .Where(a => a.AwardId == award && a.YearId == year.Value && a.LgId == league)
-                .OrderByDescending(a => a.PointsWon)
-                .Select(a => new
-                {
-                    a.PlayerId,
-                    PlayerName = (a.Player.NameFirst ?? "") + " " + (a.Player.NameLast ?? ""),
-                    a.PointsWon,
-                    a.PointsMax,
-                    a.VotesFirst
-                })
-                .ToListAsync();
+            List<VoteRow> votes;
+            if (managers)
+            {
+                votes = (await context.AwardsShareManagers
+                        .Where(a => a.AwardId == award && a.YearId == year.Value && a.LgId == league)
+                        .OrderByDescending(a => a.PointsWon)
+                        .Select(a => new
+                        {
+                            a.PlayerId,
+                            PlayerName = (a.Player.NameFirst ?? "") + " " + (a.Player.NameLast ?? ""),
+                            a.PointsWon,
+                            a.PointsMax,
+                            a.VotesFirst
+                        })
+                        .ToListAsync())
+                    .Select(a => new VoteRow(a.PlayerId, a.PlayerName, a.PointsWon, a.PointsMax,
+                        a.VotesFirst?.ToString()))
+                    .ToList();
+            }
+            else
+            {
+                votes = await context.AwardsSharePlayers
+                    .Where(a => a.AwardId == award && a.YearId == year.Value && a.LgId == league)
+                    .OrderByDescending(a => a.PointsWon)
+                    .Select(a => new VoteRow(
+                        a.PlayerId,
+                        (a.Player.NameFirst ?? "") + " " + (a.Player.NameLast ?? ""),
+                        a.PointsWon,
+                        a.PointsMax,
+                        a.VotesFirst))
+                    .ToListAsync();
+            }
 
             if (votes.Count > 0)
             {

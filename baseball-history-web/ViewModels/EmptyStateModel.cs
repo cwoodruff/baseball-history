@@ -27,6 +27,13 @@ public class EmptyStateModel
         Icon = "&#9918;"
     };
 
+    public static EmptyStateModel NoManagers() => new()
+    {
+        Title = "No Managers Found",
+        Message = "Try adjusting your search criteria.",
+        Icon = "&#9918;"
+    };
+
     public static EmptyStateModel NoParks() => new()
     {
         Title = "No Ballparks Found",

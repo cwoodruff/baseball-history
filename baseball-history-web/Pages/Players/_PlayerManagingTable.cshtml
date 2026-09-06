@@ -1,0 +1,58 @@
+@model baseball_history_web.ViewModels.PlayerDetailViewModel
+
+@{
+    var wins = Model.ManagerialSeasons.Sum(s => (int)(s.Wins ?? 0));
+    var losses = Model.ManagerialSeasons.Sum(s => (int)(s.Losses ?? 0));
+    var pct = wins + losses > 0 ? ((double)wins / (wins + losses)).ToString(".000").TrimStart('0') : "—";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted">
+        Managerial record: <strong class="text-mlb-navy">@wins-@losses</strong> (@pct)
+    </span>
+    <a href="/Managers/@Model.PlayerId" class="btn btn-sm btn-outline-primary">
+        Full Managerial Record
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-baseball table-hover mb-0">
+        <thead>
+        <tr>
+            <th scope="col">Year</th>
+            <th scope="col">Team</th>
+            <th scope="col">League</th>
+            <th scope="col" class="text-end">G</th>
+            <th scope="col" class="text-end">W</th>
+            <th scope="col" class="text-end">L</th>
+            <th scope="col" class="text-end">PCT</th>
+            <th scope="col" class="text-end">Finish</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var season in Model.ManagerialSeasons)
+        {
+            <tr>
+                <td class="stat-cell">@season.Year</td>
+                <td>
+                    <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                       class="text-decoration-none">@(season.TeamName ?? season.TeamId)</a>
+                </td>
+                <td>@season.LgId</td>
+                <td class="text-end stat-cell">@(season.Games?.ToString() ?? "—")</td>
+                <td class="text-end stat-cell">@(season.Wins?.ToString() ?? "—")</td>
+                <td class="text-end stat-cell">@(season.Losses?.ToString() ?? "—")</td>
+                <td class="text-end stat-cell">@season.FormattedWinPct</td>
+                <td class="text-end stat-cell">@(season.Rank?.ToString() ?? "—")</td>
+                <td>
+                    @if (season.IsPlayerManager)
+                    {
+                        <rhx-badge rhx-variant="neutral" title="Player-manager">Player-Mgr</rhx-badge>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

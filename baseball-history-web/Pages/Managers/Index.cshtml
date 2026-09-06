@@ -1,0 +1,17 @@
+@page
+@model baseball_history_web.Pages.Managers.IndexModel
+@{
+    ViewData["Title"] = "Managers";
+}
+
+<h1 class="text-mlb-navy mb-4">Managers</h1>
+
+@* hx-indicator is inherited by every htmx control inside (search, sort, pagination) *@
+<div class="position-relative" hx-indicator="#managers-loading">
+    <div id="managers-loading" class="htmx-indicator loading-overlay">
+        @await Html.PartialAsync("Components/_LoadingSpinner", "Loading managers...")
+    </div>
+    <div id="managers-content">
+        @await Html.PartialAsync("_ManagersContent", Model.ViewModel)
+    </div>
+</div>

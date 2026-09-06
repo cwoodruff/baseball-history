@@ -68,6 +68,10 @@ public class PlayerDetailViewModel
     public List<PostseasonBattingRecord> PostseasonBattingSeasons { get; set; } = new();
     public List<PostseasonPitchingRecord> PostseasonPitchingSeasons { get; set; } = new();
 
+    // Managerial career (player-managers and players who later managed)
+    public List<ManagerSeasonRow> ManagerialSeasons { get; set; } = new();
+    public bool HasManagerialCareer => ManagerialSeasons.Count > 0;
+
     public bool HasPostseason => PostseasonBattingSeasons.Count > 0 || PostseasonPitchingSeasons.Count > 0;
 
     // Career fielding totals per position, main position first

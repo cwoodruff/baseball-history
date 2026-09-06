@@ -1,0 +1,59 @@
+@model baseball_history_web.ViewModels.ManagerListViewModel
+
+@if (Model.Managers.Count == 0)
+{
+    @await Html.PartialAsync("Components/_EmptyState", baseball_history_web.ViewModels.EmptyStateModel.NoManagers())
+}
+else
+{
+    var paginationModel = baseball_history_web.ViewModels.PaginationModel.Create(
+        Model.CurrentPage,
+        Model.TotalManagers,
+        Model.PageSize,
+        "/Managers",
+        Model.FilterQueryParams());
+    paginationModel.Target = "#managers-content";
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th scope="col">Manager</th>
+                    <th scope="col" class="text-end">Years</th>
+                    <th scope="col" class="text-end">Seasons</th>
+                    <th scope="col" class="text-end">G</th>
+                    <th scope="col" class="text-end">W</th>
+                    <th scope="col" class="text-end">L</th>
+                    <th scope="col" class="text-end">PCT</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var manager in Model.Managers)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Managers/@manager.PlayerId" class="text-decoration-none fw-semibold">@manager.FullName</a>
+                            @if (manager.IsInHallOfFame)
+                            {
+                                <span class="hof-badge ms-1" title="Hall of Fame">HOF</span>
+                            }
+                        </td>
+                        <td class="text-end stat-cell">@manager.YearsLabel</td>
+                        <td class="text-end stat-cell">@manager.Seasons</td>
+                        <td class="text-end stat-cell">@manager.Games.ToString("N0")</td>
+                        <td class="text-end stat-cell">@manager.Wins.ToString("N0")</td>
+                        <td class="text-end stat-cell">@manager.Losses.ToString("N0")</td>
+                        <td class="text-end stat-cell">@manager.FormattedWinPct</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        @await Html.PartialAsync("Components/_Pagination", paginationModel)
+    }
+}

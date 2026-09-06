@@ -19,6 +19,8 @@ History application.
 | Negro Leagues Hub  | The seven recognized leagues          | `/NegroLeagues`                 |
 | League Detail      | Seasons and clubs for one league      | `/NegroLeagues/{lgId}`          |
 | League Season      | Standings and leaders for one season  | `/NegroLeagues/{lgId}/{year}`   |
+| Managers Browser   | Manager listing with career records   | `/Managers`                     |
+| Manager Career     | Season-by-season managerial record    | `/Managers/{playerId}`          |
 | Batting Leaders    | Batting statistical leaders           | `/Stats/Batting`                |
 | Pitching Leaders   | Pitching statistical leaders          | `/Stats/Pitching`               |
 | Hall of Fame       | HOF inductee browser                  | `/HallOfFame`                   |
@@ -358,6 +360,48 @@ in December 2020. Tracks issue #90. League scope is defined once, in
    `ILeaderboardQueryService` with `League` + `SingleSeason` filters, using the
    season-relative qualification thresholds
 3. **Data scope notes** — the standard `_DataScopeNote` plus standings caveat
+
+---
+
+## Managers Browser
+
+**URL**: `/Managers`
+
+Browse all 931 managers with career records aggregated from `Managers`.
+Tracks issue #87.
+
+### Query Parameters
+
+| Parameter | Description                     | Example      |
+|-----------|---------------------------------|--------------|
+| `q`       | Filter by name                  | `?q=mack`    |
+| `sort`    | `wins` (default) or `name`      | `?sort=name` |
+| `page`    | Page number (50 per page)       | `?page=2`    |
+
+---
+
+## Manager Career
+
+**URL**: `/Managers/{playerId}` (e.g. `/Managers/mackco01`)
+
+### Components
+
+1. **Career Header** — years, seasons, W-L record, PCT, pennants, WS titles;
+   HOF badge; "Player Page" link when the manager also played
+2. **Manager Awards** — from `AwardsManagers`, with "View Race" links into
+   `/Awards?scope=managers` where voting data exists
+3. **Season History** — every stint (team linked to team season pages), with
+   Pennant/WS/Player-Mgr badges; footnote that team flags may span managers
+4. **Split Seasons** — `ManagersHalf` rows (1892, 1981 only)
+
+Cross-links: player pages gain a **Managing** tab (`_PlayerManagingTable`) when
+the player managed, with manager awards merged into the Awards card; the team
+season managers card links each manager's career page.
+
+**Awards scope**: `/Awards` accepts `scope=players` (default) or
+`scope=managers`, switching the winners/voting queries between the
+`AwardsPlayers`/`AwardsSharePlayers` and `AwardsManagers`/`AwardsShareManagers`
+tables. Filter dropdowns, "View Race" links, and pagination all carry the scope.
 
 ---
 
