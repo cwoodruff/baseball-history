@@ -1,5 +1,9 @@
 @model baseball_history_web.ViewModels.AwardVotingViewModel
 
+@{
+    var scopeSuffix = Model.IsManagersScope ? "&scope=managers" : "";
+}
+
 @if (Model.VotingDetail != null)
 {
     <!-- Voting Race Detail -->
@@ -12,7 +16,7 @@
                 <thead>
                 <tr>
                     <th class="text-end" style="width: 40px;">#</th>
-                    <th>Player</th>
+                    <th>@(Model.IsManagersScope ? "Manager" : "Player")</th>
                     <th class="text-end">Points</th>
                     <th class="text-end">Max</th>
                     <th class="text-end">1st Place</th>
@@ -28,13 +32,22 @@
                     <tr class="@(vote.IsWinner ? "table-success" : "")">
                         <td class="text-end text-muted small">@voteRank</td>
                         <td>
-                            <a href="/Players/@vote.PlayerId" class="text-decoration-none fw-bold"
-                               hx-get="/Players/Modal/@vote.PlayerId"
-                               hx-target="#modal-container"
-                               hx-swap="innerHTML"
-                               hx-boost="false">
-                                @vote.PlayerName
-                            </a>
+                            @if (Model.IsManagersScope)
+                            {
+                                <a href="/Managers/@vote.PlayerId" class="text-decoration-none fw-bold">
+                                    @vote.PlayerName
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="/Players/@vote.PlayerId" class="text-decoration-none fw-bold"
+                                   hx-get="/Players/Modal/@vote.PlayerId"
+                                   hx-target="#modal-container"
+                                   hx-swap="innerHTML"
+                                   hx-boost="false">
+                                    @vote.PlayerName
+                                </a>
+                            }
                             @if (vote.IsWinner)
                             {
                                 <rhx-badge rhx-variant="success" class="ms-1">Winner</rhx-badge>
@@ -88,7 +101,7 @@ else
             <table class="table table-baseball table-hover mb-0">
                 <thead>
                 <tr>
-                    <th>Player</th>
+                    <th>@(Model.IsManagersScope ? "Manager" : "Player")</th>
                     <th>Award</th>
                     <th class="text-center">Year</th>
                     <th class="text-center">League</th>
@@ -101,13 +114,22 @@ else
                 {
                     <tr>
                         <td>
-                            <a href="/Players/@winner.PlayerId" class="text-decoration-none fw-bold"
-                               hx-get="/Players/Modal/@winner.PlayerId"
-                               hx-target="#modal-container"
-                               hx-swap="innerHTML"
-                               hx-boost="false">
-                                @winner.PlayerName
-                            </a>
+                            @if (Model.IsManagersScope)
+                            {
+                                <a href="/Managers/@winner.PlayerId" class="text-decoration-none fw-bold">
+                                    @winner.PlayerName
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="/Players/@winner.PlayerId" class="text-decoration-none fw-bold"
+                                   hx-get="/Players/Modal/@winner.PlayerId"
+                                   hx-target="#modal-container"
+                                   hx-swap="innerHTML"
+                                   hx-boost="false">
+                                    @winner.PlayerName
+                                </a>
+                            }
                             @if (winner.IsInHallOfFame)
                             {
                                 <span class="hof-badge ms-1">HOF</span>
@@ -122,9 +144,9 @@ else
                         <td class="text-end">
                             @if (winner.HasVotingData)
                             {
-                                <a href="/Awards?award=@winner.AwardId&year=@winner.Year&league=@winner.LgId"
+                                <a href="/Awards?award=@winner.AwardId&year=@winner.Year&league=@winner.LgId@Html.Raw(scopeSuffix)"
                                    class="btn btn-sm btn-outline-primary"
-                                   hx-get="/Awards?award=@winner.AwardId&year=@winner.Year&league=@winner.LgId"
+                                   hx-get="/Awards?award=@winner.AwardId&year=@winner.Year&league=@winner.LgId@Html.Raw(scopeSuffix)"
                                    hx-target="#awards-list"
                                    hx-push-url="true">
                                     View Race
@@ -141,6 +163,7 @@ else
     @if (Model.TotalPages > 1)
     {
         var queryParams = new Dictionary<string, string>();
+        if (Model.IsManagersScope) queryParams["scope"] = "managers";
         if (!string.IsNullOrEmpty(Model.SelectedAward)) queryParams["award"] = Model.SelectedAward;
         if (Model.SelectedYear.HasValue) queryParams["year"] = Model.SelectedYear.Value.ToString();
         if (!string.IsNullOrEmpty(Model.SelectedLeague)) queryParams["league"] = Model.SelectedLeague;

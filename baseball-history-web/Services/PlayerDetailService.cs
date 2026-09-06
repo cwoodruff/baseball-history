@@ -273,6 +273,48 @@ public class PlayerDetailService(BaseballDbContext context)
             })
             .ToListAsync();
 
+        // Merge in manager awards (Manager of the Year etc.) for players who managed
+        var managerAwards = await context.AwardsManagers
+            .Where(a => a.PlayerId == id)
+            .Select(a => new AwardRecord
+            {
+                Year = a.YearId,
+                AwardId = a.AwardId,
+                LgId = a.LgId,
+                Notes = a.Notes
+            })
+            .ToListAsync();
+
+        if (managerAwards.Count > 0)
+        {
+            player.Awards = player.Awards
+                .Concat(managerAwards)
+                .OrderByDescending(a => a.Year)
+                .ToList();
+        }
+
+        // Managerial career, for the Managing tab and the /Managers cross-link
+        player.ManagerialSeasons = await context.Managers
+            .Where(m => m.PlayerId == id)
+            .OrderByDescending(m => m.YearId)
+            .ThenBy(m => m.Inseason)
+            .Select(m => new ManagerSeasonRow
+            {
+                Year = m.YearId,
+                TeamId = m.TeamId,
+                LgId = m.LgId,
+                TeamName = m.Team.Name,
+                Inseason = m.Inseason,
+                Games = m.G,
+                Wins = m.W,
+                Losses = m.L,
+                Rank = m.Rank,
+                IsPlayerManager = m.PlyrMgr == "Y",
+                WonPennant = m.Team.LgWin == "Y",
+                WonWorldSeries = m.Team.Wswin == "Y"
+            })
+            .ToListAsync();
+
         // Get All-Star appearances
         var allStarData = await context.AllstarFull
             .Where(a => a.PlayerId == id)

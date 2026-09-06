@@ -9,6 +9,10 @@ public class AwardVotingViewModel
     public int? SelectedYear { get; set; }
     public string? SelectedLeague { get; set; }
 
+    /// <summary>"players" (default) or "managers" — which award tables the page reads</summary>
+    public string Scope { get; set; } = "players";
+    public bool IsManagersScope => Scope == "managers";
+
     public List<string> AvailableAwards { get; set; } = new();
     public List<int> AvailableYears { get; set; } = new();
     public List<string> AvailableLeagues { get; set; } = new();
@@ -50,5 +54,5 @@ public class AwardVoteEntry
     public bool IsInHallOfFame { get; set; }
     public bool IsWinner { get; set; }
 
-    public string FormattedVoteShare => $"{VoteShare:0.1}%";
+    public string FormattedVoteShare => $"{VoteShare:0.0}%";
 }

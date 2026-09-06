@@ -1,0 +1,71 @@
+@model baseball_history_web.ViewModels.ManagerListViewModel
+
+@{
+    string SortUrl(string sortKey)
+    {
+        var parts = new List<string>();
+        if (sortKey != "wins") parts.Add($"sort={sortKey}");
+        if (!string.IsNullOrEmpty(Model.SearchQuery)) parts.Add($"q={Uri.EscapeDataString(Model.SearchQuery)}");
+        return "/Managers" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+    }
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <span class="text-muted">@Model.TotalManagers managers</span>
+    <div class="d-flex gap-2" role="group" aria-label="Sort managers">
+        <a href="@SortUrl("wins")"
+           class="btn btn-sm @(Model.Sort == "wins" ? "btn-primary" : "btn-outline-primary")"
+           aria-current="@(Model.Sort == "wins" ? "true" : null)"
+           hx-get="@SortUrl("wins")"
+           hx-target="#managers-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            By Wins
+        </a>
+        <a href="@SortUrl("name")"
+           class="btn btn-sm @(Model.Sort == "name" ? "btn-primary" : "btn-outline-primary")"
+           aria-current="@(Model.Sort == "name" ? "true" : null)"
+           hx-get="@SortUrl("name")"
+           hx-target="#managers-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            By Name
+        </a>
+    </div>
+</div>
+
+<form id="manager-filter-form" class="row g-2 mb-4" onsubmit="return false;">
+    @if (Model.Sort != "wins")
+    {
+        <input type="hidden" name="sort" value="@Model.Sort"/>
+    }
+    <div class="col-md-4">
+        <label for="manager-search" class="visually-hidden">Filter managers by name</label>
+        <input type="search" class="form-control" id="manager-search" name="q"
+               placeholder="Filter by name..." value="@Model.SearchQuery" autocomplete="off"
+               hx-get="/Managers"
+               hx-include="#manager-filter-form"
+               hx-target="#managers-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               hx-trigger="input changed delay:300ms, search"/>
+    </div>
+    @if (Model.HasActiveFilters)
+    {
+        <div class="col-6 col-md-2">
+            @{ var clearUrl = "/Managers" + (Model.Sort != "wins" ? "?sort=" + Model.Sort : ""); }
+            <a class="btn btn-outline-secondary w-100"
+               href="@clearUrl"
+               hx-get="@clearUrl"
+               hx-target="#managers-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">
+                Clear Filters
+            </a>
+        </div>
+    }
+</form>
+
+<div id="manager-list">
+    @await Html.PartialAsync("_ManagerList", Model)
+</div>

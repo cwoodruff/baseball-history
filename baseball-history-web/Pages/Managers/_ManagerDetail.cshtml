@@ -1,0 +1,178 @@
+@model baseball_history_web.ViewModels.ManagerDetailViewModel
+
+<div class="card mb-4">
+    <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">
+            @Model.FullName
+            @if (Model.IsInHallOfFame)
+            {
+                <span class="hof-badge ms-2" title="Hall of Fame">HOF</span>
+            }
+        </h1>
+        @if (Model.WasPlayer)
+        {
+            <a href="/Players/@Model.PlayerId" class="btn btn-sm btn-outline-light">Player Page</a>
+        }
+    </div>
+    <div class="card-body">
+        @if (Model.WasPlayerManager)
+        {
+            <p class="text-muted mb-3">
+                Served as a player-manager for at least part of this career.
+            </p>
+        }
+        <div class="row text-center">
+            <div class="col-md-2 col-4 mb-3">
+                <div class="h3 mb-0 text-mlb-navy">@Model.YearsLabel</div>
+                <small class="text-muted">Years</small>
+            </div>
+            <div class="col-md-2 col-4 mb-3">
+                <div class="h3 mb-0 text-mlb-navy">@Model.SeasonCount</div>
+                <small class="text-muted">Seasons</small>
+            </div>
+            <div class="col-md-2 col-4 mb-3">
+                <div class="h3 mb-0 text-mlb-navy">@Model.Record</div>
+                <small class="text-muted">Record</small>
+            </div>
+            <div class="col-md-2 col-4 mb-3">
+                <div class="h3 mb-0 text-mlb-navy">@Model.FormattedWinPct</div>
+                <small class="text-muted">PCT</small>
+            </div>
+            <div class="col-md-2 col-4 mb-3">
+                <div class="h3 mb-0 text-mlb-navy">@Model.Pennants</div>
+                <small class="text-muted">Pennant@(Model.Pennants == 1 ? "" : "s")</small>
+            </div>
+            <div class="col-md-2 col-4 mb-3">
+                <div class="h3 mb-0 text-mlb-navy">@Model.WorldSeriesTitles</div>
+                <small class="text-muted">WS Title@(Model.WorldSeriesTitles == 1 ? "" : "s")</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Awards.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Manager Awards</strong>
+        </div>
+        <ul class="list-group list-group-flush">
+            @foreach (var award in Model.Awards)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <strong class="text-mlb-navy me-1">@award.Year</strong>
+                        @award.AwardId
+                        <span class="text-muted">(@award.LgId)</span>
+                    </span>
+                    @if (award.HasVotingData)
+                    {
+                        <a href="/Awards?scope=managers&award=@Uri.EscapeDataString(award.AwardId)&year=@award.Year&league=@award.LgId"
+                           class="btn btn-sm btn-outline-primary">
+                            View Race
+                        </a>
+                    }
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-header card-header-mlb">
+        <strong>Season History</strong>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-baseball table-hover mb-0">
+            <thead>
+            <tr>
+                <th scope="col">Year</th>
+                <th scope="col">Team</th>
+                <th scope="col">League</th>
+                <th scope="col" class="text-end">G</th>
+                <th scope="col" class="text-end">W</th>
+                <th scope="col" class="text-end">L</th>
+                <th scope="col" class="text-end">PCT</th>
+                <th scope="col" class="text-end">Finish</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var season in Model.Seasons)
+            {
+                <tr>
+                    <td class="stat-cell">@season.Year</td>
+                    <td>
+                        <a href="/Teams/Season/@season.TeamId/@season.LgId/@season.Year"
+                           class="text-decoration-none">@(season.TeamName ?? season.TeamId)</a>
+                    </td>
+                    <td>@season.LgId</td>
+                    <td class="text-end stat-cell">@(season.Games?.ToString() ?? "—")</td>
+                    <td class="text-end stat-cell">@(season.Wins?.ToString() ?? "—")</td>
+                    <td class="text-end stat-cell">@(season.Losses?.ToString() ?? "—")</td>
+                    <td class="text-end stat-cell">@season.FormattedWinPct</td>
+                    <td class="text-end stat-cell">@(season.Rank?.ToString() ?? "—")</td>
+                    <td>
+                        @if (season.WonWorldSeries)
+                        {
+                            <rhx-badge rhx-variant="success" class="ms-1">WS</rhx-badge>
+                        }
+                        else if (season.WonPennant)
+                        {
+                            <rhx-badge rhx-variant="brand" class="ms-1">Pennant</rhx-badge>
+                        }
+                        @if (season.IsPlayerManager)
+                        {
+                            <rhx-badge rhx-variant="neutral" class="ms-1" title="Player-manager">Player-Mgr</rhx-badge>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer text-muted small">
+        Pennant and World Series flags reflect the team's season result, which may span multiple managers.
+    </div>
+</div>
+
+@if (Model.Halves.Count > 0)
+{
+    <div class="card mb-4">
+        <div class="card-header card-header-mlb">
+            <strong>Split Seasons</strong>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th scope="col">Year</th>
+                    <th scope="col">Team</th>
+                    <th scope="col" class="text-end">Half</th>
+                    <th scope="col" class="text-end">G</th>
+                    <th scope="col" class="text-end">W</th>
+                    <th scope="col" class="text-end">L</th>
+                    <th scope="col" class="text-end">Finish</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var half in Model.Halves)
+                {
+                    <tr>
+                        <td class="stat-cell">@half.Year</td>
+                        <td>
+                            <a href="/Teams/Season/@half.TeamId/@half.LgId/@half.Year"
+                               class="text-decoration-none">@(half.TeamName ?? half.TeamId)</a>
+                        </td>
+                        <td class="text-end stat-cell">@half.Half</td>
+                        <td class="text-end stat-cell">@(half.Games?.ToString() ?? "—")</td>
+                        <td class="text-end stat-cell">@(half.Wins?.ToString() ?? "—")</td>
+                        <td class="text-end stat-cell">@(half.Losses?.ToString() ?? "—")</td>
+                        <td class="text-end stat-cell">@(half.Rank?.ToString() ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
