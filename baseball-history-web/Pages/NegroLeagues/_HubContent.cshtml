@@ -1,0 +1,63 @@
+@using baseball_history_web.ViewModels
+@model baseball_history_web.ViewModels.NegroLeaguesHubViewModel
+
+@await Html.PartialAsync("Components/_PageHeader", new PageHeaderModel
+{
+    Eyebrow = "History",
+    Title = "The Negro Leagues",
+    Subtitle = "Seven leagues, 1920–1948, recognized by Major League Baseball as major leagues. " +
+               "Browse their seasons, standings, and leaders."
+})
+
+<div class="alert alert-light border mb-4" role="note">
+    The record here is what researchers reconstructed from newspaper box scores — treat every total
+    as a floor, not a measure. <a href="/SurvivingRecords">Read the story of the surviving record</a>
+    or see <a href="/About#data-scope">the data scope</a>.
+</div>
+
+<div class="row">
+    @foreach (var league in Model.Leagues)
+    {
+        <div class="col-md-6 col-xl-4 mb-4 d-flex">
+            <div class="card flex-fill">
+                <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+                    <strong>@league.Info.Name</strong>
+                    <span class="badge bg-light text-dark">@league.Info.Id</span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex gap-4 mb-3">
+                        <div>
+                            <div class="h4 mb-0 text-mlb-navy">@league.Info.YearsLabel</div>
+                            <small class="text-muted">Years</small>
+                        </div>
+                        <div>
+                            <div class="h4 mb-0 text-mlb-navy">@league.ClubCount</div>
+                            <small class="text-muted">Clubs</small>
+                        </div>
+                        <div>
+                            <div class="h4 mb-0 text-mlb-navy">@league.TeamSeasons</div>
+                            <small class="text-muted">Team-Seasons</small>
+                        </div>
+                    </div>
+                    <p class="text-muted flex-grow-1">@league.Info.Summary</p>
+                    <a href="/NegroLeagues/@league.Info.Id" class="btn btn-outline-primary mt-auto align-self-start">
+                        Explore the @league.Info.Id
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h2 class="h4">Before the leagues</h2>
+        <p class="mb-0 text-muted">
+            Organized Black baseball long predates 1920 — independent clubs, eastern and western
+            circuits, and barnstorming teams whose surviving records sit outside the recognized
+            league seasons shown here. <a href="/SurvivingRecords">The Surviving Record</a> tells
+            that story, and the <a href="https://www.seamheads.com/NegroLgs/" target="_blank"
+            rel="noopener">Seamheads Negro Leagues Database</a> continues to reconstruct it.
+        </p>
+    </div>
+</div>

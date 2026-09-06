@@ -16,6 +16,9 @@ History application.
 | Team Season        | Single season team view               | `/Teams/{teamId}/{lgId}/{year}` |
 | Ballpark Browser   | Ballpark listing with filters         | `/Parks`                        |
 | Ballpark Detail    | Park history and attendance trends    | `/Parks/{parkKey}`              |
+| Negro Leagues Hub  | The seven recognized leagues          | `/NegroLeagues`                 |
+| League Detail      | Seasons and clubs for one league      | `/NegroLeagues/{lgId}`          |
+| League Season      | Standings and leaders for one season  | `/NegroLeagues/{lgId}/{year}`   |
 | Batting Leaders    | Batting statistical leaders           | `/Stats/Batting`                |
 | Pitching Leaders   | Pitching statistical leaders          | `/Stats/Pitching`               |
 | Hall of Fame       | HOF inductee browser                  | `/HallOfFame`                   |
@@ -308,6 +311,53 @@ Complete history of one ballpark from `Parks` + `HomeGames`.
 4. **Season History Table**
     - Every team-season: games, openings, attendance
     - Linked to team season pages
+
+---
+
+## Negro Leagues Hub
+
+**URL**: `/NegroLeagues`
+
+Browse the seven Negro Leagues (1920–1948) that MLB recognized as major leagues
+in December 2020. Tracks issue #90. League scope is defined once, in
+`Services/NegroLeagues.cs`; earlier independent Black baseball (lgIDs `IND`,
+`EAS`, `WES`, `NAC`) is out of scope and covered narratively on
+`/SurvivingRecords`.
+
+### Components
+
+1. **League Cards** — name, lgID, years, club count, team-season count, summary
+2. **Transparency framing** — links to `/SurvivingRecords` and `/About#data-scope`
+3. **"Before the leagues"** — pre-1920 context with Seamheads link
+
+---
+
+## League Detail
+
+**URL**: `/NegroLeagues/{lgId}` (e.g. `/NegroLeagues/NN2`; case-insensitive)
+
+### Components
+
+1. **League Header** — name, years, seasons, clubs, team-seasons
+2. **Seasons Table** — year (links to league season page), team count, pennant
+   winner (links to team season page)
+3. **Clubs Table** — every club's tenure: years, seasons, W-L record, PCT,
+   pennants; sorted by pennants then seasons
+
+---
+
+## League Season
+
+**URL**: `/NegroLeagues/{lgId}/{year}` (e.g. `/NegroLeagues/NN2/1943`)
+
+### Components
+
+1. **Standings** — rank, W-L, PCT, games behind, documented games; pennant
+   badge; teams link to team season pages; prev/next season navigation
+2. **Leaders** — top 5 in AVG (qualified), HR, ERA (qualified), W via
+   `ILeaderboardQueryService` with `League` + `SingleSeason` filters, using the
+   season-relative qualification thresholds
+3. **Data scope notes** — the standard `_DataScopeNote` plus standings caveat
 
 ---
 

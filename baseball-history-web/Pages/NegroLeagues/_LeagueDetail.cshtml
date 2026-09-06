@@ -1,0 +1,115 @@
+@model baseball_history_web.ViewModels.NegroLeagueDetailViewModel
+
+<div class="card mb-4">
+    <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">@Model.Info.Name</h1>
+        <span class="badge bg-light text-dark">@Model.Info.Id</span>
+    </div>
+    <div class="card-body">
+        <p class="mb-3">@Model.Info.Summary</p>
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-2">
+                <div class="h3 mb-0 text-mlb-navy">@Model.Info.YearsLabel</div>
+                <small class="text-muted">Years</small>
+            </div>
+            <div class="col-md-3 col-6 mb-2">
+                <div class="h3 mb-0 text-mlb-navy">@Model.Seasons.Count</div>
+                <small class="text-muted">Season@(Model.Seasons.Count == 1 ? "" : "s")</small>
+            </div>
+            <div class="col-md-3 col-6 mb-2">
+                <div class="h3 mb-0 text-mlb-navy">@Model.Clubs.Count</div>
+                <small class="text-muted">Clubs</small>
+            </div>
+            <div class="col-md-3 col-6 mb-2">
+                <div class="h3 mb-0 text-mlb-navy">@Model.Seasons.Sum(s => s.TeamCount)</div>
+                <small class="text-muted">Team-Seasons</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="card">
+            <div class="card-header card-header-mlb">
+                <strong>Seasons</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-baseball table-hover mb-0">
+                    <thead>
+                    <tr>
+                        <th scope="col">Year</th>
+                        <th scope="col" class="text-end">Teams</th>
+                        <th scope="col">Pennant</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var season in Model.Seasons)
+                    {
+                        <tr>
+                            <td class="stat-cell">
+                                <a href="/NegroLeagues/@Model.Info.Id/@season.Year"
+                                   class="text-decoration-none fw-semibold">@season.Year</a>
+                            </td>
+                            <td class="text-end stat-cell">@season.TeamCount</td>
+                            <td>
+                                @if (season.ChampionTeamId != null)
+                                {
+                                    <a href="/Teams/Season/@season.ChampionTeamId/@Model.Info.Id/@season.Year"
+                                       class="text-decoration-none">@(season.ChampionName ?? season.ChampionTeamId)</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7 mb-4">
+        <div class="card">
+            <div class="card-header card-header-mlb">
+                <strong>Clubs</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-baseball table-hover mb-0">
+                    <thead>
+                    <tr>
+                        <th scope="col">Club</th>
+                        <th scope="col" class="text-end">Years</th>
+                        <th scope="col" class="text-end">Seasons</th>
+                        <th scope="col" class="text-end">Record</th>
+                        <th scope="col" class="text-end">PCT</th>
+                        <th scope="col" class="text-end">Pennants</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var club in Model.Clubs)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/Teams/Season/@club.TeamId/@Model.Info.Id/@club.LastYear"
+                                   class="text-decoration-none">@club.Name</a>
+                            </td>
+                            <td class="text-end stat-cell">@club.YearsLabel</td>
+                            <td class="text-end stat-cell">@club.Seasons</td>
+                            <td class="text-end stat-cell">@club.Record</td>
+                            <td class="text-end stat-cell">@club.FormattedWinPct</td>
+                            <td class="text-end stat-cell">@(club.Pennants > 0 ? club.Pennants.ToString() : "—")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="text-muted small mt-2 mb-0">
+            Wins and losses reflect documented league games; surviving Negro Leagues records cover
+            shorter and incompletely documented seasons. <a href="/About#data-scope">About the data scope</a>.
+        </p>
+    </div>
+</div>

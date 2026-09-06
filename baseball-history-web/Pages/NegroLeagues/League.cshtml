@@ -1,0 +1,14 @@
+@page "/NegroLeagues/{lgId}"
+@using baseball_history_web.ViewModels
+@model baseball_history_web.Pages.NegroLeagues.LeagueModel
+@{
+    ViewData["Title"] = Model.ViewModel.Info.Name;
+}
+
+@await Html.PartialAsync("Components/_Breadcrumbs", BreadcrumbModel.Build(
+    new BreadcrumbItem("Negro Leagues", "/NegroLeagues"),
+    new BreadcrumbItem(Model.ViewModel.Info.Name)))
+
+<div id="league-content">
+    @await Html.PartialAsync("_LeagueDetail", Model.ViewModel)
+</div>

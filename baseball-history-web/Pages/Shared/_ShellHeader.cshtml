@@ -13,6 +13,7 @@
     var isPlayers = IsSection("/Players");
     var isTeams = IsSection("/Teams");
     var isParks = IsSection("/Parks");
+    var isNegroLeagues = IsSection("/NegroLeagues") || IsSection("/SurvivingRecords");
     var isStats = IsSection("/Stats", "/HallOfFame", "/Awards", "/Postseason", "/Salaries");
     var isCompare = IsSection("/Compare");
     var isApi = IsSection("/ApiDocs");
@@ -45,6 +46,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="@NavClass(isParks)" aria-current="@AriaCurrent(isParks)" asp-area="" asp-page="/Parks/Index">Ballparks</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="@NavClass(isNegroLeagues)" aria-current="@AriaCurrent(isNegroLeagues)" asp-area="" asp-page="/NegroLeagues/Index">Negro Leagues</a>
                     </li>
                     <li class="nav-item dropdown">
                         <button class="@NavClass(isStats) dropdown-toggle" id="statsDropdown"

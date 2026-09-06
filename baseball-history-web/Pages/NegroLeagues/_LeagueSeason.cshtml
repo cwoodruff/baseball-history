@@ -1,0 +1,115 @@
+@model baseball_history_web.ViewModels.NegroLeagueSeasonViewModel
+
+<div class="card mb-4">
+    <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0">@Model.Year @Model.Info.Name</h1>
+        <div class="d-flex gap-2">
+            @if (Model.PreviousYear is { } prev)
+            {
+                <a href="/NegroLeagues/@Model.Info.Id/@prev" class="btn btn-sm btn-outline-light"
+                   aria-label="Previous season">&laquo; @prev</a>
+            }
+            @if (Model.NextYear is { } next)
+            {
+                <a href="/NegroLeagues/@Model.Info.Id/@next" class="btn btn-sm btn-outline-light"
+                   aria-label="Next season">@next &raquo;</a>
+            }
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-baseball table-hover mb-0">
+            <thead>
+            <tr>
+                <th scope="col" class="rank-cell">#</th>
+                <th scope="col">Team</th>
+                <th scope="col" class="text-end">W</th>
+                <th scope="col" class="text-end">L</th>
+                <th scope="col" class="text-end">PCT</th>
+                <th scope="col" class="text-end">GB</th>
+                <th scope="col" class="text-end">G</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Model.Standings)
+            {
+                <tr>
+                    <td class="rank-cell">@(row.Rank?.ToString() ?? "—")</td>
+                    <td>
+                        <a href="/Teams/Season/@row.TeamId/@Model.Info.Id/@Model.Year"
+                           class="text-decoration-none fw-semibold">@row.Name</a>
+                        @if (row.WonPennant)
+                        {
+                            <rhx-badge rhx-variant="brand" class="ms-2">Pennant</rhx-badge>
+                        }
+                    </td>
+                    <td class="text-end stat-cell">@row.Wins</td>
+                    <td class="text-end stat-cell">@row.Losses</td>
+                    <td class="text-end stat-cell">@row.FormattedWinPct</td>
+                    <td class="text-end stat-cell">@row.FormattedGamesBehind</td>
+                    <td class="text-end stat-cell">@(row.Games?.ToString() ?? "—")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted small mb-4">
+    Standings reflect documented league games; game counts vary by how much of each season survives.
+    <a href="/About#data-scope">About the data scope</a> &middot;
+    <a href="/SurvivingRecords">The story of the surviving record</a>
+</p>
+
+@{
+    var leaderTables = new[]
+    {
+        ("Batting Average", "Qualified leaders", Model.BattingAverageLeaders),
+        ("Home Runs", "All players", Model.HomeRunLeaders),
+        ("ERA", "Qualified leaders", Model.EraLeaders),
+        ("Wins", "All pitchers", Model.WinLeaders)
+    };
+}
+
+<div class="row">
+    @foreach (var (title, note, leaders) in leaderTables)
+    {
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card h-100">
+                <div class="card-header card-header-mlb">
+                    <strong>@title</strong>
+                    <small class="d-block text-white-50">@note</small>
+                </div>
+                @if (leaders.Count == 0)
+                {
+                    <div class="card-body">
+                        <span class="text-muted">No surviving records.</span>
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var leader in leaders)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <span class="text-muted me-1">@(leader.Rank).</span>
+                                    <a href="/Players/@leader.PlayerId" class="text-decoration-none"
+                                       hx-get="/Players/Modal/@leader.PlayerId"
+                                       hx-target="#modal-container"
+                                       hx-swap="innerHTML">@leader.PlayerName</a>
+                                    @if (leader.IsInHallOfFame)
+                                    {
+                                        <span class="hof-badge ms-1" title="Hall of Fame">HOF</span>
+                                    }
+                                </span>
+                                <span class="stat-cell fw-semibold">@leader.Value</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@await Html.PartialAsync("Components/_DataScopeNote")
