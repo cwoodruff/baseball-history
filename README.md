@@ -1,38 +1,65 @@
-# Baseball History Web App
+# Baseball History
 
-A web application for exploring Major League Baseball history using the Lahman
-Baseball Database. Baseball data and statistics from 1871 to 2025. Built with ASP.NET Core Razor Pages, Entity Framework Core,
-htmxRazor, htmx, and Bootstrap.
+**150 years of Major League Baseball you can browse, query, compare — and ask
+an AI about. With the gaps in the historical record marked, not papered over.**
+
+Baseball History covers 24,000+ players across 1871–2025, including the Negro
+Leagues, built on the Lahman Baseball Database. Three things set it apart:
+
+- **It's honest about what survived.** 453 players in this database are known
+  only by a surname or an initial — mostly segregation-era Black baseball,
+  where the record lived in weekly newspapers. Instead of rendering them like
+  fully documented careers, the site marks them with a *Partial record* badge
+  that links to [a feature page on why the record survived unevenly](./docs/FEATURES.md#partial-record-badge),
+  and every leaderboard carries a plain statement that raw totals are not
+  context-adjusted across eras.
+- **AI assistants can query it directly.** A [Model Context Protocol server](./docs/MCP-SERVER-PLAN.md)
+  exposes players, franchises, leaderboards, Hall of Fame history, and salary
+  data as MCP tools and resources — speaking the current stateless Streamable
+  HTTP revision, so Claude and other MCP clients can answer baseball questions
+  against the real data.
+- **Everything is open through a REST API.** 30+ JSON endpoints with no
+  authentication — players, teams, leaders, awards voting, postseason,
+  salaries, search — with an interactive Scalar explorer and OpenAPI spec.
 
 ![Home Screenshot](./docs/home-screenshot.png)
 
 ## Table of Contents
 
-- [Overview](#overview)
+- [Features](#features)
 - [Technology Stack](#technology-stack)
 - [Documentation](#documentation)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
 
-## Overview
+## Features
 
-Baseball History is an interactive web application that allows users to explore
-over 150 years of Major League Baseball statistics, including:
-
-- **Player Browser**: Browse players alphabetically with career statistics
-- **Team Browser**: Explore franchises and their season-by-season history
-- **Statistical Leaders**: View batting and pitching leaderboards with filters
-- **Hall of Fame**: Browse Hall of Fame inductees by year and category
-- **Search**: Global search across players and teams
+- **Player Browser & Modals** — alphabetical browsing, quick-view modals with
+  batting, pitching, fielding, and postseason tabs
+- **Player Comparison** — up to 4 players side by side with Chart.js
+  visualizations and CSV export
+- **Statistical Leaders** — batting and pitching leaderboards with
+  season-relative qualification thresholds and era/league filters
+- **Hall of Fame** — inductees by year and category, full voting history
+- **Awards & Voting** — award winners with complete voting breakdowns
+- **Postseason** — playoff series results from 1884 onward
+- **Salary Explorer** — player salary history, team payrolls, salary leaders
+- **Global Search** — players and teams across the entire history of the game
+- **Data transparency** — partial-record badges, a data scope statement, and
+  the Surviving Records feature page on segregation-era record survival
 
 ## Technology Stack
 
-| Component | Technology                           |
-|-----------|--------------------------------------|
-| Backend   | ASP.NET Core 10.0, Razor Pages       |
-| Database  | PostgreSQL (runtime) with Lahman data |
-| ORM       | Entity Framework Core 10.0           |
+| Component | Technology                               |
+|-----------|------------------------------------------|
+| Backend   | ASP.NET Core 10.0, Razor Pages           |
+| Database  | PostgreSQL (runtime) with Lahman data    |
+| ORM       | Entity Framework Core 10.0               |
 | Frontend  | htmxRazor 2.0.1, htmx 2.0.4, Bootstrap 5 |
+| AI access | ModelContextProtocol 2.1 (MCP server)    |
+
+The frontend uses htmx for SPA-feel navigation with no JavaScript framework;
+local development is orchestrated with .NET Aspire.
 
 ## Documentation
 
@@ -127,31 +154,30 @@ setups should not rely on copying it into `baseball-history-web`.
 ```
 baseball-history/
 ├── baseball-history-aspire/       # Aspire AppHost for local orchestration
+├── baseball-history-data/         # Shared EF Core models and query services
+├── baseball-history-mcp/          # Model Context Protocol server
+├── baseball-history-tests/        # Regression suite (unit + integration)
 ├── baseball-history-web/          # Main web application
-│   ├── Models/                    # Entity models and DbContext
+│   ├── Api/                       # REST API endpoints and DTOs
 │   ├── ViewModels/                # View models for pages
 │   ├── Pages/                     # Razor Pages
 │   │   ├── Players/               # Player browser and modals
 │   │   ├── Teams/                 # Team/franchise browser
 │   │   ├── Stats/                 # Statistical leaderboards
+│   │   ├── Compare/               # Multi-player comparison
 │   │   ├── HallOfFame/            # Hall of Fame browser
 │   │   └── Shared/                # Layouts and components
+│   ├── Services/                  # Shared services and helpers
 │   ├── Extensions/                # Helper extensions (htmx, etc.)
 │   ├── wwwroot/                   # Static files (CSS, JS)
 │   └── Program.cs                 # Application entry point
 └── docs/                          # Documentation
 ```
 
-## Key Features
-
-- **No JavaScript Required**: Uses htmx for dynamic content loading
-- **MLB Theming**: Official MLB color scheme with team-specific colors
-- **Responsive Design**: Mobile-friendly Bootstrap layout
-- **Fast Navigation**: htmx boost for SPA-like navigation
-- **Player Modals**: Quick view of player details without page navigation
-- **Advanced Filtering**: Filter leaderboards by year, league, and minimums
-
 ## License
 
 This project uses the Lahman Baseball Database, which is available under the
-Creative Commons Attribution-ShareAlike 3.0 Unported License.
+Creative Commons Attribution-ShareAlike 3.0 Unported License. The site states
+its data's limits plainly — see the data scope statement on the About page:
+raw totals, no park factors or era adjustments, and partial surviving records
+for the Negro Leagues.
