@@ -5,13 +5,15 @@
 -- Design goal: one code path. The website, the public API, and the MCP server
 -- all read these views, so they cannot diverge on what "qualified" means.
 --
--- ASSUMPTIONS (adjust to your migration):
---   * Lowercase unquoted identifiers (playerid, yearid, lgid, teamid).
---   * Doubles/triples: Lahman ships them as 2B/3B, which are not legal bare
---     identifiers. The stint CTE below aliases them once; change that one spot
---     if your migration renamed them to doubles/triples.
+-- Adapted to this project's migration: quoted mixed-case identifiers
+-- ("Batting"."playerID", "Teams"."G", ...); every base numeric column is
+-- smallint, so no defensive string parsing is needed here (unlike the
+-- Fielding/*Post tables — see LahmanNumbers.cs).
 --   * hbp / sf / sh are NULL across large stretches of pre-1954 data. Every
 --     reference is COALESCEd. Do NOT skip this — a NULL sf silently nulls PA.
+--   * SO / CS / RBI / SB also carry pre-modern NULLs. Those are left
+--     NULL-aware on purpose: an 1880s season with unrecorded strikeouts gets
+--     a NULL BABIP/K%, not a fabricated one.
 -- ============================================================================
 
 
@@ -25,13 +27,13 @@
 
 CREATE OR REPLACE VIEW v_team_games AS
 SELECT
-    t.yearid,
-    t.lgid,
-    t.teamid,
-    t.g AS team_games
-FROM teams t
-WHERE t.g IS NOT NULL
-  AND t.g > 0;
+    t."yearID"  AS yearid,
+    t."lgID"    AS lgid,
+    t."teamID"  AS teamid,
+    t."G"       AS team_games
+FROM "Teams" t
+WHERE t."G" IS NOT NULL
+  AND t."G" > 0;
 
 COMMENT ON VIEW v_team_games IS
   'Games played per team-season. Denominator for all season-relative qualification.';
@@ -43,27 +45,27 @@ COMMENT ON VIEW v_team_games IS
 CREATE OR REPLACE VIEW v_player_season_batting AS
 WITH stint AS (
     SELECT
-        b.playerid,
-        b.yearid,
+        b."playerID"        AS playerid,
+        b."yearID"          AS yearid,
         b.stint,
-        b.teamid,
-        b.lgid,
-        b.g,
-        b.ab,
-        b.r,
-        b.h,
-        b."2B"          AS doubles,   -- <- rename here if your schema differs
-        b."3B"          AS triples,   -- <- rename here if your schema differs
-        b.hr,
-        b.rbi,
-        b.sb,
-        b.cs,
-        b.bb,
-        b.so,
-        COALESCE(b.hbp, 0) AS hbp,
-        COALESCE(b.sf,  0) AS sf,
-        COALESCE(b.sh,  0) AS sh
-    FROM batting b
+        b."teamID"          AS teamid,
+        b."lgID"            AS lgid,
+        b."G"               AS g,
+        b."AB"              AS ab,
+        b."R"               AS r,
+        b."H"               AS h,
+        b."2B"              AS doubles,
+        b."3B"              AS triples,
+        b."HR"              AS hr,
+        b."RBI"             AS rbi,
+        b."SB"              AS sb,
+        b."CS"              AS cs,
+        b."BB"              AS bb,
+        b."SO"              AS so,
+        COALESCE(b."HBP", 0) AS hbp,
+        COALESCE(b."SF",  0) AS sf,
+        COALESCE(b."SH",  0) AS sh
+    FROM "Batting" b
 ),
 joined AS (
     SELECT
@@ -271,11 +273,23 @@ FROM career c;
 CREATE OR REPLACE VIEW v_player_season_pitching AS
 WITH stint AS (
     SELECT
-        p.playerid, p.yearid, p.teamid, p.lgid,
-        p.w, p.l, p.g, p.gs, p.ipouts, p.h, p.er, p.hr, p.bb, p.so,
-        COALESCE(p.hbp, 0) AS hbp,
-        COALESCE(p.bfp, 0) AS bfp
-    FROM pitching p
+        p."playerID"        AS playerid,
+        p."yearID"          AS yearid,
+        p."teamID"          AS teamid,
+        p."lgID"            AS lgid,
+        p."W"               AS w,
+        p."L"               AS l,
+        p."G"               AS g,
+        p."GS"              AS gs,
+        p."IPouts"          AS ipouts,
+        p."H"               AS h,
+        p."ER"              AS er,
+        p."HR"              AS hr,
+        p."BB"              AS bb,
+        p."SO"              AS so,
+        COALESCE(p."HBP", 0) AS hbp,
+        COALESCE(p."BFP", 0) AS bfp
+    FROM "Pitching" p
 ),
 joined AS (
     SELECT s.*, tg.team_games
@@ -311,11 +325,11 @@ GROUP BY j.playerid, j.yearid;
 -- ----------------------------------------------------------------------------
 -- 7. Indexes
 -- ----------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS ix_batting_player_year  ON batting  (playerid, yearid);
-CREATE INDEX IF NOT EXISTS ix_batting_year_team    ON batting  (yearid, teamid);
-CREATE INDEX IF NOT EXISTS ix_pitching_player_year ON pitching (playerid, yearid);
-CREATE INDEX IF NOT EXISTS ix_pitching_year_team   ON pitching (yearid, teamid);
-CREATE INDEX IF NOT EXISTS ix_teams_year_team      ON teams    (yearid, teamid);
+CREATE INDEX IF NOT EXISTS ix_batting_player_year  ON "Batting"  ("playerID", "yearID");
+CREATE INDEX IF NOT EXISTS ix_batting_year_team    ON "Batting"  ("yearID", "teamID");
+CREATE INDEX IF NOT EXISTS ix_pitching_player_year ON "Pitching" ("playerID", "yearID");
+CREATE INDEX IF NOT EXISTS ix_pitching_year_team   ON "Pitching" ("yearID", "teamID");
+CREATE INDEX IF NOT EXISTS ix_teams_year_team      ON "Teams"    ("yearID", "teamID");
 
 
 -- ============================================================================
@@ -325,10 +339,10 @@ CREATE INDEX IF NOT EXISTS ix_teams_year_team      ON teams    (yearid, teamid);
 -- A. Career AVG leaderboard, qualified. Cobb and Hornsby should top it.
 --    Under the old flat floor this page was ~100 players hitting 1.000.
 --
--- SELECT p.namefirst || ' ' || p.namelast AS player,
+-- SELECT p."nameFirst" || ' ' || p."nameLast" AS player,
 --        c.avg, c.pa, c.career_pa_threshold, c.ops_index
 -- FROM v_career_batting c
--- JOIN people p USING (playerid)
+-- JOIN "People" p ON p."playerID" = c.playerid
 -- WHERE c.qualified
 -- ORDER BY c.avg DESC
 -- LIMIT 25;
@@ -336,11 +350,11 @@ CREATE INDEX IF NOT EXISTS ix_teams_year_team      ON teams    (yearid, teamid);
 -- B. Do the Negro Leagues stars qualify now? Gibson, Charleston, Stearnes,
 --    Suttles should all come back qualified = true.
 --
--- SELECT p.namefirst || ' ' || p.namelast AS player,
+-- SELECT p."nameFirst" || ' ' || p."nameLast" AS player,
 --        c.pa, c.career_pa_threshold, c.pct_of_threshold, c.qualified, c.avg
 -- FROM v_career_batting c
--- JOIN people p USING (playerid)
--- WHERE p.namelast IN ('Gibson','Charleston','Stearnes','Suttles')
+-- JOIN "People" p ON p."playerID" = c.playerid
+-- WHERE p."nameLast" IN ('Gibson','Charleston','Stearnes','Suttles')
 -- ORDER BY c.pa DESC;
 
 -- C. Nobody with a handful of PA survives the default filter.
@@ -352,10 +366,10 @@ CREATE INDEX IF NOT EXISTS ix_teams_year_team      ON teams    (yearid, teamid);
 -- D. Aggregation spot-checks that must not move (from the SABR review).
 --    Bonds 762 HR, Aaron 755 HR / 3771 H, Ruth 714 HR, Mays 3293 H / 660 HR.
 --
--- SELECT p.namefirst || ' ' || p.namelast AS player, c.h, c.hr
+-- SELECT p."nameFirst" || ' ' || p."nameLast" AS player, c.h, c.hr
 -- FROM v_career_batting c
--- JOIN people p USING (playerid)
--- WHERE p.playerid IN ('bondsba01','aaronha01','ruthba01','mayswi01')
+-- JOIN "People" p ON p."playerID" = c.playerid
+-- WHERE p."playerID" IN ('bondsba01','aaronha01','ruthba01','mayswi01')
 -- ORDER BY c.hr DESC;
 
 
@@ -366,10 +380,13 @@ CREATE INDEX IF NOT EXISTS ix_teams_year_team      ON teams    (yearid, teamid);
 --    league-relative only. Do not ship it under the name "OPS+".
 -- 2. League baseline includes pitchers, so ops_index will read a few points
 --    below bbref's OPS+ for the same season. Refine with a position filter.
--- 3. Teams.g for Negro Leagues clubs may reflect *documented* games rather than
+-- 3. Teams.G for Negro Leagues clubs may reflect *documented* games rather than
 --    scheduled ones. Where documentation is thin, team_games is understated and
 --    the threshold is correspondingly lenient. Verify against Seamheads schedule
 --    data before treating these thresholds as authoritative.
--- 4. Pre-1954 sf and pre-1887 hbp are absent, so early OBP is approximate. This
+-- 4. Pre-1954 SF and pre-1887 HBP are absent, so early OBP is approximate. This
 --    is a property of the historical record, not a bug — say so on the page.
 -- 5. mv_league_batting_season needs REFRESH MATERIALIZED VIEW after each load.
+-- 6. SO/CS/RBI/SB carry pre-modern NULLs and are deliberately not COALESCEd:
+--    seasons with unrecorded strikeouts get NULL BABIP/K% rather than invented
+--    values.
