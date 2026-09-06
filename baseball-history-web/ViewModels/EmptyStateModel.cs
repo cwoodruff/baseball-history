@@ -27,6 +27,20 @@ public class EmptyStateModel
         Icon = "&#9918;"
     };
 
+    public static EmptyStateModel NoParks() => new()
+    {
+        Title = "No Ballparks Found",
+        Message = "Try adjusting your search criteria.",
+        Icon = "&#127942;"
+    };
+
+    public static EmptyStateModel NoParkSeasons() => new()
+    {
+        Title = "No Game History",
+        Message = "No home-game records are available for this ballpark.",
+        Icon = "&#9918;"
+    };
+
     public static EmptyStateModel NoSearchResults(string query) => new()
     {
         Title = "No Results",

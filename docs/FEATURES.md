@@ -14,6 +14,8 @@ History application.
 | Team Browser       | Franchise listing                     | `/Teams`                        |
 | Franchise History  | Team history by franchise             | `/Teams/Franchise/{id}`         |
 | Team Season        | Single season team view               | `/Teams/{teamId}/{lgId}/{year}` |
+| Ballpark Browser   | Ballpark listing with filters         | `/Parks`                        |
+| Ballpark Detail    | Park history and attendance trends    | `/Parks/{parkKey}`              |
 | Batting Leaders    | Batting statistical leaders           | `/Stats/Batting`                |
 | Pitching Leaders   | Pitching statistical leaders          | `/Stats/Pitching`               |
 | Hall of Fame       | HOF inductee browser                  | `/HallOfFame`                   |
@@ -253,6 +255,59 @@ View details for a specific team season.
 
 6. **Season Navigation**
     - Links to other seasons for this franchise
+
+7. **Home Park**
+    - Park name linked to the ballpark detail page (`/Parks/{parkKey}`)
+    - Resolved through `HomeGames` (primary park = most home games that season)
+
+---
+
+## Ballpark Browser
+
+**URL**: `/Parks`
+
+Browse all 345 ballparks from the Lahman `Parks` table. Tracks issue #86.
+
+### Display
+
+- **Park Table**: Name (linked), former names, location, years active
+  (from `HomeGames`), and count of home teams
+- **Sorting**: Sorted by park name
+- **Empty State**: Shown when filters match nothing
+
+### Query Parameters
+
+| Parameter | Description                        | Example      |
+|-----------|------------------------------------|--------------|
+| `q`       | Filter by name, former name, city  | `?q=fenway`  |
+| `state`   | Filter by state code               | `?state=MA`  |
+| `page`    | Page number (30 per page)          | `?page=2`    |
+
+---
+
+## Ballpark Detail
+
+**URL**: `/Parks/{parkKey}` (e.g. `/Parks/BOS07`)
+
+Complete history of one ballpark from `Parks` + `HomeGames`.
+
+### Components
+
+1. **Park Header**
+    - Name, location, former names
+    - Lifespan (first–last season), season count
+    - Home teams, total home games, total and peak attendance
+
+2. **Attendance History Chart**
+    - Chart.js line chart of season attendance, summed across tenants
+
+3. **Home Teams Table**
+    - Each team tenure: years, seasons, home games
+    - Linked to the team's most recent season at the park
+
+4. **Season History Table**
+    - Every team-season: games, openings, attendance
+    - Linked to team season pages
 
 ---
 

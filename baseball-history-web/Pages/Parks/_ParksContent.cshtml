@@ -1,0 +1,51 @@
+@model baseball_history_web.ViewModels.ParkListViewModel
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <span class="text-muted">@Model.TotalParks ballparks</span>
+</div>
+
+<form id="park-filter-form" class="row g-2 mb-4" onsubmit="return false;">
+    <div class="col-md-4">
+        <label for="park-search" class="visually-hidden">Filter ballparks by name or city</label>
+        <input type="search" class="form-control" id="park-search" name="q"
+               placeholder="Filter by name or city..." value="@Model.SearchQuery" autocomplete="off"
+               hx-get="/Parks"
+               hx-include="#park-filter-form"
+               hx-target="#parks-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               hx-trigger="input changed delay:300ms, search"/>
+    </div>
+    <div class="col-6 col-md-3">
+        <label for="park-state" class="visually-hidden">State</label>
+        <select class="form-select" id="park-state" name="state"
+                hx-get="/Parks"
+                hx-include="#park-filter-form"
+                hx-target="#parks-content"
+                hx-swap="innerHTML"
+                hx-push-url="true">
+            <option value="">All States</option>
+            @foreach (var stateOption in Model.StateOptions)
+            {
+                <option value="@stateOption" selected="@(Model.SelectedState == stateOption)">@stateOption</option>
+            }
+        </select>
+    </div>
+    @if (Model.HasActiveFilters)
+    {
+        <div class="col-6 col-md-2">
+            <a class="btn btn-outline-secondary w-100"
+               href="/Parks"
+               hx-get="/Parks"
+               hx-target="#parks-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">
+                Clear Filters
+            </a>
+        </div>
+    }
+</form>
+
+<div id="park-list">
+    @await Html.PartialAsync("_ParkList", Model)
+</div>

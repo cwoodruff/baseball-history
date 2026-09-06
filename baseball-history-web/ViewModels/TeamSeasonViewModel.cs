@@ -31,6 +31,7 @@ public class TeamSeasonViewModel
 
     // Ballpark info
     public string? ParkName { get; set; }
+    public string? ParkKey { get; set; }
     public int? Attendance { get; set; }
 
     // Roster

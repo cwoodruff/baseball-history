@@ -1,0 +1,54 @@
+@model baseball_history_web.ViewModels.ParkListViewModel
+
+@if (Model.Parks.Count == 0)
+{
+    @await Html.PartialAsync("Components/_EmptyState", baseball_history_web.ViewModels.EmptyStateModel.NoParks())
+}
+else
+{
+    var paginationModel = baseball_history_web.ViewModels.PaginationModel.Create(
+        Model.CurrentPage,
+        Model.TotalParks,
+        Model.PageSize,
+        "/Parks",
+        Model.FilterQueryParams());
+    paginationModel.Target = "#parks-content";
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-baseball table-hover mb-0">
+                <thead>
+                <tr>
+                    <th scope="col">Ballpark</th>
+                    <th scope="col">Location</th>
+                    <th scope="col" class="text-end">Years Active</th>
+                    <th scope="col" class="text-end">Home Teams</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var park in Model.Parks)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Parks/@park.ParkKey" class="text-decoration-none fw-semibold">@park.ParkName</a>
+                            @if (!string.IsNullOrWhiteSpace(park.Alias))
+                            {
+                                <br/>
+                                <small class="text-muted">Also known as: @park.Alias</small>
+                            }
+                        </td>
+                        <td>@park.Location</td>
+                        <td class="text-end stat-cell">@park.YearsActive</td>
+                        <td class="text-end stat-cell">@(park.TeamCount > 0 ? park.TeamCount.ToString() : "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        @await Html.PartialAsync("Components/_Pagination", paginationModel)
+    }
+}
