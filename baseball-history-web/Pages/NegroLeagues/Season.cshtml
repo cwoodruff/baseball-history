@@ -1,0 +1,15 @@
+@page "/NegroLeagues/{lgId}/{year:int}"
+@using baseball_history_web.ViewModels
+@model baseball_history_web.Pages.NegroLeagues.SeasonModel
+@{
+    ViewData["Title"] = $"{Model.ViewModel.Year} {Model.ViewModel.Info.Name}";
+}
+
+@await Html.PartialAsync("Components/_Breadcrumbs", BreadcrumbModel.Build(
+    new BreadcrumbItem("Negro Leagues", "/NegroLeagues"),
+    new BreadcrumbItem(Model.ViewModel.Info.Name, $"/NegroLeagues/{Model.ViewModel.Info.Id}"),
+    new BreadcrumbItem(Model.ViewModel.Year.ToString())))
+
+<div id="league-season-content">
+    @await Html.PartialAsync("_LeagueSeason", Model.ViewModel)
+</div>

@@ -1,0 +1,9 @@
+@page "/NegroLeagues"
+@model baseball_history_web.Pages.NegroLeagues.IndexModel
+@{
+    ViewData["Title"] = "Negro Leagues";
+}
+
+<div id="negro-leagues-content">
+    @await Html.PartialAsync("_HubContent", Model.ViewModel)
+</div>
