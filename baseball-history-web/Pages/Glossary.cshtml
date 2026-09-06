@@ -1,0 +1,117 @@
+@page "/Glossary"
+@model GlossaryModel
+@{
+    ViewData["Title"] = "Stats Glossary";
+}
+
+<div class="row justify-content-center g-4">
+    <div class="col-xl-10">
+        @await Html.PartialAsync("Components/_PageHeader", new baseball_history_web.ViewModels.PageHeaderModel
+        {
+            Title = "Stats Glossary",
+            Subtitle = "What the advanced statistics mean, how qualification works, and where the numbers stop short.",
+            Eyebrow = "Reference"
+        })
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section id="qualification">
+                    <h2>Season-relative qualification</h2>
+                    <p>
+                        Rate-stat leaderboards need a minimum playing time, or a hot week tops every list.
+                        Instead of one flat floor, this site derives the threshold from the schedule each
+                        player's teams actually faced: <strong>3.1 plate appearances per team game</strong>
+                        for batters (the modern MLB rule) and <strong>one inning per team game</strong> for
+                        pitchers. A 154-game 1927 season, a 162-game 1998 season, and a 74-game 1943 Negro
+                        National League season each get their own bar.
+                    </p>
+                    <p class="mb-0">
+                        Career qualification sums the season thresholds a player's teams faced &mdash; not a
+                        flat 3,000 at-bats. That is why Josh Gibson's documented plate appearances qualify
+                        against the 60&ndash;80 game schedules he actually played, where a flat floor would
+                        erase him. A 100-PA minimum guards against seasons where only a handful of games
+                        were documented. Qualified rows are marked with a &#10003; in the advanced tables.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section id="ops-vs-lg">
+                    <h2>OPS vs. League &mdash; and why we don't call it OPS+</h2>
+                    <p>
+                        <strong>OPS vs Lg</strong> compares a player's on-base and slugging to his league
+                        and season: 100 is exactly league average, 150 is exceptional. It uses the same
+                        formula as the familiar OPS+ <em>minus the park adjustment</em>, because the Lahman
+                        database carries no home/road splits from which park factors could be derived.
+                        A hitter in a bandbox and a hitter in a canyon get no correction here &mdash;
+                        that's a real limitation, and it's why the column is not labeled OPS+.
+                    </p>
+                    <p class="mb-0">
+                        Two more honest differences from Baseball-Reference's OPS+: our league baseline
+                        includes pitchers' batting, so values here read a few points lower than bbref's
+                        for the same season; and league context for the Negro Leagues reflects the
+                        <em>documented</em> record, which is still being reconstructed.
+                    </p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section id="stats">
+                    <h2>The advanced columns</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">PA</dt>
+                        <dd class="col-sm-9">Plate appearances: AB + BB + HBP + SF + SH.</dd>
+                        <dt class="col-sm-3">ISO</dt>
+                        <dd class="col-sm-9">Isolated power &mdash; slugging minus batting average; extra bases per at-bat.</dd>
+                        <dt class="col-sm-3">BABIP</dt>
+                        <dd class="col-sm-9">Batting average on balls in play (home runs and strikeouts excluded).</dd>
+                        <dt class="col-sm-3">BB% / K%</dt>
+                        <dd class="col-sm-9">Walks and strikeouts as a percentage of plate appearances.</dd>
+                        <dt class="col-sm-3">HR/162</dt>
+                        <dd class="col-sm-9">Home runs per 162 team games &mdash; puts a 74-game Negro Leagues
+                            season next to a 154-game one without pretending they're the same length.</dd>
+                        <dt class="col-sm-3">K/9, BB/9</dt>
+                        <dd class="col-sm-9">Strikeouts and walks per nine innings pitched.</dd>
+                        <dt class="col-sm-3">WHIP</dt>
+                        <dd class="col-sm-9">Walks plus hits per inning pitched.</dd>
+                    </dl>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <section id="caveats">
+                    <h2>Where the numbers stop short</h2>
+                    <ul class="mb-0">
+                        <li><strong>No park factors.</strong> Lahman has no home/road run splits, so every
+                            rate here is league-relative, never park-adjusted.</li>
+                        <li><strong>League baselines include pitchers</strong>, so OPS vs Lg runs a few
+                            points below Baseball-Reference's OPS+ for the same season.</li>
+                        <li><strong>Negro Leagues team games reflect documented play.</strong> Where the
+                            record is thin, schedule-relative thresholds are correspondingly lenient; see
+                            <a href="/SurvivingRecords">The Surviving Record</a>.</li>
+                        <li><strong>Early-era gaps are honest gaps.</strong> Sacrifice flies before 1954 and
+                            hit-by-pitch before 1887 weren't recorded, so early OBP is approximate; seasons
+                            with unrecorded strikeouts show a dash for BABIP and K% rather than an invented
+                            number.</li>
+                        <li>For the general limits of the data, see the
+                            <a href="/About#data-scope">data scope statement</a>.</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>

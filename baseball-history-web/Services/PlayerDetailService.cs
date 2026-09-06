@@ -114,6 +114,52 @@ public class PlayerDetailService(BaseballDbContext context)
             };
         }
 
+        // League-indexed career context and advanced season rows from the
+        // shared query layer (docs/qualification_and_league_index.sql)
+        var careerIndex = await context.CareerBattingSummaries
+            .Where(c => c.PlayerId == id)
+            .FirstOrDefaultAsync();
+
+        if (careerIndex != null)
+        {
+            player.CareerOpsIndex = (int?)careerIndex.OpsIndex;
+            player.CareerQualified = careerIndex.Qualified;
+            player.CareerPctOfThreshold = (double?)careerIndex.PctOfThreshold;
+        }
+
+        player.AdvancedBattingSeasons = await context.PlayerSeasonRates
+            .Where(r => r.PlayerId == id)
+            .OrderByDescending(r => r.YearId)
+            .Select(r => new AdvancedBattingSeason
+            {
+                Year = r.YearId,
+                LgId = r.LgId,
+                Pa = r.Pa ?? 0,
+                Iso = r.Iso,
+                Babip = r.Babip,
+                BbPct = r.BbPct,
+                KPct = r.KPct,
+                OpsIndex = r.OpsIndex,
+                HrPer162 = r.HrPer162,
+                Qualified = r.Qualified ?? false
+            })
+            .ToListAsync();
+
+        player.AdvancedPitchingSeasons = await context.PlayerSeasonPitchingAdvanced
+            .Where(p => p.PlayerId == id)
+            .OrderByDescending(p => p.YearId)
+            .Select(p => new AdvancedPitchingSeason
+            {
+                Year = p.YearId,
+                LgId = p.LgId,
+                Ip = p.Ip,
+                K9 = p.K9,
+                Bb9 = p.Bb9,
+                Whip = p.Whip,
+                Qualified = p.Qualified ?? false
+            })
+            .ToListAsync();
+
         // Get season-by-season batting records
         player.BattingSeasons = await context.Batting
             .Where(b => b.PlayerId == id)

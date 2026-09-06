@@ -22,6 +22,7 @@ History application.
 | Salary Explorer    | Player salary data and team payrolls  | `/Salaries`                     |
 | Search             | Global search                         | `/Search`                       |
 | Surviving Records  | Segregation-era record survival story | `/SurvivingRecords`             |
+| Stats Glossary     | Advanced stat definitions and caveats | `/Glossary`                     |
 | API Documentation  | REST API reference                    | `/ApiDocs`                      |
 | REST API           | JSON API (30+ endpoints)              | `/api/*`                        |
 
@@ -120,8 +121,11 @@ Detailed player information displayed in a modal overlay.
 
 6. **Stats Tabs** (each tab appears only when the player has data for it;
    pitchers see Pitching first)
-    - **Batting**: year-by-year batting statistics
-    - **Pitching**: year-by-year pitching statistics
+    - **Batting**: year-by-year batting statistics, plus an Advanced Batting
+      table (PA, ISO, BABIP, BB%, K%, OPS vs Lg, HR/162, season-relative
+      qualification marks) from the shared query layer
+    - **Pitching**: year-by-year pitching statistics, plus an Advanced
+      Pitching table (IP, K/9, BB/9, WHIP, qualification marks)
     - **Fielding**: career totals by position, then season-by-season
       records (G, PO, A, E, DP, fielding percentage)
     - **Postseason**: batting and pitching lines per year and round with

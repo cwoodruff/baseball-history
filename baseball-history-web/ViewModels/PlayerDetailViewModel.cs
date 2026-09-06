@@ -41,6 +41,15 @@ public class PlayerDetailViewModel
     // Career batting stats
     public CareerBattingStats? BattingStats { get; set; }
 
+    // League-indexed career context (v_career_batting; see docs/qualification_and_league_index.sql)
+    public int? CareerOpsIndex { get; set; }
+    public bool? CareerQualified { get; set; }
+    public double? CareerPctOfThreshold { get; set; }
+
+    // Season rows from the shared query layer (stints collapsed, unlike BattingSeasons)
+    public List<AdvancedBattingSeason> AdvancedBattingSeasons { get; set; } = new();
+    public List<AdvancedPitchingSeason> AdvancedPitchingSeasons { get; set; } = new();
+
     // Career pitching stats
     public CareerPitchingStats? PitchingStats { get; set; }
 
@@ -315,6 +324,53 @@ public class SeasonBattingRecord
 /// <summary>
 /// Single season pitching record
 /// </summary>
+/// <summary>
+/// Season batting row from the shared query layer: league-indexed rates and
+/// season-relative qualification. NULL stats (unrecorded-era SO, missing
+/// league context) render as an em dash rather than a fabricated number.
+/// </summary>
+public class AdvancedBattingSeason
+{
+    public short Year { get; set; }
+    public string? LgId { get; set; }
+    public long Pa { get; set; }
+    public decimal? Iso { get; set; }
+    public decimal? Babip { get; set; }
+    public decimal? BbPct { get; set; }
+    public decimal? KPct { get; set; }
+    public decimal? OpsIndex { get; set; }
+    public decimal? HrPer162 { get; set; }
+    public bool Qualified { get; set; }
+
+    public string FormattedIso => FormatRate(Iso);
+    public string FormattedBabip => FormatRate(Babip);
+    public string FormattedBbPct => BbPct?.ToString("0.0") ?? "—";
+    public string FormattedKPct => KPct?.ToString("0.0") ?? "—";
+    public string FormattedOpsIndex => OpsIndex?.ToString("0") ?? "—";
+    public string FormattedHrPer162 => HrPer162?.ToString("0.0") ?? "—";
+
+    internal static string FormatRate(decimal? value) => value?.ToString(".000") ?? "—";
+}
+
+/// <summary>
+/// Season pitching row from the shared query layer.
+/// </summary>
+public class AdvancedPitchingSeason
+{
+    public short Year { get; set; }
+    public string? LgId { get; set; }
+    public decimal? Ip { get; set; }
+    public decimal? K9 { get; set; }
+    public decimal? Bb9 { get; set; }
+    public decimal? Whip { get; set; }
+    public bool Qualified { get; set; }
+
+    public string FormattedIp => Ip?.ToString("0.0") ?? "—";
+    public string FormattedK9 => K9?.ToString("0.00") ?? "—";
+    public string FormattedBb9 => Bb9?.ToString("0.00") ?? "—";
+    public string FormattedWhip => Whip?.ToString("0.000") ?? "—";
+}
+
 public class SeasonPitchingRecord
 {
     public short Year { get; set; }

@@ -53,3 +53,49 @@
         </table>
     </div>
 </div>
+
+@if (Model.AdvancedBattingSeasons.Any(s => s.Pa > 0))
+{
+    <div class="card mt-3">
+        <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+            <strong>Advanced Batting</strong>
+            <small><a href="/Glossary" class="text-white-50">About these stats</a></small>
+        </div>
+        <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-sm table-baseball mb-0">
+                <caption class="visually-hidden">Season-by-season advanced batting statistics for @Model.FullName</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Year</th>
+                    <th scope="col">Lg</th>
+                    <th class="text-end" scope="col">PA</th>
+                    <th class="text-end" scope="col" title="Isolated power: SLG minus AVG">ISO</th>
+                    <th class="text-end" scope="col" title="Batting average on balls in play">BABIP</th>
+                    <th class="text-end" scope="col" title="Walks per plate appearance">BB%</th>
+                    <th class="text-end" scope="col" title="Strikeouts per plate appearance">K%</th>
+                    <th class="text-end" scope="col" title="OPS relative to league (100 = average). Not park-adjusted.">OPS vs Lg</th>
+                    <th class="text-end" scope="col" title="Home runs per 162 team games — normalizes short schedules">HR/162</th>
+                    <th class="text-end" scope="col" title="Season-relative qualification: 3.1 PA per team game">Qual</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var season in Model.AdvancedBattingSeasons.Where(s => s.Pa > 0))
+                {
+                    <tr>
+                        <td>@season.Year</td>
+                        <td>@season.LgId</td>
+                        <td class="text-end stat-cell">@season.Pa</td>
+                        <td class="text-end stat-cell">@season.FormattedIso</td>
+                        <td class="text-end stat-cell">@season.FormattedBabip</td>
+                        <td class="text-end stat-cell">@season.FormattedBbPct</td>
+                        <td class="text-end stat-cell">@season.FormattedKPct</td>
+                        <td class="text-end stat-cell">@season.FormattedOpsIndex</td>
+                        <td class="text-end stat-cell">@season.FormattedHrPer162</td>
+                        <td class="text-end stat-cell">@(season.Qualified ? "✓" : "")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

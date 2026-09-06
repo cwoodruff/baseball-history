@@ -32,7 +32,35 @@
                     <div class="h4 mb-0 text-mlb-navy">@Model.BattingStats.FormattedOps</div>
                     <small class="text-muted">OPS</small>
                 </div>
+                @if (Model.CareerOpsIndex.HasValue)
+                {
+                    <div class="col">
+                        <div class="h4 mb-0 text-mlb-navy">@Model.CareerOpsIndex</div>
+                        <small class="text-muted"
+                               title="OPS relative to league (100 = average). League-relative, not park-adjusted — see the glossary.">OPS vs Lg</small>
+                    </div>
+                }
             </div>
+            @if (Model.CareerQualified == true)
+            {
+                <div class="text-center mt-2">
+                    <small class="text-muted"
+                           title="Career plate appearances meet the season-relative qualification threshold (3.1 PA per team game, summed across the schedules his teams actually played).">
+                        Qualified for career rate leaderboards
+                        &middot; <a href="/Glossary">about these stats</a>
+                    </small>
+                </div>
+            }
+            else if (Model.CareerPctOfThreshold.HasValue)
+            {
+                <div class="text-center mt-2">
+                    <small class="text-muted"
+                           title="Career plate appearances fall short of the season-relative qualification threshold.">
+                        @Model.CareerPctOfThreshold.Value.ToString("0")% of the career qualification threshold
+                        &middot; <a href="/Glossary">about these stats</a>
+                    </small>
+                </div>
+            }
         </div>
     </div>
 }
