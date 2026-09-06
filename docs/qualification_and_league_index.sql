@@ -250,7 +250,10 @@ WITH career AS (
 )
 SELECT
     c.*,
-    (c.pa >= c.career_pa_threshold)                             AS qualified,
+    -- The 100-PA floor guards against Negro Leagues team-seasons with only a
+    -- handful of *documented* games (caveat 3): without it, thresholds built
+    -- from 1-2 documented games let 4-PA careers qualify (sanity check C).
+    (c.pa >= GREATEST(c.career_pa_threshold, 100))              AS qualified,
     ROUND(100.0 * c.pa / NULLIF(c.career_pa_threshold, 0), 1)   AS pct_of_threshold,
 
     ROUND(c.h::numeric / NULLIF(c.ab, 0), 4)                    AS avg,
