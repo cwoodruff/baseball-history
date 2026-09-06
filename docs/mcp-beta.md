@@ -4,13 +4,22 @@ Materials for recruiting and running the early MCP beta (issue #74):
 the invitation note, the test checklist, the feedback channel, and the
 credits commitment.
 
-> **Before sending invitations, decide the access path.** The MCP server is
-> not yet deployed anywhere public — only the web app runs in Azure. Either
-> (a) deploy the MCP host and put its URL in the invitation, or (b) limit
-> the first wave to technical testers who can run it locally (.NET 10 SDK
-> plus a PostgreSQL loaded with Lahman data — a real setup cost). The
-> invitation below is written for (a) with a placeholder URL; the local
-> path is included as an appendix for technical testers.
+The hosted endpoint is live at **https://baseball-history-mcp.azurewebsites.net/**
+(stateless Streamable HTTP). Testers point their MCP client at it directly:
+
+```json
+{
+  "mcpServers": {
+    "baseball-history": {
+      "type": "http",
+      "url": "https://baseball-history-mcp.azurewebsites.net/"
+    }
+  }
+}
+```
+
+The local-setup appendix remains for technical testers who want to run
+against their own copy.
 
 ---
 
@@ -35,7 +44,8 @@ survived and what didn't.
 What you'd do as a beta tester:
 
 - Connect your MCP-capable client (Claude Desktop is the easiest; I'll
-  send a two-line config) to the server at <mcp-url>.
+  send a two-line config) to the server at
+  https://baseball-history-mcp.azurewebsites.net/.
 - Spend an hour or two asking it real research questions — the kind you'd
   normally answer with your own references — and note where it shines,
   where it stumbles, and where a tool's output made you distrust it.
