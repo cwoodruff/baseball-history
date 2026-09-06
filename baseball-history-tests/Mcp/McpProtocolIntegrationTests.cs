@@ -282,7 +282,12 @@ public sealed class McpHostFixture : IAsyncLifetime
             },
             sessionId: null);
         response.EnsureSuccessStatusCode();
-        _sessionId = response.Headers.GetValues("Mcp-Session-Id").Single();
+
+        // Stateless Streamable HTTP (2026-07-28 revision, SEP-2567) issues no
+        // Mcp-Session-Id; keep the id only if a sessionful server sends one.
+        _sessionId = response.Headers.TryGetValues("Mcp-Session-Id", out var sessionIds)
+            ? sessionIds.Single()
+            : string.Empty;
 
         using var initializeDocument = await ReadJsonRpcDocumentAsync(response);
         Assert.Equal(

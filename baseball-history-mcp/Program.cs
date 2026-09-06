@@ -16,7 +16,10 @@ internal static class McpHostProgram
 
         builder.AddServiceDefaults();
         builder.AddBaseballMcpServer()
-            .WithHttpTransport();
+            .WithHttpTransport(options =>
+                // Explicit: the 2026-07-28 MCP revision (SEP-2567) removed HTTP
+                // sessions, and this read-only server needs no session state.
+                options.Stateless = true);
 
         if (string.IsNullOrWhiteSpace(builder.Configuration["urls"])
             && string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_URLS")))

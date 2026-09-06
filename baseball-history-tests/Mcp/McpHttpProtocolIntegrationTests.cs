@@ -23,13 +23,15 @@ public sealed class McpHttpProtocolIntegrationTests(McpHttpHostFixture fixture)
     }
 
     [Fact]
-    public async Task HttpHost_Initialize_ReturnsServerInfoAndSession()
+    public async Task HttpHost_Initialize_ReturnsServerInfoWithoutSession()
     {
         var (response, document) = await fixture.SendInitializeAsync();
         using (document)
         {
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.True(response.Headers.Contains("Mcp-Session-Id"), "Expected an Mcp-Session-Id response header.");
+            // Stateless Streamable HTTP (2026-07-28 revision, SEP-2567): the
+            // server must not mint session ids.
+            Assert.False(response.Headers.Contains("Mcp-Session-Id"), "Stateless server must not issue an Mcp-Session-Id header.");
             Assert.Equal(
                 "baseball-history-mcp",
                 document.RootElement.GetProperty("result").GetProperty("serverInfo").GetProperty("name").GetString());
@@ -37,14 +39,9 @@ public sealed class McpHttpProtocolIntegrationTests(McpHttpHostFixture fixture)
     }
 
     [Fact]
-    public async Task HttpHost_ToolsList_ReturnsShippedToolsOverSession()
+    public async Task HttpHost_ToolsList_ReturnsShippedToolsStateless()
     {
-        var (initializeResponse, initializeDocument) = await fixture.SendInitializeAsync();
-        initializeDocument.Dispose();
-        var sessionId = initializeResponse.Headers.GetValues("Mcp-Session-Id").Single();
-
-        await fixture.SendNotificationAsync("notifications/initialized", sessionId);
-        using var toolsDocument = await fixture.SendRequestAsync("tools/list", new { }, sessionId);
+        using var toolsDocument = await fixture.SendRequestAsync("tools/list", new { }, sessionId: null);
 
         var toolNames = toolsDocument.RootElement
             .GetProperty("result")
@@ -128,18 +125,10 @@ public sealed class McpHttpHostFixture : IAsyncLifetime
         return (response, await ReadJsonRpcDocumentAsync(response));
     }
 
-    public async Task<JsonDocument> SendRequestAsync(string method, object parameters, string sessionId)
+    public async Task<JsonDocument> SendRequestAsync(string method, object parameters, string? sessionId)
     {
         var response = await PostJsonRpcAsync(method, parameters, sessionId);
         return await ReadJsonRpcDocumentAsync(response);
-    }
-
-    public async Task SendNotificationAsync(string method, string sessionId)
-    {
-        var payload = JsonSerializer.Serialize(new { jsonrpc = "2.0", method });
-        using var request = CreateJsonRpcRequest(payload, sessionId);
-        using var response = await Client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
     }
 
     private async Task<HttpResponseMessage> PostJsonRpcAsync(string method, object parameters, string? sessionId)
