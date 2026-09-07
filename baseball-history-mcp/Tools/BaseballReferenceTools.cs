@@ -11,7 +11,11 @@ public sealed class BaseballReferenceTools(
     ITeamReadService teams,
     ILeaderboardReadService leaderboards,
     IHallOfFameReadService hallOfFame,
-    ISalaryReadService salaries)
+    ISalaryReadService salaries,
+    IPostseasonReadService postseason,
+    IFieldingReadService fielding,
+    IParkReadService parks,
+    IManagerReadService managers)
 {
     [McpServerTool(Name = "search_players", ReadOnly = true, Title = "Search Players"), Description("Search players by free-text query or last-name prefix with paging.")]
     public Task<PagedReadResult<PlayerLookupItem>> SearchPlayersAsync(
@@ -135,4 +139,37 @@ public sealed class BaseballReferenceTools(
         [Description("Page size from 1 up to the configured salary leader max.")] int pageSize = 25,
         CancellationToken cancellationToken = default)
         => salaries.GetSalaryLeadersAsync(new SalaryLeaderRequest(year, page, pageSize), cancellationToken);
+
+    [McpServerTool(Name = "get_player_postseason", ReadOnly = true, Title = "Get Player Postseason"), Description("Get bounded postseason batting and pitching lines for one player, ordered by year then round (wild card through World Series).")]
+    public Task<PlayerPostseasonReadModel?> GetPlayerPostseasonAsync(
+        [Description("Lahman player id, for example jeterde01.")] string playerId,
+        CancellationToken cancellationToken = default)
+        => postseason.GetPlayerPostseasonAsync(playerId, cancellationToken);
+
+    [McpServerTool(Name = "get_player_fielding", ReadOnly = true, Title = "Get Player Fielding"), Description("Get bounded season-by-season fielding rows plus career-by-position totals for one player.")]
+    public Task<PlayerFieldingReadModel?> GetPlayerFieldingAsync(
+        [Description("Lahman player id, for example ruthba01.")] string playerId,
+        CancellationToken cancellationToken = default)
+        => fielding.GetPlayerFieldingAsync(playerId, cancellationToken);
+
+    [McpServerTool(Name = "search_parks", ReadOnly = true, Title = "Search Parks"), Description("Search ballparks by name, former name, or city with optional state filter and bounded paging. Returns park keys for get_park.")]
+    public Task<PagedReadResult<ParkSummaryReadModel>> SearchParksAsync(
+        [Description("Optional free-text search across park name, former names, and city.")] string? query = null,
+        [Description("Optional state code filter such as MA.")] string? state = null,
+        [Description("1-based results page.")] int page = 1,
+        [Description("Page size from 1 up to the configured park search max.")] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+        => parks.SearchParksAsync(new ParkSearchRequest(query, state, page, pageSize), cancellationToken);
+
+    [McpServerTool(Name = "get_park", ReadOnly = true, Title = "Get Park"), Description("Get one ballpark by park key: location, former names, home-team tenures, and bounded per-season home games and attendance.")]
+    public Task<ParkReadModel?> GetParkAsync(
+        [Description("Lahman park key, for example BOS07 for Fenway Park.")] string parkKey,
+        CancellationToken cancellationToken = default)
+        => parks.GetParkAsync(parkKey, cancellationToken);
+
+    [McpServerTool(Name = "get_manager", ReadOnly = true, Title = "Get Manager"), Description("Get one manager's career by player id: bounded season-by-season records with pennant/World Series flags, player-manager stints, and manager awards.")]
+    public Task<ManagerReadModel?> GetManagerAsync(
+        [Description("Lahman player id, for example mackco01 for Connie Mack.")] string playerId,
+        CancellationToken cancellationToken = default)
+        => managers.GetManagerAsync(playerId, cancellationToken);
 }

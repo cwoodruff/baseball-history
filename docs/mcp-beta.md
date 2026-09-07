@@ -65,6 +65,41 @@ Chris
 
 ---
 
+## Expansion update note (email-ready)
+
+Subject: **Baseball History MCP beta: the server now covers postseason,
+fielding, ballparks, and managers**
+
+Hi <name>,
+
+A quick update for beta testers: the MCP server's surface grew from 12
+tools to 17. Several of you asked for exactly these — item 15 on the
+checklist worked.
+
+New since the last note:
+
+- `get_player_postseason` — postseason batting and pitching lines for
+  any player, ordered the way a series run actually unfolded (wild card
+  through World Series).
+- `get_player_fielding` — season-by-season fielding plus
+  career-by-position totals.
+- `search_parks` and `get_park` — every ballpark since 1871: locations,
+  former names, home-team tenures, and season-by-season attendance.
+- `get_manager` — full managerial careers with pennant and World Series
+  flags, player-manager stints, and Manager of the Year awards.
+
+Nothing you configured changes — reconnect and the new tools appear.
+The workflow-guide resource routes the new question types, and the
+checklist below has four new scenarios (16–19) if you'd like prompts.
+
+Park *factors* (adjusted stats) remain out of scope — the park tools
+return the documented record, not adjustments.
+
+Thanks,
+Chris
+
+---
+
 ## Beta test checklist
 
 Ask your assistant these in your own words — natural phrasing is part of
@@ -111,6 +146,17 @@ against your own references, and did the response say anything misleading?
     helpful?
 15. Anything from your own research life the server *should* handle —
     tell us what's missing.
+
+**New in the expanded surface (postseason, fielding, parks, managers)**
+
+16. A famous postseason performance ("how did Jeter hit in the 2000
+    World Series?") — do the rounds come back in the right order?
+17. A player's defensive story ("what positions did Ruth actually
+    play?") — do the career-by-position totals look right?
+18. A ballpark's history ("who called Fenway home, and when?") — does
+    the assistant find the park without knowing its key?
+19. A manager's career ("Connie Mack's record, pennants, titles") —
+    including a player-manager from the 19th century.
 
 **What to report:** for each finding — the question you asked, what you
 expected, what happened, and (if wrong) the correct answer with your

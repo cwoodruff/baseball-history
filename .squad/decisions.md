@@ -2168,3 +2168,24 @@ Implemented issues #63-66 (season-relative qualification fix) with four concurre
 
 Live smoke-testing caught bugs that 446 automated tests missed. Post-deployment manual verification is essential for leaderboard correctness. Coordinator added 33 new regression tests to close the gap and prevent recurrence.
 
+
+# Claude — MCP tool expansion to 17 tools (issue #95, 2026-09-06)
+
+Added five tools: get_player_postseason (BattingPost/PitchingPost, rounds
+ordered chronologically WC→WS), get_player_fielding (Fielding rows +
+career-by-position totals), search_parks/get_park (Parks/HomeGames; search
+exists because park keys are otherwise undiscoverable), and get_manager
+(Managers/AwardsManagers with pennant/WS flags from the Team nav).
+
+Decisions:
+- Each domain gets its own ReadModels + ReadService pair, singleton DI with
+  the pooled context factory, caps in BaseballMcp:Limits (postseason 200
+  rows/category, fielding 200, park search 50/page, park seasons 160,
+  manager seasons 80) surfaced in the limit snapshot and workflow guide.
+- Per line 340's rule, the workflow guide gained three scenarios
+  (player-postseason-and-fielding, ballpark-lookup, manager-careers) and
+  the discoverability tests were updated (tool subset, toolCount >= 17,
+  appsettings limit assertions). ResourceCount stays 6 — no new resources.
+- Not-found stays null-result, not error, matching get_team_season.
+- SeriesPost (team series results) deliberately not exposed — noted as an
+  unsupported shape in the guide; candidate for issue #92 work.

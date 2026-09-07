@@ -47,7 +47,7 @@ internal static class BaseballMcpServiceCollectionExtensions
             Name: "baseball-history-mcp",
             Title: "Baseball History MCP",
             Version: version,
-            Description: "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."));
+            Description: "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, postseason lines, fielding, ballparks, managers, diagnostics, and guide resources."));
         builder.Services.AddSingleton<BaseballMcpMetadataService>();
 
         builder.Services.AddSingleton<IHallOfFameReadService, HallOfFameReadService>();
@@ -56,6 +56,10 @@ internal static class BaseballMcpServiceCollectionExtensions
         builder.Services.AddSingleton<ITeamReadService, TeamReadService>();
         builder.Services.AddScoped<ILeaderboardReadService, LeaderboardReadService>();
         builder.Services.AddSingleton<ISalaryReadService, SalaryReadService>();
+        builder.Services.AddSingleton<IPostseasonReadService, PostseasonReadService>();
+        builder.Services.AddSingleton<IFieldingReadService, FieldingReadService>();
+        builder.Services.AddSingleton<IParkReadService, ParkReadService>();
+        builder.Services.AddSingleton<IManagerReadService, ManagerReadService>();
 
         return builder.Services
             .AddMcpServer(options =>
@@ -65,10 +69,10 @@ internal static class BaseballMcpServiceCollectionExtensions
                     Name = "baseball-history-mcp",
                     Version = version,
                     Title = "Baseball History MCP",
-                    Description = "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, diagnostics, and guide resources."
+                    Description = "Read-only Lahman data access for players, franchises, team seasons, leaderboards, Hall of Fame, salaries, postseason lines, fielding, ballparks, managers, diagnostics, and guide resources."
                 };
                 options.ServerInstructions =
-                    "Use these read-only baseball history tools for player lookup, franchise lookup, deterministic team-season reads, curated leaderboards, Hall of Fame history, salary history, workflow guidance, and runtime diagnostics. Start with baseball-history://server/workflow-guide for question routing, then use baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://server/diagnostics, baseball-history://hall-of-fame/guide, baseball-history://salary/guide, or the get_server_diagnostics tool as needed. This server never mutates data. Statistics come from the Lahman Baseball Database (CC BY-SA 3.0) with Negro Leagues data from the Seamheads Negro Leagues Database via SABR; attribution requirements are published at /Licensing on the companion site.";
+                    "Use these read-only baseball history tools for player lookup, franchise lookup, deterministic team-season reads, curated leaderboards, Hall of Fame history, salary history, per-player postseason and fielding lines, ballpark lookup, manager careers, workflow guidance, and runtime diagnostics. Start with baseball-history://server/workflow-guide for question routing, then use baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://server/diagnostics, baseball-history://hall-of-fame/guide, baseball-history://salary/guide, or the get_server_diagnostics tool as needed. This server never mutates data. Statistics come from the Lahman Baseball Database (CC BY-SA 3.0) with Negro Leagues data from the Seamheads Negro Leagues Database via SABR; attribution requirements are published at /Licensing on the companion site.";
             })
             .WithRequestFilters(filters => filters.AddCallToolFilter(BaseballMcpToolErrorHandling.NormalizeToolFailures))
             .WithResourcesFromAssembly()

@@ -28,6 +28,16 @@ public sealed class BaseballMcpLimitOptions
     public int SalaryHistorySeasonsMax { get; init; } = 40;
 
     public int SalaryLeaderboardPageSizeMax { get; init; } = 50;
+
+    public int PostseasonRowsPerCategoryMax { get; init; } = 200;
+
+    public int FieldingSeasonRowsMax { get; init; } = 200;
+
+    public int ParkSearchPageSizeMax { get; init; } = 50;
+
+    public int ParkSeasonRowsMax { get; init; } = 160;
+
+    public int ManagerSeasonRowsMax { get; init; } = 80;
 }
 
 internal static class BaseballMcpOptionsValidator
@@ -94,6 +104,36 @@ internal static class BaseballMcpOptionsValidator
         {
             throw new InvalidOperationException(
                 $"{BaseballMcpOptions.SectionName}:Limits:SalaryLeaderboardPageSizeMax must be greater than zero.");
+        }
+
+        if (options.Limits.PostseasonRowsPerCategoryMax <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{BaseballMcpOptions.SectionName}:Limits:PostseasonRowsPerCategoryMax must be greater than zero.");
+        }
+
+        if (options.Limits.FieldingSeasonRowsMax <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{BaseballMcpOptions.SectionName}:Limits:FieldingSeasonRowsMax must be greater than zero.");
+        }
+
+        if (options.Limits.ParkSearchPageSizeMax <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{BaseballMcpOptions.SectionName}:Limits:ParkSearchPageSizeMax must be greater than zero.");
+        }
+
+        if (options.Limits.ParkSeasonRowsMax <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{BaseballMcpOptions.SectionName}:Limits:ParkSeasonRowsMax must be greater than zero.");
+        }
+
+        if (options.Limits.ManagerSeasonRowsMax <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{BaseballMcpOptions.SectionName}:Limits:ManagerSeasonRowsMax must be greater than zero.");
         }
 
         return options;

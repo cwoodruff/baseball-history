@@ -28,7 +28,7 @@
         <section class="mb-5">
             <h2 class="border-bottom pb-2">How it works</h2>
             <p>
-                The server exposes <strong>12 read-only tools</strong> and <strong>6 JSON resources</strong> over
+                The server exposes <strong>17 read-only tools</strong> and <strong>6 JSON resources</strong> over
                 streamable HTTP at <code>http://localhost:5190</code>. Start the server yourself with
                 <code>dotnet run --project baseball-history-mcp</code> (or let the Aspire AppHost host it), then point
                 your MCP client at the URL. Health endpoints are available at <code>/healthz</code> and <code>/alive</code>.
@@ -88,6 +88,9 @@
                     <tr><td>&ldquo;Lowest career ERA, minimum 1000 innings&rdquo;</td><td><code>get_pitching_leaders</code></td></tr>
                     <tr><td>&ldquo;Who was inducted into the Hall of Fame in 1999?&rdquo;</td><td><code>list_hall_of_fame_inductees</code></td></tr>
                     <tr><td>&ldquo;Mike Trout's salary history&rdquo;</td><td><code>get_player_salary_history</code></td></tr>
+                    <tr><td>&ldquo;How did Derek Jeter hit in the postseason?&rdquo;</td><td><code>get_player_postseason</code></td></tr>
+                    <tr><td>&ldquo;What was Connie Mack's managerial record?&rdquo;</td><td><code>get_manager</code></td></tr>
+                    <tr><td>&ldquo;Who called Fenway Park home?&rdquo;</td><td><code>search_parks</code> then <code>get_park</code></td></tr>
                 </tbody>
             </table>
         </section>
@@ -161,6 +164,23 @@
             <ul class="list-unstyled">
                 <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player_salary_history</rhx-badge> Get bounded salary history for one player, ordered most recent to oldest.</li>
                 <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_salary_leaders</rhx-badge> List highest salary rows with optional year filter and bounded paging.</li>
+            </ul>
+
+            <h5 class="mt-3">Postseason &amp; Fielding</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player_postseason</rhx-badge> Get bounded postseason batting and pitching lines for one player, ordered by year then round.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player_fielding</rhx-badge> Get season fielding rows plus career-by-position totals for one player.</li>
+            </ul>
+
+            <h5 class="mt-3">Ballparks</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">search_parks</rhx-badge> Search ballparks by name, former name, or city; returns park keys for get_park.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_park</rhx-badge> Get one ballpark: location, former names, home-team tenures, and per-season attendance.</li>
+            </ul>
+
+            <h5 class="mt-3">Managers</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_manager</rhx-badge> Get one manager's career: season records, pennant and World Series flags, and manager awards.</li>
             </ul>
 
             <h5 class="mt-3">Diagnostics</h5>

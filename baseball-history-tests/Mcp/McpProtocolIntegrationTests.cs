@@ -37,6 +37,11 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
             "get_hall_of_fame_voting_history",
             "get_player_salary_history",
             "get_salary_leaders",
+            "get_player_postseason",
+            "get_player_fielding",
+            "search_parks",
+            "get_park",
+            "get_manager",
             "get_server_diagnostics"
         }, toolNames);
 
@@ -88,6 +93,49 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.Contains(
             workflowGuide.RootElement.GetProperty("workflows").EnumerateArray().Select(value => value.GetProperty("name").GetString()),
             value => value == "salary-history-and-leaders");
+    }
+
+    [Fact]
+    public async Task Host_CallsExpandedSurfaceToolsTheWayClientsDo()
+    {
+        // search_parks discovers the key that get_park requires
+        using var parkSearchResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "search_parks", arguments = new { query = "fenway", pageSize = 5 } });
+        Assert.False(McpHostFixture.IsToolError(parkSearchResponse), McpHostFixture.ReadToolMessage(parkSearchResponse));
+        using var parkSearchPayload = McpHostFixture.ReadToolPayload(parkSearchResponse);
+        var parkKey = parkSearchPayload.RootElement.GetProperty("items")[0].GetProperty("parkKey").GetString();
+        Assert.Equal("BOS07", parkKey);
+
+        using var parkResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_park", arguments = new { parkKey } });
+        Assert.False(McpHostFixture.IsToolError(parkResponse), McpHostFixture.ReadToolMessage(parkResponse));
+        using var parkPayload = McpHostFixture.ReadToolPayload(parkResponse);
+        Assert.Equal("Fenway Park", parkPayload.RootElement.GetProperty("name").GetString());
+        Assert.True(parkPayload.RootElement.GetProperty("tenants").GetArrayLength() >= 2);
+
+        using var postseasonResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_player_postseason", arguments = new { playerId = "jeterde01" } });
+        Assert.False(McpHostFixture.IsToolError(postseasonResponse), McpHostFixture.ReadToolMessage(postseasonResponse));
+        using var postseasonPayload = McpHostFixture.ReadToolPayload(postseasonResponse);
+        Assert.True(postseasonPayload.RootElement.GetProperty("batting").GetArrayLength() > 0);
+
+        using var fieldingResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_player_fielding", arguments = new { playerId = "ruthba01" } });
+        Assert.False(McpHostFixture.IsToolError(fieldingResponse), McpHostFixture.ReadToolMessage(fieldingResponse));
+        using var fieldingPayload = McpHostFixture.ReadToolPayload(fieldingResponse);
+        Assert.True(fieldingPayload.RootElement.GetProperty("careerByPosition").GetArrayLength() > 0);
+
+        using var managerResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_manager", arguments = new { playerId = "mackco01" } });
+        Assert.False(McpHostFixture.IsToolError(managerResponse), McpHostFixture.ReadToolMessage(managerResponse));
+        using var managerPayload = McpHostFixture.ReadToolPayload(managerResponse);
+        Assert.Equal(3731, managerPayload.RootElement.GetProperty("wins").GetInt32());
+        Assert.Equal(9, managerPayload.RootElement.GetProperty("pennants").GetInt32());
     }
 
     [Fact]
@@ -196,7 +244,7 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.False(McpHostFixture.IsToolError(diagnosticsResponse), McpHostFixture.ReadToolMessage(diagnosticsResponse));
         using var diagnosticsPayload = McpHostFixture.ReadToolPayload(diagnosticsResponse);
         Assert.True(diagnosticsPayload.RootElement.GetProperty("databaseReachable").GetBoolean());
-        Assert.True(diagnosticsPayload.RootElement.GetProperty("toolCount").GetInt32() >= 12);
+        Assert.True(diagnosticsPayload.RootElement.GetProperty("toolCount").GetInt32() >= 17);
     }
 
     [Fact]

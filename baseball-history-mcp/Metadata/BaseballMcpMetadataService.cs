@@ -35,6 +35,11 @@ public sealed class BaseballMcpMetadataService(
         "get_hall_of_fame_voting_history",
         "get_player_salary_history",
         "get_salary_leaders",
+        "get_player_postseason",
+        "get_player_fielding",
+        "search_parks",
+        "get_park",
+        "get_manager",
         "get_server_diagnostics"
     ];
 
@@ -57,7 +62,7 @@ public sealed class BaseballMcpMetadataService(
     private static readonly IReadOnlyList<ServerResourceLink> ResourceLinks =
     [
         new("baseball-history://server/info", "Server Info", "Read server identity, startup requirements, and configured limits."),
-        new("baseball-history://server/workflow-guide", "Workflow Guide", "Choose the right tool or guide resource for player, franchise, team-season, leaderboard, Hall of Fame, salary, and diagnostics questions."),
+        new("baseball-history://server/workflow-guide", "Workflow Guide", "Choose the right tool or guide resource for player, franchise, team-season, leaderboard, Hall of Fame, salary, postseason, fielding, ballpark, manager, and diagnostics questions."),
         new("baseball-history://server/stats-catalog", "Stats Catalog", "Discover supported batting and pitching stat categories plus the supported year span."),
         new("baseball-history://server/diagnostics", "Server Diagnostics", "Inspect safe runtime posture, configured limits, and connectivity without exposing secrets."),
         new("baseball-history://hall-of-fame/guide", "Hall of Fame Guide", "Review Hall of Fame tool limits, year coverage, and voting-history caveats."),
@@ -84,6 +89,7 @@ public sealed class BaseballMcpMetadataService(
                 "ConnectionStrings:Lahman must be configured before the server starts.",
                 "Placeholder connection strings containing '<' are rejected at startup.",
                 $"Player search page size is capped at {options.Value.Limits.PlayerSearchPageSizeMax} rows, franchise listing page size is capped at {options.Value.Limits.FranchiseListPageSizeMax} rows, Hall of Fame page size is capped at {options.Value.Limits.HallOfFamePageSizeMax} rows, batting and pitching leaderboard page size is capped at {options.Value.Limits.LeaderboardPageSizeMax} rows, salary history is capped at {options.Value.Limits.SalaryHistorySeasonsMax} seasons, and salary leaderboard page size is capped at {options.Value.Limits.SalaryLeaderboardPageSizeMax} rows.",
+                $"Postseason lines are capped at {options.Value.Limits.PostseasonRowsPerCategoryMax} rows per category, fielding at {options.Value.Limits.FieldingSeasonRowsMax} season rows, park search page size at {options.Value.Limits.ParkSearchPageSizeMax} rows, park season history at {options.Value.Limits.ParkSeasonRowsMax} rows, and manager careers at {options.Value.Limits.ManagerSeasonRowsMax} season rows.",
                 $"Database commands use a configured timeout of {options.Value.QueryTimeoutSeconds} seconds.",
                 "Client workflows should start with baseball-history://server/info and baseball-history://server/workflow-guide before calling domain tools."
             ],
@@ -229,7 +235,7 @@ public sealed class BaseballMcpMetadataService(
                         ],
                         UnsupportedQueryShapes:
                         [
-                            "Fielding, postseason, or arbitrary custom-stat leaderboards.",
+                            "Fielding, postseason, or arbitrary custom-stat leaderboards (per-player fielding and postseason lines live on get_player_fielding and get_player_postseason).",
                             "Free-form sorting over unsupported columns or formulas."
                         ]),
                     new(
@@ -285,6 +291,85 @@ public sealed class BaseballMcpMetadataService(
                             "Salary search by team without using the returned player-team-season rows."
                         ]),
                     new(
+                        Name: "player-postseason-and-fielding",
+                        CommonQuestions:
+                        [
+                            "How did this player perform in the postseason?",
+                            "What positions did this player field, and how well?"
+                        ],
+                        RecommendedResources:
+                        [
+                            "baseball-history://server/workflow-guide"
+                        ],
+                        RecommendedTools:
+                        [
+                            "search_players",
+                            "get_player_postseason",
+                            "get_player_fielding"
+                        ],
+                        SupportedQueryShapes:
+                        [
+                            $"One-player postseason batting and pitching lines with get_player_postseason(playerId), capped at {options.Value.Limits.PostseasonRowsPerCategoryMax} rows per category, ordered by year then round (wild card through World Series).",
+                            $"One-player season fielding rows plus career-by-position totals with get_player_fielding(playerId), capped at {options.Value.Limits.FieldingSeasonRowsMax} season rows."
+                        ],
+                        UnsupportedQueryShapes:
+                        [
+                            "Postseason or fielding leaderboards across players.",
+                            "Postseason series results by team (the SeriesPost table is not exposed)."
+                        ]),
+                    new(
+                        Name: "ballpark-lookup",
+                        CommonQuestions:
+                        [
+                            "What was this ballpark, and who played there?",
+                            "What attendance history does one park have?"
+                        ],
+                        RecommendedResources:
+                        [
+                            "baseball-history://server/workflow-guide"
+                        ],
+                        RecommendedTools:
+                        [
+                            "search_parks",
+                            "get_park"
+                        ],
+                        SupportedQueryShapes:
+                        [
+                            $"Paged park search by name, former name, or city with search_parks(query?, state?, page, pageSize) up to {options.Value.Limits.ParkSearchPageSizeMax} rows per page.",
+                            $"One-park detail with get_park(parkKey) — location, aliases, home-team tenures, and per-season home games and attendance, capped at {options.Value.Limits.ParkSeasonRowsMax} season rows."
+                        ],
+                        UnsupportedQueryShapes:
+                        [
+                            "Park factors or park-adjusted statistics.",
+                            "Game-level or date-level attendance breakdowns."
+                        ]),
+                    new(
+                        Name: "manager-careers",
+                        CommonQuestions:
+                        [
+                            "What is this manager's career record?",
+                            "Which seasons did a manager win the pennant or a Manager of the Year award?"
+                        ],
+                        RecommendedResources:
+                        [
+                            "baseball-history://server/workflow-guide"
+                        ],
+                        RecommendedTools:
+                        [
+                            "search_players",
+                            "get_manager"
+                        ],
+                        SupportedQueryShapes:
+                        [
+                            $"One-manager career with get_manager(playerId) — season-by-season records, pennant and World Series flags, player-manager stints, and manager awards, capped at {options.Value.Limits.ManagerSeasonRowsMax} season rows.",
+                            "Manager ids are People ids; find them with search_players first."
+                        ],
+                        UnsupportedQueryShapes:
+                        [
+                            "Manager leaderboards or cross-manager comparisons in one call.",
+                            "Manager of the Year voting shares (only award wins are returned)."
+                        ]),
+                    new(
                         Name: "diagnostics-and-server-capabilities",
                         CommonQuestions:
                         [
@@ -316,7 +401,7 @@ public sealed class BaseballMcpMetadataService(
                 [
                     "The server does not mutate baseball data or runtime configuration.",
                     "The server does not expose arbitrary SQL, custom joins, or raw table browsing tools.",
-                    "The server does not provide unsupported stat families beyond the shipped player, franchise, team-season, leaderboard, Hall of Fame, salary, and diagnostics surfaces."
+                    "The server does not provide unsupported stat families beyond the shipped player, franchise, team-season, leaderboard, Hall of Fame, salary, postseason, fielding, ballpark, manager, and diagnostics surfaces."
                 ]));
 
     public async Task<ServerDiagnosticsDocument> GetServerDiagnosticsAsync(CancellationToken cancellationToken = default)
@@ -392,7 +477,12 @@ public sealed class BaseballMcpMetadataService(
             options.Value.Limits.TeamPayrollPlayerCountMax,
             options.Value.Limits.HallOfFameVotingHistoryYearsMax,
             options.Value.Limits.SalaryHistorySeasonsMax,
-            options.Value.Limits.SalaryLeaderboardPageSizeMax);
+            options.Value.Limits.SalaryLeaderboardPageSizeMax,
+            options.Value.Limits.PostseasonRowsPerCategoryMax,
+            options.Value.Limits.FieldingSeasonRowsMax,
+            options.Value.Limits.ParkSearchPageSizeMax,
+            options.Value.Limits.ParkSeasonRowsMax,
+            options.Value.Limits.ManagerSeasonRowsMax);
 
     private async Task<SupportedYearSpan?> GetSupportedYearSpanAsync(CancellationToken cancellationToken)
     {
