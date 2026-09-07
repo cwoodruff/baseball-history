@@ -1,14 +1,15 @@
 using baseball_history_web.Extensions;
+using baseball_history_web.Filters;
+using baseball_history_web.Pages.Shared;
 using BaseballHistory.Data.Models;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.Parks;
 
-[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
-public class IndexModel(BaseballDbContext context) : PageModel
+[HtmxPageResponseCache]
+public class IndexModel(BaseballDbContext context) : HtmxPageModel
 {
     public ParkListViewModel ViewModel { get; set; } = new();
 
@@ -68,11 +69,6 @@ public class IndexModel(BaseballDbContext context) : PageModel
             .OrderBy(s => s)
             .ToListAsync();
 
-        if (Request.IsHtmxNonBoostedRequest())
-        {
-            return Partial("_ParksContent", ViewModel);
-        }
-
-        return Page();
+        return HtmxOrPage("_ParksContent", ViewModel);
     }
 }

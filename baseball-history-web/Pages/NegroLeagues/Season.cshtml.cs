@@ -1,15 +1,16 @@
 using baseball_history_web.Extensions;
+using baseball_history_web.Filters;
+using baseball_history_web.Pages.Shared;
 using BaseballHistory.Data.Models;
 using BaseballHistory.Data.Querying;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_web.Pages.NegroLeagues;
 
-[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
-public class SeasonModel(BaseballDbContext context, ILeaderboardQueryService leaderboardService) : PageModel
+[HtmxPageResponseCache]
+public class SeasonModel(BaseballDbContext context, ILeaderboardQueryService leaderboardService) : HtmxPageModel
 {
     private const int LeaderCount = 5;
 
@@ -72,12 +73,7 @@ public class SeasonModel(BaseballDbContext context, ILeaderboardQueryService lea
                 r => r.W.ToString())
         };
 
-        if (Request.IsHtmxNonBoostedRequest())
-        {
-            return Partial("_LeagueSeason", ViewModel);
-        }
-
-        return Page();
+        return HtmxOrPage("_LeagueSeason", ViewModel);
     }
 
     private async Task<List<LeaderLine>> GetBattingLeadersAsync(string stat, short year, string league,

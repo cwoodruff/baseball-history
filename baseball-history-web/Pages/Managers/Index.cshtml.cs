@@ -1,15 +1,16 @@
 using baseball_history_web.Extensions;
+using baseball_history_web.Filters;
+using baseball_history_web.Pages.Shared;
 using BaseballHistory.Data.Models;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.Managers;
 
-[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
-public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageModel
+[HtmxPageResponseCache]
+public class IndexModel(BaseballDbContext context, IMemoryCache cache) : HtmxPageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
 
@@ -75,11 +76,6 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             manager.IsInHallOfFame = hofPlayerIds.Contains(manager.PlayerId);
         }
 
-        if (Request.IsHtmxNonBoostedRequest())
-        {
-            return Partial("_ManagersContent", ViewModel);
-        }
-
-        return Page();
+        return HtmxOrPage("_ManagersContent", ViewModel);
     }
 }

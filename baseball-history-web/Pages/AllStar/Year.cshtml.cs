@@ -1,15 +1,16 @@
 using baseball_history_web.Extensions;
+using baseball_history_web.Filters;
+using baseball_history_web.Pages.Shared;
 using BaseballHistory.Data.Models;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages.AllStar;
 
-[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]
-public class YearModel(BaseballDbContext context, IMemoryCache cache) : PageModel
+[HtmxPageResponseCache]
+public class YearModel(BaseballDbContext context, IMemoryCache cache) : HtmxPageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
 
@@ -119,11 +120,6 @@ public class YearModel(BaseballDbContext context, IMemoryCache cache) : PageMode
                 .ToListAsync()
         };
 
-        if (Request.IsHtmxNonBoostedRequest())
-        {
-            return Partial("_AllStarYear", ViewModel);
-        }
-
-        return Page();
+        return HtmxOrPage("_AllStarYear", ViewModel);
     }
 }
