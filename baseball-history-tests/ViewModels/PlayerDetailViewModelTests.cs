@@ -291,36 +291,24 @@ public class PlayerDetailViewModelTests
     }
 
     [Fact]
-    public void AllStarYearRanges_CompressesRunsAndPreservesGaps()
+    public void AllStarYears_DistinctNewestFirst()
     {
         var vm = new PlayerDetailViewModel
         {
             PlayerId = "test",
-            AllStarAppearances = new[] { 1936, 1937, 1938, 1939, 1940, 1941, 1942, 1946, 1947, 1948, 1949, 1950, 1951 }
-                .Select(y => new AllStarRecord { Year = (short)y, LgId = "AL", TeamId = "BOS" })
+            AllStarAppearances = new[] { 1959, 1959, 1960, 1958 }
+                .Select(y => new AllStarRecord { Year = (short)y, LgId = "NL", TeamId = "SFN" })
                 .ToList()
         };
 
-        Assert.Equal("1936–1942, 1946–1951", vm.AllStarYearRanges);
+        Assert.Equal(new short[] { 1960, 1959, 1958 }, vm.AllStarYears);
     }
 
     [Fact]
-    public void AllStarYearRanges_SingleYearIsNotARange()
-    {
-        var vm = new PlayerDetailViewModel
-        {
-            PlayerId = "test",
-            AllStarAppearances = [new AllStarRecord { Year = 1985, LgId = "AL", TeamId = "NYA" }]
-        };
-
-        Assert.Equal("1985", vm.AllStarYearRanges);
-    }
-
-    [Fact]
-    public void AllStarYearRanges_EmptyWhenNoAppearances()
+    public void AllStarYears_EmptyWhenNoAppearances()
     {
         var vm = new PlayerDetailViewModel { PlayerId = "test" };
 
-        Assert.Equal("", vm.AllStarYearRanges);
+        Assert.Empty(vm.AllStarYears);
     }
 }

@@ -1,0 +1,38 @@
+@model baseball_history_web.ViewModels.AllStarIndexViewModel
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-baseball table-hover mb-0">
+            <thead>
+            <tr>
+                <th scope="col">Year</th>
+                <th scope="col" class="text-end">Games</th>
+                <th scope="col" class="text-end">Selections</th>
+                <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var year in Model.Years)
+            {
+                <tr>
+                    <td class="stat-cell">
+                        <a href="/AllStar/@year.Year" class="text-decoration-none fw-semibold">@year.Year</a>
+                    </td>
+                    <td class="text-end stat-cell">@year.GameCount</td>
+                    <td class="text-end stat-cell">@year.Selections</td>
+                    <td>
+                        @if (year.HasEastWestGame)
+                        {
+                            <rhx-badge rhx-variant="brand" class="me-1">East-West Game</rhx-badge>
+                        }
+                        @if (year.Year is >= 1959 and <= 1962)
+                        {
+                            <rhx-badge rhx-variant="neutral">Two games</rhx-badge>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

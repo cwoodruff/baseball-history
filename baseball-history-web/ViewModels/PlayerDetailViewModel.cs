@@ -130,33 +130,12 @@ public class PlayerDetailViewModel
     // not games, matching the Compare page.
     public int AllStarSelectionCount => AllStarAppearances.Select(a => a.Year).Distinct().Count();
 
-    // Selection years compressed into ranges, e.g. "1936–1942, 1946–1951"
-    public string AllStarYearRanges
-    {
-        get
-        {
-            var years = AllStarAppearances.Select(a => (int)a.Year).Distinct().OrderBy(y => y).ToList();
-            if (years.Count == 0) return "";
-
-            var parts = new List<string>();
-            var start = years[0];
-            var prev = years[0];
-
-            foreach (var year in years.Skip(1))
-            {
-                if (year != prev + 1)
-                {
-                    parts.Add(start == prev ? $"{start}" : $"{start}–{prev}");
-                    start = year;
-                }
-
-                prev = year;
-            }
-
-            parts.Add(start == prev ? $"{start}" : $"{start}–{prev}");
-            return string.Join(", ", parts);
-        }
-    }
+    // Distinct selection years, newest first, for linking to /AllStar/{year}
+    public List<short> AllStarYears => AllStarAppearances
+        .Select(a => a.Year)
+        .Distinct()
+        .OrderByDescending(y => y)
+        .ToList();
 
     // Teams played for
     public List<TeamRecord> Teams { get; set; } = new();

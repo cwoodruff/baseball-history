@@ -1,0 +1,16 @@
+@page "/AllStar"
+@model baseball_history_web.Pages.AllStar.IndexModel
+@{
+    ViewData["Title"] = "All-Star Games";
+}
+
+<h1 class="text-mlb-navy mb-2">All-Star Games</h1>
+<p class="text-muted mb-4">
+    Every All-Star roster since 1933 — the AL-NL Midsummer Classic alongside the Negro Leagues'
+    East-West Game and North-South Game. From 1959 through 1962 two AL-NL games were played each
+    season; selections are counted by season, not by game.
+</p>
+
+<div id="allstar-content">
+    @await Html.PartialAsync("_AllStarYearList", Model.ViewModel)
+</div>

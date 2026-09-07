@@ -1,0 +1,14 @@
+@page "/AllStar/{year:int}"
+@using baseball_history_web.ViewModels
+@model baseball_history_web.Pages.AllStar.YearModel
+@{
+    ViewData["Title"] = $"{Model.ViewModel.Year} All-Star Game";
+}
+
+@await Html.PartialAsync("Components/_Breadcrumbs", BreadcrumbModel.Build(
+    new BreadcrumbItem("All-Star Games", "/AllStar"),
+    new BreadcrumbItem(Model.ViewModel.Year.ToString())))
+
+<div id="allstar-year-content">
+    @await Html.PartialAsync("_AllStarYear", Model.ViewModel)
+</div>

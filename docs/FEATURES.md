@@ -21,6 +21,8 @@ History application.
 | League Season      | Standings and leaders for one season  | `/NegroLeagues/{lgId}/{year}`   |
 | Managers Browser   | Manager listing with career records   | `/Managers`                     |
 | Manager Career     | Season-by-season managerial record    | `/Managers/{playerId}`          |
+| All-Star Games     | Season index of All-Star rosters      | `/AllStar`                      |
+| All-Star Rosters   | Rosters for one season's games        | `/AllStar/{year}`               |
 | Batting Leaders    | Batting statistical leaders           | `/Stats/Batting`                |
 | Pitching Leaders   | Pitching statistical leaders          | `/Stats/Pitching`               |
 | Hall of Fame       | HOF inductee browser                  | `/HallOfFame`                   |
@@ -402,6 +404,31 @@ season managers card links each manager's career page.
 `scope=managers`, switching the winners/voting queries between the
 `AwardsPlayers`/`AwardsSharePlayers` and `AwardsManagers`/`AwardsShareManagers`
 tables. Filter dropdowns, "View Race" links, and pagination all carry the scope.
+
+---
+
+## All-Star Games
+
+**URL**: `/AllStar` (index), `/AllStar/{year}` (rosters). Tracks issue #88.
+
+Season index of every All-Star roster in `AllstarFull` — the AL-NL Midsummer
+Classic plus the Negro Leagues East-West Game (1933–1948) and North-South Game.
+Rows carrying Retrosheet game IDs are AL/NL games; the showcase games have
+empty game IDs and are classified by squad codes (`EAS`/`WES`, `NOS`/`SAS`)
+via `AllStarGames.GroupKey`.
+
+### Components
+
+1. **Year Index** — year, game count, selection count; "East-West Game" and
+   "Two games" (1959–1962) badges
+2. **Roster Pages** — one section per game (MLB games first), AL/NL or
+   East/West rosters side by side: starters by position, then reserves
+   alphabetically; team names link to team season pages (showcase squads
+   resolve the club's real league); East-West section links to `/NegroLeagues`
+3. **1959–1962** — two AL-NL games per season shown as Game 1/Game 2; player
+   badges count seasons, not games (`AllStarSelectionCount`)
+4. **Player links** — the player Honors card renders each All-Star year as a
+   link to `/AllStar/{year}`
 
 ---
 
