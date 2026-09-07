@@ -39,6 +39,19 @@ History application.
 
 ## Home Dashboard
 
+### This Day in Baseball (issue #93)
+
+A widget below the stats band showing up to five birthdays, debuts, and final
+games matching today's month/day — Hall of Famers first, then most recent
+year. Each name links to the player page/modal. Cached per month/day
+(`this_day_{M}_{d}`) so it rotates daily while the rest of the home data stays
+on its 24h key. An optional `?day=MM-DD` query override exists for browsing
+other dates (and deterministic tests); malformed values fall back to today.
+Note: `debut`/`finalGame` are varchar columns behind a `DateOnly` converter,
+so month/day filters must compare whole dates (an `IN` list of one candidate
+date per season year) — `.Month`/`.Year` never translate to SQL.
+
+
 **URL**: `/`
 
 The home page provides an overview of the baseball history database.

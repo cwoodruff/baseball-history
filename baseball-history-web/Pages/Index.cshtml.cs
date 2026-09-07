@@ -24,12 +24,25 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
     // Recent Hall of Fame inductees
     public List<PlayerSummary> RecentHofInductees { get; set; } = new();
 
+    // "This day in baseball" widget
+    public ThisDayViewModel ThisDay { get; set; } = new();
+
     // Top career leaders
     public List<BattingLeaderEntry> CareerHrLeaders { get; set; } = new();
     public List<PitchingLeaderEntry> CareerWinsLeaders { get; set; } = new();
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync([FromQuery] string? day = null)
     {
+        var (month, dayOfMonth) = ThisDayViewModel.ResolveDay(day, DateOnly.FromDateTime(DateTime.Now));
+
+        // Cached per month/day so the widget rotates while the rest of the
+        // home data stays on its own 24h key
+        ThisDay = (await cache.GetOrCreateAsync($"this_day_{month}_{dayOfMonth}", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await LoadThisDayAsync(month, dayOfMonth);
+        }))!;
+
         var homeData = await cache.GetOrCreateAsync("home_page_data", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
@@ -49,6 +62,101 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
             CareerHrLeaders = homeData.CareerHrLeaders;
             CareerWinsLeaders = homeData.CareerWinsLeaders;
         }
+    }
+
+    private async Task<ThisDayViewModel> LoadThisDayAsync(int month, int day)
+    {
+        const int entriesPerCategory = 5;
+
+        var hofPlayerIds = (await cache.GetOrCreateAsync("hof_player_ids", async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = CacheDuration;
+            return await context.HallOfFame
+                .Where(h => h.Inducted == "Y")
+                .Select(h => h.PlayerId)
+                .Distinct()
+                .ToHashSetAsync();
+        }))!;
+
+        // birthMonth/birthDay are unpadded numeric strings in the Lahman data
+        var monthText = month.ToString();
+        var dayText = day.ToString();
+
+        // debut/finalGame are varchar columns behind a DateOnly converter, so
+        // Month/Day never translate to SQL; equality against concrete dates
+        // does, one candidate per season year
+        var candidateDates = new List<DateOnly?>();
+        for (var candidateYear = 1871; candidateYear <= DateTime.Now.Year; candidateYear++)
+        {
+            if (day <= DateTime.DaysInMonth(candidateYear, month))
+            {
+                candidateDates.Add(new DateOnly(candidateYear, month, day));
+            }
+        }
+
+        var birthdays = await context.People
+            .Where(p => p.BirthMonth == monthText && p.BirthDay == dayText)
+            .Select(p => new
+            {
+                p.PlayerId,
+                FullName = (p.NameFirst ?? "") + " " + (p.NameLast ?? ""),
+                p.BirthYear
+            })
+            .ToListAsync();
+
+        var debuts = await context.People
+            .Where(p => p.Debut != null && candidateDates.Contains(p.Debut))
+            .Select(p => new
+            {
+                p.PlayerId,
+                FullName = (p.NameFirst ?? "") + " " + (p.NameLast ?? ""),
+                Date = p.Debut
+            })
+            .ToListAsync();
+
+        var finales = await context.People
+            .Where(p => p.FinalGame != null && candidateDates.Contains(p.FinalGame))
+            .Select(p => new
+            {
+                p.PlayerId,
+                FullName = (p.NameFirst ?? "") + " " + (p.NameLast ?? ""),
+                Date = p.FinalGame
+            })
+            .ToListAsync();
+
+        List<ThisDayEntry> Rank(IEnumerable<ThisDayEntry> entries) => entries
+            .OrderByDescending(e => e.IsInHallOfFame)
+            .ThenByDescending(e => e.Year)
+            .ThenBy(e => e.FullName)
+            .Take(entriesPerCategory)
+            .ToList();
+
+        return new ThisDayViewModel
+        {
+            Month = month,
+            Day = day,
+            Birthdays = Rank(birthdays.Select(b => new ThisDayEntry
+            {
+                PlayerId = b.PlayerId,
+                FullName = b.FullName.Trim(),
+                Year = int.TryParse(b.BirthYear, out var birthYear) ? birthYear : null,
+                IsInHallOfFame = hofPlayerIds.Contains(b.PlayerId)
+            })),
+            Debuts = Rank(debuts.Select(d => new ThisDayEntry
+            {
+                PlayerId = d.PlayerId,
+                FullName = d.FullName.Trim(),
+                Year = d.Date?.Year,
+                IsInHallOfFame = hofPlayerIds.Contains(d.PlayerId)
+            })),
+            Finales = Rank(finales.Select(f => new ThisDayEntry
+            {
+                PlayerId = f.PlayerId,
+                FullName = f.FullName.Trim(),
+                Year = f.Date?.Year,
+                IsInHallOfFame = hofPlayerIds.Contains(f.PlayerId)
+            }))
+        };
     }
 
     private async Task<HomePageData> LoadHomePageDataAsync()
