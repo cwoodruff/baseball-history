@@ -34,7 +34,12 @@ public sealed record McpLimitSnapshot(
     int TeamPayrollPlayerCountMax,
     int HallOfFameVotingHistoryYearsMax,
     int SalaryHistorySeasonsMax,
-    int SalaryLeaderboardPageSizeMax);
+    int SalaryLeaderboardPageSizeMax,
+    int PostseasonRowsPerCategoryMax,
+    int FieldingSeasonRowsMax,
+    int ParkSearchPageSizeMax,
+    int ParkSeasonRowsMax,
+    int ManagerSeasonRowsMax);
 
 public sealed record ServerResourceLink(
     string Uri,

@@ -42,7 +42,21 @@ The server exposes a deliberately small MCP surface:
     - Salary history and career total for one player when Lahman salary rows exist
 11. `get_salary_leaders`
     - Highest-paid player rows with optional year filtering and paging
-12. `get_server_diagnostics`
+12. `get_player_postseason`
+    - Postseason batting and pitching lines for one player, ordered by year then
+      round (wild card through World Series)
+13. `get_player_fielding`
+    - Season fielding rows plus career-by-position totals for one player
+14. `search_parks`
+    - Ballpark search by name, former name, or city with optional state filter;
+      returns park keys for `get_park`
+15. `get_park`
+    - One ballpark: location, former names, home-team tenures, and per-season
+      home games and attendance
+16. `get_manager`
+    - One manager's career: season records with pennant/World Series flags,
+      player-manager stints, and manager awards
+17. `get_server_diagnostics`
     - Safe runtime posture and limits; no secrets returned
 
 ### Resources
@@ -72,6 +86,11 @@ These concrete caps match `appsettings.json` and the shipped `baseball-history:/
 - `get_hall_of_fame_voting_history` row cap: **25**
 - `get_player_salary_history` season cap: **40**
 - `get_salary_leaders` page size max: **50**
+- `get_player_postseason` rows per category cap: **200**
+- `get_player_fielding` season row cap: **200**
+- `search_parks` page size max: **50**
+- `get_park` season row cap: **160**
+- `get_manager` season row cap: **80**
 
 If you need capabilities beyond that surface, treat them as follow-on work. Do not document or assume generic SQL, writes, or REST-parity tools because they are not part of the shipped MCP contract.
 

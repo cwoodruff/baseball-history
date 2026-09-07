@@ -12,6 +12,12 @@ public class McpDocsPageTests(WebApplicationFactory<Program> factory) : Integrat
         Assert.Contains("MCP Server", html);
         Assert.Contains("search_players", html);
         Assert.Contains("get_batting_leaders", html);
+        Assert.Contains("get_player_postseason", html);
+        Assert.Contains("get_player_fielding", html);
+        Assert.Contains("search_parks", html);
+        Assert.Contains("get_park", html);
+        Assert.Contains("get_manager", html);
+        Assert.Contains("17 read-only tools", html);
         Assert.Contains("get_server_diagnostics", html);
         Assert.Contains("baseball-history://server/info", html);
         Assert.Contains("ConnectionStrings__Lahman", html);

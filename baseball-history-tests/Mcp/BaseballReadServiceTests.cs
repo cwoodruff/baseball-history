@@ -344,6 +344,168 @@ public class BaseballReadServiceTests
         return new TeamReadService(factory, hallOfFame);
     }
 
+    [Fact]
+    public async Task GetPlayerPostseasonAsync_WithJeter_ReturnsBattingLines()
+    {
+        var service = CreatePostseasonReadService();
+
+        var postseason = await service.GetPlayerPostseasonAsync("jeterde01");
+
+        Assert.NotNull(postseason);
+        Assert.Equal("Derek Jeter", postseason.FullName);
+        Assert.True(postseason.Batting.Count > 20);
+        // 2000 World Series MVP year is present with the WS round
+        Assert.Contains(postseason.Batting, b => b.Year == 2000 && b.Round == "WS");
+        // Rounds within a year sort chronologically, not alphabetically:
+        // the 2000 run reads ALDS -> ALCS -> WS
+        var run2000 = postseason.Batting.Where(b => b.Year == 2000).Select(b => b.Round).ToList();
+        Assert.Equal(run2000.Count - 1, run2000.IndexOf("WS"));
+    }
+
+    [Fact]
+    public async Task GetPlayerPostseasonAsync_CapsRows()
+    {
+        var service = CreatePostseasonReadService(postseasonRowsPerCategoryMax: 5);
+
+        var postseason = await service.GetPlayerPostseasonAsync("jeterde01");
+
+        Assert.NotNull(postseason);
+        Assert.Equal(5, postseason.Batting.Count);
+        Assert.True(postseason.WasBattingCapped);
+        Assert.True(postseason.TotalBattingRowCount > 5);
+    }
+
+    [Fact]
+    public async Task GetPlayerPostseasonAsync_WithUnknownPlayer_ReturnsNull()
+    {
+        var service = CreatePostseasonReadService();
+
+        Assert.Null(await service.GetPlayerPostseasonAsync("nosuchplayer99"));
+    }
+
+    [Fact]
+    public async Task GetPlayerFieldingAsync_WithRuth_ReturnsPositions()
+    {
+        var service = CreateFieldingReadService();
+
+        var fielding = await service.GetPlayerFieldingAsync("ruthba01");
+
+        Assert.NotNull(fielding);
+        Assert.Equal("Babe Ruth", fielding.FullName);
+        // Ruth pitched and played the outfield
+        Assert.Contains(fielding.CareerByPosition, p => p.Position == "P");
+        Assert.Contains(fielding.CareerByPosition, p => p.Position == "OF" || p.Position == "RF" || p.Position == "LF");
+        Assert.All(fielding.CareerByPosition.Where(p => p.FieldingPercentage.HasValue),
+            p => Assert.InRange(p.FieldingPercentage!.Value, 0, 1));
+    }
+
+    [Fact]
+    public async Task GetPlayerFieldingAsync_WithUnknownPlayer_ReturnsNull()
+    {
+        var service = CreateFieldingReadService();
+
+        Assert.Null(await service.GetPlayerFieldingAsync("nosuchplayer99"));
+    }
+
+    [Fact]
+    public async Task SearchParksAsync_ByName_FindsFenway()
+    {
+        var service = CreateParkReadService();
+
+        var result = await service.SearchParksAsync(new ParkSearchRequest(Query: "fenway"));
+
+        Assert.Contains(result.Items, p => p.ParkKey == "BOS07" && p.Name == "Fenway Park");
+    }
+
+    [Fact]
+    public async Task SearchParksAsync_ByState_FiltersResults()
+    {
+        var service = CreateParkReadService();
+
+        var result = await service.SearchParksAsync(new ParkSearchRequest(State: "ma"));
+
+        Assert.True(result.TotalCount > 0);
+        Assert.All(result.Items, p => Assert.Equal("MA", p.State));
+    }
+
+    [Fact]
+    public async Task GetParkAsync_WithFenway_ReturnsTenantsAndSeasons()
+    {
+        var service = CreateParkReadService();
+
+        var park = await service.GetParkAsync("bos07");
+
+        Assert.NotNull(park);
+        Assert.Equal("Fenway Park", park.Name);
+        Assert.Equal((short)1912, park.FirstYear);
+        // The Braves borrowed Fenway in 1913-14, so it has at least two tenants
+        Assert.True(park.Tenants.Count >= 2);
+        Assert.Contains(park.Tenants, t => t.TeamId == "BOS" && t.LeagueId == "AL");
+        Assert.True(park.TotalAttendance > 100_000_000);
+    }
+
+    [Fact]
+    public async Task GetParkAsync_CapsSeasonRows()
+    {
+        var service = CreateParkReadService(parkSeasonRowsMax: 10);
+
+        var park = await service.GetParkAsync("BOS07");
+
+        Assert.NotNull(park);
+        Assert.Equal(10, park.Seasons.Count);
+        Assert.True(park.WasSeasonListCapped);
+        Assert.True(park.TotalSeasonRowCount > 10);
+    }
+
+    [Fact]
+    public async Task GetParkAsync_WithUnknownKey_ReturnsNull()
+    {
+        var service = CreateParkReadService();
+
+        Assert.Null(await service.GetParkAsync("NOPE99"));
+    }
+
+    [Fact]
+    public async Task GetManagerAsync_WithConnieMack_ReturnsCareer()
+    {
+        var service = CreateManagerReadService();
+
+        var manager = await service.GetManagerAsync("mackco01");
+
+        Assert.NotNull(manager);
+        Assert.Equal("Connie Mack", manager.FullName);
+        Assert.Equal(3731, manager.Wins);
+        Assert.Equal(9, manager.Pennants);
+        Assert.Equal(5, manager.WorldSeriesTitles);
+        Assert.True(manager.IsInHallOfFame);
+        Assert.True(manager.WasPlayerManager);
+        Assert.Equal((short)1894, manager.FirstYear);
+        Assert.Equal((short)1950, manager.LastYear);
+    }
+
+    [Fact]
+    public async Task GetManagerAsync_CapsSeasonRows()
+    {
+        var service = CreateManagerReadService(managerSeasonRowsMax: 10);
+
+        var manager = await service.GetManagerAsync("mackco01");
+
+        Assert.NotNull(manager);
+        Assert.Equal(10, manager.Seasons.Count);
+        Assert.True(manager.WasSeasonListCapped);
+        // Career totals still cover the full record despite the capped list
+        Assert.Equal(3731, manager.Wins);
+    }
+
+    [Fact]
+    public async Task GetManagerAsync_WithNonManager_ReturnsNull()
+    {
+        var service = CreateManagerReadService();
+
+        // Jeter played but never managed
+        Assert.Null(await service.GetManagerAsync("jeterde01"));
+    }
+
     private static ISalaryReadService CreateSalaryReadService(
         int salaryHistorySeasonsMax = 40,
         int salaryLeaderboardPageSizeMax = 50) =>
@@ -352,6 +514,28 @@ public class BaseballReadServiceTests
             CreateOptions(
                 salaryHistorySeasonsMax: salaryHistorySeasonsMax,
                 salaryLeaderboardPageSizeMax: salaryLeaderboardPageSizeMax));
+
+    private static IPostseasonReadService CreatePostseasonReadService(int postseasonRowsPerCategoryMax = 200) =>
+        new PostseasonReadService(
+            new TestDbContextFactory(),
+            CreateOptions(postseasonRowsPerCategoryMax: postseasonRowsPerCategoryMax));
+
+    private static IFieldingReadService CreateFieldingReadService(int fieldingSeasonRowsMax = 200) =>
+        new FieldingReadService(
+            new TestDbContextFactory(),
+            CreateOptions(fieldingSeasonRowsMax: fieldingSeasonRowsMax));
+
+    private static IParkReadService CreateParkReadService(
+        int parkSearchPageSizeMax = 50,
+        int parkSeasonRowsMax = 160) =>
+        new ParkReadService(
+            new TestDbContextFactory(),
+            CreateOptions(parkSearchPageSizeMax: parkSearchPageSizeMax, parkSeasonRowsMax: parkSeasonRowsMax));
+
+    private static IManagerReadService CreateManagerReadService(int managerSeasonRowsMax = 80) =>
+        new ManagerReadService(
+            new TestDbContextFactory(),
+            CreateOptions(managerSeasonRowsMax: managerSeasonRowsMax));
 
     private static BaseballMcpRequestPolicy CreateRequestPolicy(IOptions<BaseballMcpOptions>? options = null) =>
         new(options ?? CreateOptions());
@@ -364,6 +548,11 @@ public class BaseballReadServiceTests
         int hallOfFameVotingHistoryYearsMax = 25,
         int salaryHistorySeasonsMax = 40,
         int salaryLeaderboardPageSizeMax = 50,
+        int postseasonRowsPerCategoryMax = 200,
+        int fieldingSeasonRowsMax = 200,
+        int parkSearchPageSizeMax = 50,
+        int parkSeasonRowsMax = 160,
+        int managerSeasonRowsMax = 80,
         int queryTimeoutSeconds = 30) =>
         Options.Create(new BaseballMcpOptions
         {
@@ -376,7 +565,12 @@ public class BaseballReadServiceTests
                 HallOfFamePageSizeMax = hallOfFamePageSizeMax,
                 HallOfFameVotingHistoryYearsMax = hallOfFameVotingHistoryYearsMax,
                 SalaryHistorySeasonsMax = salaryHistorySeasonsMax,
-                SalaryLeaderboardPageSizeMax = salaryLeaderboardPageSizeMax
+                SalaryLeaderboardPageSizeMax = salaryLeaderboardPageSizeMax,
+                PostseasonRowsPerCategoryMax = postseasonRowsPerCategoryMax,
+                FieldingSeasonRowsMax = fieldingSeasonRowsMax,
+                ParkSearchPageSizeMax = parkSearchPageSizeMax,
+                ParkSeasonRowsMax = parkSeasonRowsMax,
+                ManagerSeasonRowsMax = managerSeasonRowsMax
             }
         });
 
