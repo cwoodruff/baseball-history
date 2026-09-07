@@ -59,7 +59,7 @@ public class PostseasonSeriesEntry
 {
     public short Year { get; set; }
     public string Round { get; set; } = null!;
-    public string RoundName => PostseasonViewModel.RoundNames.GetValueOrDefault(Round, Round);
+    public string RoundName => PostseasonViewModel.RoundDisplayName(Round);
     public string WinnerTeamId { get; set; } = null!;
     public string? WinnerTeamName { get; set; }
     public string WinnerLgId { get; set; } = null!;

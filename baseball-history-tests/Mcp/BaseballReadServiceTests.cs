@@ -481,6 +481,37 @@ public class BaseballReadServiceTests
     }
 
     [Fact]
+    public async Task GetParkAsync_WithCappedSeasonRows_AggregatesCoverFullHistory()
+    {
+        var cappedService = CreateParkReadService(parkSeasonRowsMax: 3);
+        var uncappedService = CreateParkReadService(parkSeasonRowsMax: 1000);
+
+        var capped = await cappedService.GetParkAsync("BOS07");
+        var uncapped = await uncappedService.GetParkAsync("BOS07");
+
+        Assert.NotNull(capped);
+        Assert.NotNull(uncapped);
+        Assert.True(capped.WasSeasonListCapped);
+        Assert.False(uncapped.WasSeasonListCapped);
+        Assert.Equal(3, capped.Seasons.Count);
+        Assert.True(uncapped.Seasons.Count > capped.Seasons.Count);
+
+        Assert.Equal(uncapped.ParkKey, capped.ParkKey);
+        Assert.Equal(uncapped.Name, capped.Name);
+        Assert.Equal(uncapped.Aliases, capped.Aliases);
+        Assert.Equal(uncapped.City, capped.City);
+        Assert.Equal(uncapped.State, capped.State);
+        Assert.Equal(uncapped.Country, capped.Country);
+        Assert.Equal(uncapped.FirstYear, capped.FirstYear);
+        Assert.Equal(uncapped.LastYear, capped.LastYear);
+        Assert.Equal(uncapped.TotalGames, capped.TotalGames);
+        Assert.Equal(uncapped.TotalAttendance, capped.TotalAttendance);
+        Assert.Equal(uncapped.TotalSeasonRowCount, capped.TotalSeasonRowCount);
+        Assert.Equal(uncapped.Tenants, capped.Tenants);
+        Assert.Equal(uncapped.Seasons.Take(capped.Seasons.Count), capped.Seasons);
+    }
+
+    [Fact]
     public async Task GetParkAsync_WithUnknownKey_ReturnsNull()
     {
         var service = CreateParkReadService();

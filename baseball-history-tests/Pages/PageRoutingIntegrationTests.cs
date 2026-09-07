@@ -438,6 +438,49 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         Assert.Contains("$25,000,000", html);
     }
 
+    [Fact]
+    public async Task Salaries_InvalidTeamFilter_ShowsEmptyState()
+    {
+        var html = await GetStringAsync("/Salaries?team=ZZZ");
+
+        AssertFullPageShell(html);
+        Assert.Contains(">Salary Explorer</h1>", html);
+        Assert.Contains("No Salary Data Found", html);
+        Assert.Contains("View All Salaries", html);
+    }
+
+    [Fact]
+    public async Task Salaries_AlternativeTeamYearCombination_RendersPayrollAndRoster()
+    {
+        var html = await GetStringAsync("/Salaries?year=2015&team=BOS");
+
+        AssertFullPageShell(html);
+        Assert.Contains("Boston Red Sox &mdash; 2015 Total Payroll", html);
+        Assert.Contains("Player Salaries", html);
+        Assert.Contains("David Ortiz", html);
+    }
+
+    [Fact]
+    public async Task Salaries_Htmx_PageBeyondMax_ClampsToLastPage()
+    {
+        var html = await GetHtmxStringAsync("/Salaries?page=999999");
+        var (currentPage, totalPages) = ParsePaginationSummary(html);
+
+        Assert.Equal(totalPages, currentPage);
+        Assert.True(totalPages > 1);
+    }
+
+    [Fact]
+    public async Task Salaries_WithoutFilters_DoesNotShowTeamPayrollSummary()
+    {
+        var html = await GetStringAsync("/Salaries");
+
+        AssertFullPageShell(html);
+        Assert.Contains(">Salary Explorer</h1>", html);
+        Assert.DoesNotContain("Total Payroll", html);
+        Assert.Contains("Player Salaries", html);
+    }
+
     private static void AssertFullPageShell(string html)
     {
         Assert.Contains("<!DOCTYPE html>", html);

@@ -129,4 +129,47 @@ public class ManagersPageTests(WebApplicationFactory<Program> factory) : Integra
         Assert.Contains("Most Valuable Player", html);
         Assert.DoesNotContain("BBWAA Manager of the Year", html);
     }
+
+    [Fact]
+    public async Task AwardsPage_PlayerVotingRace_LoadsPlayerContracts()
+    {
+        var html = await GetStringAsync("/Awards?award=Most%20Valuable%20Player&year=2016&league=AL");
+
+        Assert.Contains("2016 AL Most Valuable Player Voting", html);
+        Assert.Contains("Mike Trout", html);
+        Assert.Contains("Winner", html);
+        Assert.Contains("/Players/troutmi01", html);
+        Assert.DoesNotContain("/Managers/troutmi01", html);
+    }
+
+    [Fact]
+    public async Task AwardsPage_InvalidPlayerFilters_ShowEmptyState()
+    {
+        var html = await GetStringAsync("/Awards?award=NoSuchAward&year=1800&league=ZZ");
+
+        Assert.Contains("Awards &amp; Voting", html);
+        Assert.Contains("No Awards Found", html);
+        Assert.Contains("View All Awards", html);
+    }
+
+    [Fact]
+    public async Task AwardsPage_NonBoostedHtmx_ReturnsListPartial()
+    {
+        var html = await GetHtmxStringAsync("/Awards?award=Most%20Valuable%20Player&year=2016&league=AL");
+
+        Assert.DoesNotContain("<!DOCTYPE html>", html);
+        Assert.Contains("2016 AL Most Valuable Player Voting", html);
+        Assert.DoesNotContain("id=\"filter-form\"", html);
+    }
+
+    [Fact]
+    public async Task AwardsPage_BoostedHtmx_ReturnsFullPageShell()
+    {
+        var html = await GetHtmxStringAsync("/Awards?scope=managers", boosted: true);
+
+        Assert.Contains("<!DOCTYPE html>", html);
+        Assert.Contains("Awards &amp; Voting", html);
+        Assert.Contains("id=\"awards-list\"", html);
+        Assert.Contains("id=\"filter-form\"", html);
+    }
 }

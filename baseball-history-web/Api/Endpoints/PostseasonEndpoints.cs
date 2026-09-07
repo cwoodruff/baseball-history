@@ -28,6 +28,11 @@ public static class PostseasonEndpoints
 
         var data = await query
             .OrderByDescending(s => s.YearId)
+            .ThenBy(s => s.Round.StartsWith("ALWC") || s.Round.StartsWith("NLWC") ? 0 :
+                s.Round.StartsWith("ALDS") || s.Round.StartsWith("NLDS") ||
+                s.Round == "AEDIV" || s.Round == "AWDIV" || s.Round == "NEDIV" || s.Round == "NWDIV" ? 1 :
+                s.Round.StartsWith("ALCS") || s.Round.StartsWith("NLCS") || s.Round == "CS" ? 2 :
+                s.Round == "WS" ? 3 : 4)
             .ThenBy(s => s.Round)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -43,7 +48,12 @@ public static class PostseasonEndpoints
     {
         var series = await context.SeriesPost
             .Where(s => s.YearId == year)
-            .OrderBy(s => s.Round)
+            .OrderBy(s => s.Round.StartsWith("ALWC") || s.Round.StartsWith("NLWC") ? 0 :
+                s.Round.StartsWith("ALDS") || s.Round.StartsWith("NLDS") ||
+                s.Round == "AEDIV" || s.Round == "AWDIV" || s.Round == "NEDIV" || s.Round == "NWDIV" ? 1 :
+                s.Round.StartsWith("ALCS") || s.Round.StartsWith("NLCS") || s.Round == "CS" ? 2 :
+                s.Round == "WS" ? 3 : 4)
+            .ThenBy(s => s.Round)
             .Select(s => new PostseasonSeriesDto(
                 s.YearId, s.Round, s.TeamIdwinner, s.LgIdwinner,
                 s.TeamIdloser, s.LgIdloser, s.Wins, s.Losses, s.Ties))

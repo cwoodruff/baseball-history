@@ -46,6 +46,11 @@ public class IndexModel(BaseballDbContext context, IMemoryCache cache) : PageMod
 
         var seriesData = await query
             .OrderByDescending(s => s.YearId)
+            .ThenBy(s => s.Round.StartsWith("ALWC") || s.Round.StartsWith("NLWC") ? 0 :
+                s.Round.StartsWith("ALDS") || s.Round.StartsWith("NLDS") ||
+                s.Round == "AEDIV" || s.Round == "AWDIV" || s.Round == "NEDIV" || s.Round == "NWDIV" ? 1 :
+                s.Round.StartsWith("ALCS") || s.Round.StartsWith("NLCS") || s.Round == "CS" ? 2 :
+                s.Round == "WS" ? 3 : 4)
             .ThenBy(s => s.Round)
             .Skip((ViewModel.CurrentPage - 1) * PageSize)
             .Take(PageSize)
