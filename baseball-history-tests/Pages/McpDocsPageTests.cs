@@ -19,6 +19,12 @@ public class McpDocsPageTests(WebApplicationFactory<Program> factory) : Integrat
         Assert.Contains("get_manager", html);
         Assert.Contains("17 read-only tools", html);
         Assert.Contains("get_server_diagnostics", html);
+        // What's-new section links the expanded surface to the new site features
+        Assert.Contains("id=\"whats-new\"", html);
+        Assert.Contains("href=\"/Parks\"", html);
+        Assert.Contains("href=\"/Managers\"", html);
+        Assert.Contains("href=\"/NegroLeagues\"", html);
+        Assert.Contains("href=\"/AllStar\"", html);
         Assert.Contains("baseball-history://server/info", html);
         Assert.Contains("ConnectionStrings__Lahman", html);
     }
