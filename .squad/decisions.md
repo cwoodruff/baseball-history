@@ -1,5 +1,82 @@
 # Squad Decisions
 
+# Dallas — HTMX list/detail implementation (2026-09-07)
+
+**Author:** Dallas  
+**Status:** ✅ COMPLETE (Commit: `baf3805`)
+
+## Decision
+
+List/detail Razor browsers should reuse a single surface-owned content wrapper across both index and detail pages, then point drill-in links and prev/next controls at that wrapper with:
+
+- `hx-get`
+- `hx-target`
+- `hx-swap="innerHTML"`
+- `hx-push-url="true"`
+
+## Standardized wrappers
+
+- All-Star: `#allstar-content`
+- Negro Leagues: `#negro-leagues-content`
+- Managers: `#managers-content`
+- Parks: `#parks-content`
+- Search page results: `#search-page-content`
+- Compare page body: `#compare-content`
+
+## Why
+
+This keeps progressive enhancement intact (`href`/`action` stay real), makes HTMX swaps predictable, and lets list/detail browsing use the existing server-side partial/full-page split instead of reloading the whole page.
+
+## Implementation
+
+- Search form refinements with HTMX form wiring
+- Compare page Apply/Clear buttons
+- All-Star, Negro Leagues, Managers, Parks drill-in and prev/next navigation
+- Response-cache vary headers added for HTMX request differentiation
+
+---
+
+# Lambert — HTMX Review & Regression Validation (2026-09-07)
+
+**Author:** Lambert  
+**Status:** ✅ APPROVED
+
+## Review Scope
+
+- Search
+- Compare
+- All-Star
+- Negro Leagues
+- Managers
+- Parks
+
+## Verification
+
+- Affected regression slice: **87/87 tests passed**
+- Full regression suite after commit: **665/665 tests passed**
+- Diff-reviewed `.cshtml`/page-model changes for HTMX navigation and form wiring
+- Confirmed each new `hx-target` matches a real wrapper id on the corresponding full page
+- Confirmed progressive-enhancement fallbacks remain present (`href` on links, `action` on forms)
+- Confirmed drill-in / prev-next / history-sensitive HTMX navigations render with `hx-push-url="true"`
+- Checked response-cache vary headers in `Search.cshtml.cs` for conflicts (none found)
+
+## Test Coverage Added
+
+Added regression assertions in:
+- AllStarPageTests
+- ManagersPageTests
+- NegroLeaguesPageTests
+- ParksPageTests
+- PageRoutingIntegrationTests
+- Sprint5SurfaceIntegrationTests
+
+## Verdict
+
+✅ **APPROVE** — No regression blocker found. The restore-time `NU1903` warning for `Microsoft.OpenApi` is pre-existing and unrelated.
+
+---
+
+
 # Parker — PostgreSQL EF Core Migration (2026-06-09)
 
 **Author:** Parker  

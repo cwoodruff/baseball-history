@@ -698,6 +698,16 @@ The fix:
 4. **Lockout rule applies to the artifact, not individual defects:** Parker is locked out from ALL defects in this branch, even though the NULL-handling bug is distinct from the DI wiring bug. This is correct per my boundaries — the lockout persists for the artifact's lifecycle to prevent endless self-revision cycles.
 
 
+**From 2026-09-07 HTMX reviewer gate:**
+
+- Verified the Search/Compare/AllStar/NegroLeagues/Managers/Parks regression slice end to end; targeted suite passed **87/87** after the review-only assertion additions.
+- Confirmed every new `hx-target` in Dallas's changed `.cshtml` files points at a real wrapper id (`search-page-content`, `compare-content`, `allstar-content`, `negro-leagues-content`, `managers-content`, `parks-content`).
+- Confirmed progressive-enhancement fallbacks remain intact: each htmx form still has a plain `action`, and each htmx drill-in / prev-next anchor still has a plain `href`.
+- Checked browser-history behavior: all reviewed drill-in / prev-next links, plus the new Search/Compare HTMX navigations, render with `hx-push-url="true"`.
+- Audited `Search.cshtml.cs` cache metadata: the new page-model `[ResponseCache(..., VaryByHeader = "HX-Request,HX-Target")]` is not duplicated elsewhere in the file or via a custom base class, and varying by `HX-Target` is warranted because `/Search` now serves both dropdown and page-content partials.
+- Added lightweight regression assertions to existing page tests so the htmx contract is pinned without modifying Dallas's markup.
+
+
 
 ## 2026-08-08 — Issue #66 Implementation Complete
 
