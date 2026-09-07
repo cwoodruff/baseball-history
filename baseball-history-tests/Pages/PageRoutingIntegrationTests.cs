@@ -360,6 +360,9 @@ public class PageRoutingIntegrationTests(WebApplicationFactory<Program> factory)
         var html = await GetStringAsync("/Compare?player1=ruthba01&player2=cobbty01");
 
         AssertFullPageShell(html);
+        Assert.Contains("hx-get=\"/Compare\"", html);
+        Assert.Contains("hx-target=\"#compare-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
         Assert.Contains("id=\"compare-tables\"", html);
         Assert.Contains("Babe Ruth", html);
         Assert.Contains("Ty Cobb", html);

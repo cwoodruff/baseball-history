@@ -31,6 +31,8 @@ public class ParksPageTests(WebApplicationFactory<Program> factory) : Integratio
 
         Assert.Contains("Fenway Park", html);
         Assert.Contains("/Parks/BOS07", html);
+        Assert.Contains("hx-target=\"#parks-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
         Assert.DoesNotContain("Wrigley Field", html);
     }
 
@@ -67,6 +69,7 @@ public class ParksPageTests(WebApplicationFactory<Program> factory) : Integratio
     {
         var html = await GetStringAsync("/Parks/BOS07");
 
+        Assert.Contains("id=\"parks-content\"", html);
         Assert.Contains("Fenway Park", html);
         Assert.Contains("Boston", html);
         // Attendance history chart

@@ -7,12 +7,20 @@
             @if (Model.PreviousYear is { } prev)
             {
                 <a href="/NegroLeagues/@Model.Info.Id/@prev" class="btn btn-sm btn-outline-light"
-                   aria-label="Previous season">&laquo; @prev</a>
+                   aria-label="Previous season"
+                   hx-get="/NegroLeagues/@Model.Info.Id/@prev"
+                   hx-target="#negro-leagues-content"
+                   hx-swap="innerHTML"
+                   hx-push-url="true">&laquo; @prev</a>
             }
             @if (Model.NextYear is { } next)
             {
                 <a href="/NegroLeagues/@Model.Info.Id/@next" class="btn btn-sm btn-outline-light"
-                   aria-label="Next season">@next &raquo;</a>
+                   aria-label="Next season"
+                   hx-get="/NegroLeagues/@Model.Info.Id/@next"
+                   hx-target="#negro-leagues-content"
+                   hx-swap="innerHTML"
+                   hx-push-url="true">@next &raquo;</a>
             }
         </div>
     </div>

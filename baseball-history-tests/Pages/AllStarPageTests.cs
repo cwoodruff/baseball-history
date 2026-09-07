@@ -11,6 +11,8 @@ public class AllStarPageTests(WebApplicationFactory<Program> factory) : Integrat
 
         Assert.Contains("<!DOCTYPE html>", html);
         Assert.Contains("href=\"/AllStar/1933\"", html);
+        Assert.Contains("hx-target=\"#allstar-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
         Assert.Contains("href=\"/AllStar/1959\"", html);
         Assert.Contains("Two games", html);
         Assert.Contains("East-West Game", html);
@@ -30,6 +32,7 @@ public class AllStarPageTests(WebApplicationFactory<Program> factory) : Integrat
     {
         var html = await GetStringAsync("/AllStar/1959");
 
+        Assert.Contains("id=\"allstar-content\"", html);
         Assert.Contains("Game 1", html);
         Assert.Contains("Game 2", html);
         Assert.Contains("Two All-Star Games were played each season from 1959 through 1962", html);
@@ -70,6 +73,8 @@ public class AllStarPageTests(WebApplicationFactory<Program> factory) : Integrat
 
         Assert.Contains("/AllStar/1958", html);
         Assert.Contains("/AllStar/1960", html);
+        Assert.Contains("hx-target=\"#allstar-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
     }
 
     [Fact]

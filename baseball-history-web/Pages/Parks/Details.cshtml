@@ -9,6 +9,6 @@
     new BreadcrumbItem("Ballparks", "/Parks"),
     new BreadcrumbItem(Model.Park.ParkName ?? Model.Park.ParkKey)))
 
-<div id="park-content">
+<div id="parks-content">
     @await Html.PartialAsync("_ParkDetail", Model.Park)
 </div>

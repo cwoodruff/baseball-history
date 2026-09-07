@@ -33,7 +33,11 @@ else
                 {
                     <tr>
                         <td>
-                            <a href="/Managers/@manager.PlayerId" class="text-decoration-none fw-semibold">@manager.FullName</a>
+                            <a href="/Managers/@manager.PlayerId" class="text-decoration-none fw-semibold"
+                               hx-get="/Managers/@manager.PlayerId"
+                               hx-target="#managers-content"
+                               hx-swap="innerHTML"
+                               hx-push-url="true">@manager.FullName</a>
                             @if (manager.IsInHallOfFame)
                             {
                                 <span class="hof-badge ms-1" title="Hall of Fame">HOF</span>

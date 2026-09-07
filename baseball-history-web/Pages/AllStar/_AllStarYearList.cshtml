@@ -16,7 +16,11 @@
             {
                 <tr>
                     <td class="stat-cell">
-                        <a href="/AllStar/@year.Year" class="text-decoration-none fw-semibold">@year.Year</a>
+                        <a href="/AllStar/@year.Year" class="text-decoration-none fw-semibold"
+                           hx-get="/AllStar/@year.Year"
+                           hx-target="#allstar-content"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">@year.Year</a>
                     </td>
                     <td class="text-end stat-cell">@year.GameCount</td>
                     <td class="text-end stat-cell">@year.Selections</td>

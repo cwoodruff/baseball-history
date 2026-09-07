@@ -33,7 +33,11 @@
     
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" action="/Compare">
+            <form method="get" action="/Compare"
+                  hx-get="/Compare"
+                  hx-target="#compare-content"
+                  hx-swap="innerHTML"
+                  hx-push-url="true">
                 @if (!string.IsNullOrEmpty(player1)) { <input type="hidden" name="player1" value="@player1" /> }
                 @if (!string.IsNullOrEmpty(player2)) { <input type="hidden" name="player2" value="@player2" /> }
                 @if (!string.IsNullOrEmpty(player3)) { <input type="hidden" name="player3" value="@player3" /> }
@@ -59,7 +63,11 @@
                             if (!string.IsNullOrEmpty(player3)) clearParams.Add($"player3={player3}");
                             if (!string.IsNullOrEmpty(player4)) clearParams.Add($"player4={player4}");
                             var clearUrl = "/Compare?" + string.Join("&", clearParams);
-                            <a href="@clearUrl" class="btn btn-sm btn-outline-secondary">Clear</a>
+                            <a href="@clearUrl" class="btn btn-sm btn-outline-secondary"
+                               hx-get="@clearUrl"
+                               hx-target="#compare-content"
+                               hx-swap="innerHTML"
+                               hx-push-url="true">Clear</a>
                         }
                     </div>
                 </div>

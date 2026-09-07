@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace baseball_history_web.Pages;
 
+[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request,HX-Target")]
 public class SearchModel(BaseballDbContext context, IMemoryCache cache) : PageModel
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);

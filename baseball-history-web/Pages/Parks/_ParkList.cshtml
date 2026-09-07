@@ -30,7 +30,11 @@ else
                 {
                     <tr>
                         <td>
-                            <a href="/Parks/@park.ParkKey" class="text-decoration-none fw-semibold">@park.ParkName</a>
+                            <a href="/Parks/@park.ParkKey" class="text-decoration-none fw-semibold"
+                               hx-get="/Parks/@park.ParkKey"
+                               hx-target="#parks-content"
+                               hx-swap="innerHTML"
+                               hx-push-url="true">@park.ParkName</a>
                             @if (!string.IsNullOrWhiteSpace(park.Alias))
                             {
                                 <br/>

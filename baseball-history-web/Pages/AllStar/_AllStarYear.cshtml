@@ -9,12 +9,20 @@
         @if (Model.PreviousYear is { } prev)
         {
             <a href="/AllStar/@prev" class="btn btn-sm btn-outline-primary"
-               aria-label="Previous All-Star season">&laquo; @prev</a>
+               aria-label="Previous All-Star season"
+               hx-get="/AllStar/@prev"
+               hx-target="#allstar-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">&laquo; @prev</a>
         }
         @if (Model.NextYear is { } next)
         {
             <a href="/AllStar/@next" class="btn btn-sm btn-outline-primary"
-               aria-label="Next All-Star season">@next &raquo;</a>
+               aria-label="Next All-Star season"
+               hx-get="/AllStar/@next"
+               hx-target="#allstar-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">@next &raquo;</a>
         }
     </div>
 </div>

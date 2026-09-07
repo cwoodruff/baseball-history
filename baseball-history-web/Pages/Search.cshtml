@@ -14,7 +14,11 @@
     }
 </div>
 
-<form method="get" action="/Search" class="mb-4">
+<form method="get" action="/Search" class="mb-4"
+      hx-get="/Search"
+      hx-target="#search-page-content"
+      hx-swap="innerHTML"
+      hx-push-url="true">
     <div class="input-group">
         <label for="search-page-query" class="visually-hidden">Search players and teams</label>
         <input type="search" id="search-page-query" name="q" class="form-control"

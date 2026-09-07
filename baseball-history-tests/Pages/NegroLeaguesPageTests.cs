@@ -18,6 +18,8 @@ public class NegroLeaguesPageTests(WebApplicationFactory<Program> factory) : Int
         Assert.Contains("Negro National League (II)", html);
         Assert.Contains("Negro American League", html);
         Assert.Contains("href=\"/NegroLeagues/NNL\"", html);
+        Assert.Contains("hx-target=\"#negro-leagues-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
         Assert.Contains("href=\"/NegroLeagues/NAL\"", html);
         // Transparency framing links
         Assert.Contains("/SurvivingRecords", html);
@@ -38,6 +40,7 @@ public class NegroLeaguesPageTests(WebApplicationFactory<Program> factory) : Int
     {
         var html = await GetStringAsync("/NegroLeagues/NN2");
 
+        Assert.Contains("id=\"negro-leagues-content\"", html);
         Assert.Contains("Negro National League (II)", html);
         Assert.Contains("Homestead Grays", html);
         // Season list spans the league's run and links to season pages
@@ -97,6 +100,8 @@ public class NegroLeaguesPageTests(WebApplicationFactory<Program> factory) : Int
 
         Assert.Contains("/NegroLeagues/NN2/1942", html);
         Assert.Contains("/NegroLeagues/NN2/1944", html);
+        Assert.Contains("hx-target=\"#negro-leagues-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
     }
 
     [Fact]

@@ -40,7 +40,11 @@
                         </div>
                     </div>
                     <p class="text-muted flex-grow-1">@league.Info.Summary</p>
-                    <a href="/NegroLeagues/@league.Info.Id" class="btn btn-outline-primary mt-auto align-self-start">
+                    <a href="/NegroLeagues/@league.Info.Id" class="btn btn-outline-primary mt-auto align-self-start"
+                       hx-get="/NegroLeagues/@league.Info.Id"
+                       hx-target="#negro-leagues-content"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">
                         Explore the @league.Info.Id
                     </a>
                 </div>

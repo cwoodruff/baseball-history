@@ -49,7 +49,11 @@
                         <tr>
                             <td class="stat-cell">
                                 <a href="/NegroLeagues/@Model.Info.Id/@season.Year"
-                                   class="text-decoration-none fw-semibold">@season.Year</a>
+                                   class="text-decoration-none fw-semibold"
+                                   hx-get="/NegroLeagues/@Model.Info.Id/@season.Year"
+                                   hx-target="#negro-leagues-content"
+                                   hx-swap="innerHTML"
+                                   hx-push-url="true">@season.Year</a>
                             </td>
                             <td class="text-end stat-cell">@season.TeamCount</td>
                             <td>

@@ -43,6 +43,9 @@ public class Sprint5SurfaceIntegrationTests(WebApplicationFactory<Program> facto
         var html = await GetStringAsync("/Search?q=Ruth");
 
         AssertFullPageShell(html);
+        Assert.Contains("hx-get=\"/Search\"", html);
+        Assert.Contains("hx-target=\"#search-page-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
         Assert.Contains("id=\"search-page-content\"", html);
         Assert.Contains("Babe Ruth", html);
         Assert.Contains("hx-get=\"/Players/Modal/ruthba01\"", html);

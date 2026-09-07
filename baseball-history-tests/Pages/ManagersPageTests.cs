@@ -13,6 +13,8 @@ public class ManagersPageTests(WebApplicationFactory<Program> factory) : Integra
         // Connie Mack's 3,731 wins lead all managers
         Assert.Contains("Connie Mack", html);
         Assert.Contains("/Managers/mackco01", html);
+        Assert.Contains("hx-target=\"#managers-content\"", html);
+        Assert.Contains("hx-push-url=\"true\"", html);
     }
 
     [Fact]
@@ -48,6 +50,7 @@ public class ManagersPageTests(WebApplicationFactory<Program> factory) : Integra
     {
         var html = await GetStringAsync("/Managers/mackco01");
 
+        Assert.Contains("id=\"managers-content\"", html);
         Assert.Contains("Connie Mack", html);
         // Season rows link to team season pages
         Assert.Contains("/Teams/Season/", html);
