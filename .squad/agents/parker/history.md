@@ -327,3 +327,11 @@ Issue: `FieldingReadService.CareerByPosition` computes career totals from the al
 **Secondary Issue:** DbContext config drift between scoped and pooled registrations — extract shared Npgsql options builder to prevent hidden query behavior differences between web and MCP paths. Low risk but increases technical debt if deferred.
 
 **Owner Recommendation:** Assign to backend developer for Sprint 5 prioritization. Include in regression suite for all future data service work.
+
+## Learnings
+
+- 2026-09-07: Historical browser PageModels should now use `HtmxPageModel` for the shared `HtmxOrPage(partialName, model)` tail instead of open-coding `Request.IsHtmxNonBoostedRequest()` partial/page branching.
+- 2026-09-07: Historical browser list/detail PageModels should now use `HtmxPageResponseCacheAttribute` instead of repeating `[ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client, VaryByHeader = "HX-Request")]`.
+- 2026-09-07: `HtmxPageModel` + `HtmxPageResponseCacheAttribute` is now the required convention for new list/detail browser PageModels so HTMX response behavior stays centralized without changing handlers or partial contracts.
+- 2026-09-07: Added direct test seams for `PlayerDetailService` and `PlayerCacheService` using `TestDatabaseFactory.CreateContext()` plus hosted-service startup polling, so backend aggregation and cache warmup regressions can be localized without page/API indirection.
+- 2026-09-07: Added focused direct-logic tests for `TeamColorService`, `AwardVotingViewModel`, `SalaryViewModel`, `FranchiseDetailViewModel`, `TeamListViewModel`, and `BreadcrumbModel`; skipped pure data-holder models (`SearchResultLinkModel`, `PageHeaderModel`) with no behavior to verify.

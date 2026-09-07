@@ -338,6 +338,12 @@ The MCP project now uses a **hybrid DI pattern**:
 This allows the MCP to adopt Parker's shared query layer without forcing all legacy MCP services to migrate from factory to scoped pattern.
 
 **Verification:**
+
+### 2026-09-07 — Regression tests for capped park reads and leaderboard rule helpers
+
+- Added `GetParkAsync_WithCappedSeasonRows_AggregatesCoverFullHistory` to `baseball-history-tests/Mcp/BaseballReadServiceTests.cs` to pin the `ParkReadService` invariant: totals, first/last year, total attendance, and tenant summaries must come from the full season history even when the returned `Seasons` list is capped.
+- Added focused direct tests for `QualificationRules` in `baseball-history-tests/Data/QualificationRulesTests.cs`, covering plate-appearance calculation plus batting and pitching season-threshold formulas.
+- Added focused direct tests for `LeaderboardStatCatalog` in `baseball-history-tests/Data/LeaderboardStatCatalogTests.cs`, covering case-insensitive alias resolution and the expected sort/rate-stat semantics for representative batting and pitching stats.
 - Full suite: **446/446 tests passed** (vs 443/446 before fix)
 - MCP integration tests that were failing:
   - ✅ `Host_CallsHallOfFameSalaryAndDiagnosticsToolsTheWayClientsDo` — now passes

@@ -109,6 +109,13 @@ Triaged GitHub issue #18 (Salaries page missing dollar sign on salary amounts). 
 
 ## Learnings
 
+### 2026-09-07 Historical browser consolidation decision
+
+- Managers, Parks, All-Star, and Negro Leagues now share a real mechanical HTMX browser contract: `[ResponseCache(... VaryByHeader = "HX-Request")]`, `Request.IsHtmxNonBoostedRequest()` deciding partial vs full page, and one surface-owned content wrapper targeted by `hx-get` + `hx-target` + `hx-swap="innerHTML"` + `hx-push-url="true"`.
+- The safe consolidation line is **plumbing only**. Query composition, filter fields, list columns, and detail content are materially different across the four areas and should stay page-owned.
+- Recommended extraction: a shared custom cache attribute plus a shared `PageModel` base/helper with a single `HtmxOrPage(partialName, model)` method; optionally add a tiny HTMX target constants/helper layer later, but do not force a generic list/detail renderer.
+- Managers is the best proof point because it exercises the full shape at once: paged/filterable index plus detail drill-in using the same `#managers-content` wrapper. Parks follows next; All-Star and Negro Leagues should migrate last because their navigation is year/league-specific rather than paged list chrome.
+
 ### 2026-09-07 Solution Review — September feature wave
 
 - The current solution shape is still coherent at the composition root: `Program.cs` remains a thin host that wires shared data services, memory cache, response compression, Razor Pages, `htmxRazor`, OpenAPI/Scalar, and the minimal API endpoint map without feature-specific branching.

@@ -792,6 +792,14 @@ Commit: `1eb915f` - "test(qualification): add regression suite for #63 season-re
 
 **NOT PUSHED** per task instructions — stopped after clean local commit and reporting back.
 
+**From 2026-09-07 browser-consolidation review:**
+
+- Verified the new `HtmxPageResponseCacheAttribute` preserves the exact prior cache contract on all nine reviewed PageModels: `Duration = 3600`, `Location = Client`, `VaryByHeader = "HX-Request"`; no silent cache drift.
+- Checked each `HtmxOrPage(...)` conversion against the prior inline HTMX tail block and confirmed the partial names are unchanged: `_ManagersContent`, `_ManagerDetail`, `_ParksContent`, `_ParkDetail`, `_AllStarYearList`, `_AllStarYear`, `_HubContent`, `_LeagueDetail`, `_LeagueSeason`.
+- Audited the reviewed diffs for unintended refactor creep; constructors, query/filter logic, routing, and view-model shaping stayed untouched, with only the shared attribute/base-class plumbing extracted.
+- Confirmed no `.cshtml` files changed in the working tree for this refactor slice.
+- Independently reran the full suite and confirmed `dotnet test baseball-history-tests` finished at **665 passed, 0 failed**.
+
 ## Session: Leaderboard Qualification Fix (2026-08-08)
 
 **Issue #66 Implementation:** Expanded regression suite to 30 new integration tests covering season-relative qualification logic.
@@ -854,3 +862,24 @@ Finding: Ten HTMX candidates identified across newer historical browsers. Backen
 
 **Recommendation for Lambert:** Plan test coverage for HTMX drill-in patterns in Sprint 5 gate. Existing leaderboard HTMX tests provide baseline; new patterns should follow same assertion shape (validate partial swaps separately from full-page responses). Hard gate suggestion: Pick one drill-in area (e.g., AllStar year) and verify full HTMX + browser-history + non-JS fallback contract before Sprint 5 merge.
 
+
+
+### 2026-09-07 — Full test coverage gap map
+- **Page areas with strong dedicated coverage:** Players, Teams, Stats, AllStar, Managers, Parks, NegroLeagues, homepage/support/search surfaces.
+- **Page areas with weak or no dedicated coverage:** HallOfFame (only incidental nav/link coverage), Postseason (only incidental player-link coverage), Awards (covered only through three manager-focused happy-path tests), Salaries (two routing/smoke tests only), Compare (page contracts covered, but no unit/viewmodel tests).
+- **Recent-feature service/viewmodel posture:** This Day, AllStar, Managers, NegroLeagues, and Parks all have page + viewmodel coverage; Compare is the standout recent gap with page-only coverage and no `CompareViewModel` tests.
+- **Web service gaps:** no dedicated tests for `PlayerDetailService`, `PlayerCacheService`, or `TeamColorService`; `LahmanNumbers` is only covered indirectly through a fielding record test.
+- **ViewModel gaps with no dedicated tests found:** `CompareViewModel`, `AwardVotingViewModel`, `SalaryViewModel`, `FranchiseDetailViewModel`, `TeamListViewModel`, `SearchResultLinkModel`, `PageHeaderModel`, and `BreadcrumbModel`.
+- **MCP read services:** every `*ReadService.cs` under `baseball-history-mcp/Querying` has at least some test coverage. The Fielding capped-list bug class is explicitly pinned; Manager has a partial cap/totals regression pin; Park and Postseason do not have equally strong invariant tests.
+- **API coverage gaps:** tests exist for search, selected player endpoints, team season/franchise detail, leaderboards, and some not-found paths. No meaningful success-path coverage was found for Park endpoints, Salary endpoints, Award endpoints, Hall of Fame index endpoint, Postseason series success responses, player pitching endpoint, or player postseason endpoints.
+- **HTMX extensions:** dedicated `HtmxExtensionsTests` exists and touches every public extension method in `HtmxExtensions.cs`, not just `IsHtmxRequest`.
+- **Data project gap:** `QualificationRules` and `LeaderboardStatCatalog` appear untested directly even though they encode core leaderboard qualification and stat-alias rules.
+
+## Learnings
+
+- Added dedicated Hall of Fame and Postseason page test suites covering full-page rendering, empty states, pagination boundaries, and the non-boosted vs boosted HTMX response contract.
+- Added direct `CompareViewModel` unit coverage for single-player vs multi-player selection, 3rd/4th player support, mixed batting/pitching/postseason/fielding visibility flags, initials formatting, and partial-record display semantics.
+- Expanded salary and awards page regression coverage beyond happy paths: invalid filters, empty results, pagination clamping, alternate team/year salary data, player voting flows, and Awards HTMX/full-page behavior.
+- Added success-path API contract coverage for awards, salaries, parks, and the previously untested player pitching / player awards / postseason batting / postseason pitching routes.
+- Closed all requested page-level and API-level gaps for this round; no known Lambert-owned follow-up gaps remain from Woody's 2026-09-07 list.
+- While adding Postseason coverage, found and fixed two page/API-adjacent correctness issues: postseason rounds were ordered lexicographically instead of chronologically, and numbered rounds like `ALDS1` were not using the existing friendly display-name normalizer.
