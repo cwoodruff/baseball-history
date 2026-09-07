@@ -14,7 +14,7 @@
     var isTeams = IsSection("/Teams");
     var isParks = IsSection("/Parks");
     var isNegroLeagues = IsSection("/NegroLeagues") || IsSection("/SurvivingRecords");
-    var isStats = IsSection("/Stats", "/HallOfFame", "/Awards", "/Postseason", "/Salaries", "/Managers");
+    var isStats = IsSection("/Stats", "/HallOfFame", "/Awards", "/Postseason", "/Salaries", "/Managers", "/AllStar");
     var isCompare = IsSection("/Compare");
     var isApi = IsSection("/ApiDocs");
     var isMcp = IsSection("/McpDocs");
@@ -64,6 +64,7 @@
                             <li><a class="dropdown-item" asp-area="" asp-page="/HallOfFame/Index">Hall of Fame</a></li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/Managers/Index">Managers</a></li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/Awards/Index">Awards &amp; Voting</a></li>
+                            <li><a class="dropdown-item" asp-area="" asp-page="/AllStar/Index">All-Star Games</a></li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/Postseason/Index">Postseason</a></li>
                             <li><a class="dropdown-item" asp-area="" asp-page="/Salaries/Index">Salaries</a></li>
                         </ul>

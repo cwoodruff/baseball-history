@@ -1,0 +1,115 @@
+@using baseball_history_web.ViewModels
+@model baseball_history_web.ViewModels.AllStarYearViewModel
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 text-mlb-navy mb-0">
+        @Model.Year All-Star Rosters
+    </h1>
+    <div class="d-flex gap-2">
+        @if (Model.PreviousYear is { } prev)
+        {
+            <a href="/AllStar/@prev" class="btn btn-sm btn-outline-primary"
+               aria-label="Previous All-Star season">&laquo; @prev</a>
+        }
+        @if (Model.NextYear is { } next)
+        {
+            <a href="/AllStar/@next" class="btn btn-sm btn-outline-primary"
+               aria-label="Next All-Star season">@next &raquo;</a>
+        }
+    </div>
+</div>
+
+@if (Model.MlbGameCount > 1)
+{
+    <div class="alert alert-light border mb-4" role="note">
+        Two All-Star Games were played each season from 1959 through 1962. Players selected for
+        both games count a single All-Star season.
+    </div>
+}
+
+@foreach (var game in Model.Games)
+{
+    var mlbGameLabel = Model.MlbGameCount > 1 && game.GroupKey.StartsWith("MLB|")
+        ? $" — Game {game.GameNum}"
+        : "";
+    <div class="mb-4">
+        <h2 class="h5 text-mlb-navy mb-3">
+            @(game.Title)@(mlbGameLabel)@(string.IsNullOrEmpty(game.FormattedDate) ? "" : $" — {game.FormattedDate}")
+        </h2>
+        @if (game.GroupKey == AllStarGames.EastWestKey)
+        {
+            <p class="text-muted small">
+                The East-West Game was the Negro Leagues' showcase, drawing crowds at Comiskey Park
+                that rivaled the major league game. <a href="/NegroLeagues">Explore the Negro Leagues</a>.
+            </p>
+        }
+        <div class="row">
+            @foreach (var roster in game.Rosters)
+            {
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header card-header-mlb d-flex justify-content-between align-items-center">
+                            <strong>@roster.DisplayName Roster</strong>
+                            <rhx-badge rhx-variant="neutral">@roster.Players.Count players</rhx-badge>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-baseball table-hover mb-0">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Pos</th>
+                                    <th scope="col">Player</th>
+                                    <th scope="col">Team</th>
+                                    <th scope="col" class="text-end">Played</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var player in roster.Players)
+                                {
+                                    <tr>
+                                        <td class="stat-cell">
+                                            @if (player.IsStarter)
+                                            {
+                                                <strong>@player.PositionName</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a href="/Players/@player.PlayerId" class="text-decoration-none"
+                                               hx-get="/Players/Modal/@player.PlayerId"
+                                               hx-target="#modal-container"
+                                               hx-swap="innerHTML"
+                                               hx-boost="false">@player.FullName</a>
+                                            @if (player.IsInHallOfFame)
+                                            {
+                                                <span class="hof-badge ms-1" title="Hall of Fame">HOF</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (player.LinkLgId != null)
+                                            {
+                                                <a href="/Teams/Season/@player.TeamId/@player.LinkLgId/@Model.Year"
+                                                   class="text-decoration-none">@(player.TeamName ?? player.TeamId)</a>
+                                            }
+                                            else
+                                            {
+                                                @(player.TeamName ?? player.TeamId)
+                                            }
+                                        </td>
+                                        <td class="text-end stat-cell">@(player.Played ? "Yes" : "—")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer text-muted small">
+                            Starters listed by position; reserves follow alphabetically.
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

@@ -109,7 +109,13 @@
                         <span class="stat-badge stat-badge-primary">
                             @Model.AllStarSelectionCount x All-Star
                         </span>
-                        <div class="small text-muted mt-1">@Model.AllStarYearRanges</div>
+                        <div class="small mt-1">
+                            @for (var i = 0; i < Model.AllStarYears.Count; i++)
+                            {
+                                <a href="/AllStar/@Model.AllStarYears[i]"
+                                   class="text-decoration-none">@Model.AllStarYears[i]</a>@(i < Model.AllStarYears.Count - 1 ? ", " : "")
+                            }
+                        </div>
                     </div>
                 }
                 @foreach (var award in Model.Awards.Take(10))

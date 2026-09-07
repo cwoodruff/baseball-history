@@ -149,8 +149,9 @@ public class PlayerDetailsPageTests(WebApplicationFactory<Program> factory) : In
 
         Assert.Contains("21 x All-Star", html);
         Assert.DoesNotContain("25 x All-Star", html);
-        // Razor HTML-encodes the en dash in "1955–1975"
-        Assert.Contains("1955&#x2013;1975", html);
+        // Selection years link to the roster pages
+        Assert.Contains("href=\"/AllStar/1955\"", html);
+        Assert.Contains("href=\"/AllStar/1975\"", html);
     }
 
     [Fact]
