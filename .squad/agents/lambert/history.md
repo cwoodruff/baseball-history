@@ -802,3 +802,45 @@ Commit: `1eb915f` - "test(qualification): add regression suite for #63 season-re
 
 **Note:** 5 hard merge gates all passing. Recommendation: Continue manual smoke tests post-deploy for leaderboard changes.
 
+## Cross-Team Notes: September Solution Review (2026-09-07)
+
+**From Dallas's HTMX Audit:**
+
+**HTMX ADOPTION GAPS IN LIST/DETAIL BROWSERS** (Priority: Sprint 5 backlog)
+
+Finding: Ten HTMX candidates identified across newer historical browsers. Backend infrastructure already supports split rendering; gaps are front-end only.
+
+**Affected Areas:**
+- `AllStar/Index` + `Year` detail pages
+- `NegroLeagues/Index` + `League` + `Season` detail pages
+- `Managers/Index` + `Details`
+- `Parks/Index` + `Details`
+
+**Pattern Gap:** These pages use plain `<a href>` anchors for drill-in navigation instead of HTMX, so users pay the shell re-render cost without getting the faster partial-swap UX.
+
+**Proposed Standardization:**
+
+1. **Index/list pages** own a stable content target wrapper
+2. **Drill-in links** should use:
+   ```html
+   <a href="/path" hx-get="/partial" hx-target="#content" hx-swap="innerHTML" hx-push-url="true">Link</a>
+   ```
+3. **Prev/next navigation** inside detail pages follows same pattern
+4. **Form submissions** (Search, Compare) should opt in for consistency
+
+**Near-term Priority (Sprint 5 backlog):**
+1. Search page form (`/Search`) — 1–2 points
+2. Compare season-range form — 1–2 points
+3. All-Star drill-in + prev/next — 2–3 points
+4. Negro Leagues drill-in + prev/next — 2–3 points
+5. Managers/Parks list-to-detail — 2–3 points each
+
+**Test Coverage Implication:** Existing `Request.IsHtmxNonBoostedRequest()` and `ResponseCache(VaryByHeader="HX-Request")` split patterns are already tested. New test focus needed:
+
+- HTMX partial response content validation (drill-in redirects should return `#content` wrapper only, not full page)
+- Browser history URL updates (hx-push-url-true semantics: verify browser location bar changes)
+- Non-JS fallback (plain href must work for accessibility)
+- Cache variance (HX-Request header must cause cache miss/fresh response)
+
+**Recommendation for Lambert:** Plan test coverage for HTMX drill-in patterns in Sprint 5 gate. Existing leaderboard HTMX tests provide baseline; new patterns should follow same assertion shape (validate partial swaps separately from full-page responses). Hard gate suggestion: Pick one drill-in area (e.g., AllStar year) and verify full HTMX + browser-history + non-JS fallback contract before Sprint 5 merge.
+

@@ -306,3 +306,24 @@ Implemented season-range filtering and qualified-seasons badge for Compare Playe
 - 479 passed, 8 failed (exact pre-existing MCP protocol failures)
 - No new failures introduced by Compare changes
 - Build succeeded (only pre-existing NU1903 warnings)
+
+## Cross-Team Notes: September Solution Review (2026-09-07)
+
+**From Ash's Data/Platform Review:**
+
+**FIELDING CAREER AGGREGATION BUG** (Priority: Medium-High)
+
+Issue: `FieldingReadService.CareerByPosition` computes career totals from the already-capped season list in the MCP response. This can **under-report career totals** for players with long careers because the 200-row season cap is applied before aggregation.
+
+**Example:** A player with 25+ seasons would only have 200 seasons included in the aggregation, missing innings/putouts/assists from earlier seasons.
+
+**Fix Strategy:**
+1. Compute career aggregates from **uncapped** SQL queries or raw EF aggregations
+2. Fetch capped season details separately for UI presentation
+3. Apply the 200-row cap only to the detail list, not the aggregate totals
+
+**Impact:** This affects the MCP `get_player_fielding` tool (issue #95). Should be validated before the tool ships publicly.
+
+**Secondary Issue:** DbContext config drift between scoped and pooled registrations — extract shared Npgsql options builder to prevent hidden query behavior differences between web and MCP paths. Low risk but increases technical debt if deferred.
+
+**Owner Recommendation:** Assign to backend developer for Sprint 5 prioritization. Include in regression suite for all future data service work.

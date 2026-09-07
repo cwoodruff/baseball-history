@@ -111,6 +111,12 @@ Received assignment of GitHub issue #18 (Salaries page missing dollar sign on sa
 
 ## Learnings
 
+- htmx coverage is strongest on filterable index pages (Players, Stats, Managers, Parks) and much weaker on newer drill-in surfaces that already expose partial-capable PageModels but still link with plain anchors.
+- Repeated gap pattern: index/detail browsers often implement `Request.IsHtmxNonBoostedRequest()` + `Partial(...)` server-side, but the companion `.cshtml` files never issue `hx-get` requests against those wrappers, leaving the split unused in practice.
+- All-Star and Negro Leagues both have obvious year/season drill-down and prev/next navigation seams that could swap only the content pane instead of reloading the whole page.
+- Search is the main split-pattern outlier: it already returns `_SearchPageResults` for targeted htmx requests, but the visible search form still submits a normal GET and the PageModel is missing the `VaryByHeader="HX-Request"` cache convention used elsewhere.
+- Compare is htmx-heavy for player selection, but its season-range form still falls back to full-page GETs; mixed interaction models on the same screen feel inconsistent.
+
 - Salary displays on the Salaries surface should use an explicit dollar-sign formatter (`$` + `N0`) instead of culture-sensitive `"C0"` so full-page and htmx partial responses render stable USD strings across environments.
 
 ## Leaderboard Minimum-Selector Investigation (2026-08-08)
@@ -362,4 +368,10 @@ Implemented season-relative qualification defaults for rate-stat leaderboards (G
 - **Commit:** `2add2a5` "feat(ui): default leaderboard UI to qualified players with override"
 - **Status:** Local commit only, not pushed or PR'd (as instructed)
 
+## Learnings
 
+- htmx coverage is strongest on filterable index pages (Players, Stats, Managers, Parks) and much weaker on newer drill-in surfaces that already expose partial-capable PageModels but still link with plain anchors.
+- Repeated gap pattern: index/detail browsers often implement `Request.IsHtmxNonBoostedRequest()` + `Partial(...)` server-side, but the companion `.cshtml` files never issue `hx-get` requests against those wrappers, leaving the split unused in practice.
+- All-Star and Negro Leagues both have obvious year/season drill-down and prev/next navigation seams that could swap only the content pane instead of reloading the whole page.
+- Search is the main split-pattern outlier: it already returns `_SearchPageResults` for targeted htmx requests, but the visible search form still submits a normal GET and the PageModel is missing the `VaryByHeader="HX-Request"` cache convention used elsewhere.
+- Compare is htmx-heavy for player selection, but its season-range form still falls back to full-page GETs; mixed interaction models on the same screen feel inconsistent.

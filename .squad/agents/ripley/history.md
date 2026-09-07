@@ -109,6 +109,16 @@ Triaged GitHub issue #18 (Salaries page missing dollar sign on salary amounts). 
 
 ## Learnings
 
+### 2026-09-07 Solution Review — September feature wave
+
+- The current solution shape is still coherent at the composition root: `Program.cs` remains a thin host that wires shared data services, memory cache, response compression, Razor Pages, `htmxRazor`, OpenAPI/Scalar, and the minimal API endpoint map without feature-specific branching.
+- Recent work expanded the product breadth mostly through additive Razor Page areas: `AllStar`, `Managers`, `NegroLeagues`, `Parks`, plus home-page `This Day`, player advanced stats/compare enhancements, and documentation/support pages like `Licensing` and `McpDocs`.
+- The new page areas generally follow the established HTMX split correctly at the page-model level: `ResponseCache` varying by `HX-Request`, `Request.IsHtmxNonBoostedRequest()`, and partial returns for fragment refreshes. Migration discipline is better than expected for a large feature burst.
+- The migration is still only partially componentized. Most new work reuses shared partials/components (`_LoadingSpinner`, `_Pagination`, `_EmptyState`, breadcrumbs, badges), but the dominant pattern is still page-specific partial stacks rather than broader reusable browser shells or richer `rhx-*` composition.
+- Architectural drift risk is duplication across the new browse/detail surfaces: `Managers`, `Parks`, `AllStar`, and `NegroLeagues` all carry parallel index/detail/list/content patterns, bespoke filters/search/pagination wiring, and area-local view models that are structurally similar but not yet unified.
+- Documentation drift is now visible. `docs/FEATURES.md` is valuable but lags the shipped app in at least two reviewer-visible ways: the compare feature still describes a two-player layout even though recent work raised the ceiling to four, and the `Licensing` page is missing from the feature inventory.
+- Repository hygiene risk: `Pages/Stats` still contains checked-in backup files (`Batting.cshtml.cs.old`, `Pitching.cshtml.cs.old`, `Pitching.cshtml.cs.old2`), which weakens the otherwise clean architecture story and invites source-of-truth confusion.
+
 ### 2026-08-08 Leaderboard Qualification — Reconciliation & Execution Plan
 
 **Context:** External feedback identified two related bugs: (1) rate-stat leaderboards default to "No minimum," surfacing 124 players batting 1.000 with 1-2 ABs; (2) the 3,000-AB career floor erases the Negro Leagues population because those leagues played 60-80 game schedules with partial surviving records.

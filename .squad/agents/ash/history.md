@@ -546,3 +546,13 @@ All 446 automated tests passed, yet the live API contradicted acceptance criteri
 - **GitHub secrets hygiene matters** — unused/orphaned secrets accumulate over time and obscure what's actually in use. Migration is a forcing function for cleanup.
 - **Aspire's dual identity (local orchestration vs. Azure provisioning)** creates ambiguity in "update Aspire" requests. Always clarify scope: dev experience vs. deployment model vs. IaC adoption.
 - **Platform owner role includes migration sequencing** — not just "what to migrate" but "in what order, with what rollback triggers, and what validation gates." Downtime estimation requires understanding cache warm-up behavior (`PlayerCacheService`), HTMX partial rendering, and EF Core query patterns.
+
+## Learnings
+
+### 2026-09-07 — MCP and page-model data/platform review
+
+- The new MCP read services mostly follow the repo's query-shape guardrails well: they rely on the globally no-tracking context, project narrow anonymous types, and keep Lahman string parsing (`Gs`, `InnOuts`, `Po`, `A`, `E`, `Dp`, postseason batting strikeouts, ERA text) out of LINQ translation.
+- `FieldingReadService` currently computes `CareerByPosition` from the already-capped `Seasons` list. When a player has more than the configured max season rows, the reported career totals by position silently become partial. Capped detail rows and career aggregates need separate data paths.
+- `ParkReadService.GetParkAsync` and `ManagerReadService.GetManagerAsync` materialize complete season sets so they can compute totals and tenant/career summaries in memory, then cap only the returned detail rows. That is safe for correctness, but it leaves avoidable read amplification compared with a split aggregate + capped-details pattern.
+- On the web side, the new browse/index pages are generally free of N+1 query loops; they use set-based projections and in-memory post-processing. The biggest platform gap is caching consistency: Managers reuses the shared Hall of Fame cache, but All-Star, Parks, and Negro Leagues index/filter data still re-query stable historical lookups on every request instead of using the established 24-hour lookup-cache pattern.
+- MCP and web both preserve the shared `ConnectionStrings:Lahman` contract, but MCP now has two DbContext configuration paths: the scoped registration from `AddDataServices` and a pooled factory with timeout/retry settings. That creates config drift risk because leaderboard queries resolved through the scoped context do not necessarily inherit the same Npgsql resilience settings as the singleton read services using the factory.

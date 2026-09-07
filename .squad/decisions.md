@@ -2189,3 +2189,154 @@ Decisions:
 - Not-found stays null-result, not error, matching get_team_season.
 - SeriesPost (team series results) deliberately not exposed — noted as an
   unsupported shape in the guide; candidate for issue #92 work.
+
+---
+
+# Ripley — Solution Review Follow-up (2026-09-07)
+
+**Author:** Ripley  
+**Status:** ✅ IDENTIFIED (Review complete, recommendations documented)
+
+## Overview
+
+High-level architectural review of September feature wave across the entire `baseball-history` solution: MCP expansion, This Day widget, All-Star browser, Managers browser, Negro Leagues hub, Parks browser, compare power-user work, qualification/league-index SQL layer usage, Licensing page, and Surviving Records.
+
+## Key Findings
+
+### 1. Browse-Surface Duplication Pattern (Non-blocking)
+
+**Observation:** `Managers`, `Parks`, `AllStar`, and `NegroLeagues` all follow the same successful pattern:
+- Index/detail page model + fragment partials
+- Search/filter/pagination
+- Each reimplements its own shell
+
+**Verdict:** Pattern is intentional copy-with-variation and is working well. Decision point: before next 2–3 historical domains land, decide whether to keep as-is or extract reusable browser scaffold.
+
+**Recommendation:** Do not pause feature delivery for extraction. Keep as a post-release cleanup decision.
+
+### 2. HTMX Migration Discipline (Green)
+
+**Observation:** New areas generally preserve the established non-boosted HTMX split:
+- `Request.IsHtmxNonBoostedRequest()`
+- `Partial()` returns for non-boosted requests
+- `ResponseCache(VaryByHeader = "HX-Request")`
+
+**Verdict:** This convention is holding as the active pattern. All new page areas should be reviewed against it explicitly.
+
+**Recommendation:** Treat the HTMX page-model split as a **hard acceptance convention** for future reviews.
+
+### 3. Documentation Drift (Action needed)
+
+**Issues:**
+- `docs/FEATURES.md` still advertises Compare as a two-player surface; does not list Licensing page
+- Backup files under `Pages/Stats/*.old` are now architecture-review visible
+
+**Recommendation:** Assign ownership for `docs/FEATURES.md` accuracy and schedule cleanup pass to remove backup files.
+
+## Team Decisions
+
+- ✅ Treat HTMX page-model split as hard acceptance convention
+- ✅ Assign FEATURES.md ownership for ongoing accuracy
+- ✅ Schedule post-release cleanup pass for files and browse-pattern extraction decision
+
+---
+
+# Ash — Data/Platform Review (2026-09-07)
+
+**Author:** Ash  
+**Status:** ✅ IDENTIFIED (Two actionable issues documented)
+
+## Proposed Team Decision
+
+Keep one authoritative `BaseballDbContext` options builder for both web and MCP registrations, and never derive cross-season summary aggregates from capped detail lists.
+
+## Correctness Issues
+
+### 1. DbContext Configuration Drift
+
+**Problem:** The MCP host mixes:
+- Scoped `BaseballDbContext` registration from `AddDataServices()`
+- Pooled `IDbContextFactory<BaseballDbContext>` with command-timeout and retry settings
+
+This means different query paths inside the same process can drift on Npgsql behavior even though they target the same `ConnectionStrings:Lahman` database.
+
+**Fix:** Extract shared Npgsql configuration into one helper used by both `AddDbContext` and `AddPooledDbContextFactory`.
+
+### 2. Fielding Career Aggregation Bug
+
+**Problem:** `FieldingReadService.CareerByPosition` currently builds `CareerByPosition` from the already-capped season list. This can **under-report career totals** for long careers because the cap is applied before aggregation.
+
+**Fix:** Treat capped season/detail collections as presentation-only. Compute career/tenant totals either in SQL or from an uncached aggregate query, then fetch capped detail rows separately.
+
+## Caching Gap
+
+New browse pages (AllStar/Parks/NegroLeagues) are missing the 24-hour cache warm-up pattern established by `PlayerCacheService`. Add cache refresh for these surfaces to avoid cold-start delay on feature landing.
+
+## Guidance
+
+1. Extract shared Npgsql configuration immediately (low risk)
+2. Fix Fielding career aggregation before shipping MCP fielding tool (backend priority)
+3. Add 24hr caching to new browse pages (performance optimization)
+
+## Impact
+
+- Preserves existing runtime contracts
+- Reduces hidden divergence between MCP and web query behavior
+- Prevents partial aggregate data from being returned as if it were career-complete
+- Improves perceived performance of historical browsers
+
+---
+
+# Dallas — HTMX Audit Follow-up (2026-09-07)
+
+**Author:** Dallas  
+**Status:** ✅ IDENTIFIED (10 candidates prioritized)
+
+## Proposed Team Decision
+
+Standardize a list/detail HTMX pattern for Razor browsers that already support partial/full-page splits server-side.
+
+## Background
+
+The audit found the same inconsistency across multiple newer features:
+- `AllStar/Index` + `AllStar/Year`
+- `NegroLeagues/Index` + `League` + `Season`
+- `Managers/Index` + `Details`
+- `Parks/Index` + `Details`
+
+These PageModels already follow the backend half of the established convention:
+- `Request.IsHtmxNonBoostedRequest()`
+- `Partial(...)` response for non-boosted HTMX
+- `ResponseCache(... VaryByHeader = "HX-Request")`
+
+**Gap:** Several companion views still use plain anchors for drill-in navigation, so the app pays the complexity cost of split rendering without consistently getting the UI benefit.
+
+## Recommendation
+
+Adopt one reusable expectation for list/detail browsers:
+
+1. **Index/list pages** own a stable content target wrapper
+2. **Drill-in links** (`year`, `season`, `manager`, `park`) use:
+   - `hx-get` for HTMX requests
+   - `hx-target` and `hx-swap="innerHTML"`
+   - `hx-push-url="true"` to update browser history
+   - Keep plain `href` as non-JS fallback
+3. **Prev/next navigation** inside detail pages follows the same pattern
+4. **Form submissions** (Search, Compare filters) should also opt into pattern for consistency
+
+## Near-term Priority Candidates
+
+1. **Search page form** (`/Search`) — add HTMX submit/live-search behavior; align cache variation
+2. **Compare season-range form** — switch from full GET reload to partial swap
+3. **All-Star year drill-in + prev/next** — enable browser-history-aware navigation
+4. **Negro Leagues league/season drill-in + prev/next** — same pattern
+5. **Managers and Parks list-to-detail transitions** — consistent drill-in behavior
+
+## Effort Assessment
+
+- **Quick wins** (1–2 points): Search, Compare form, prev/next navigation
+- **Drill-in refactors** (2–3 points each): AllStar, NegroLeagues, Managers, Parks
+
+## Verdict
+
+Backend infrastructure is ready (splitting already works). Gaps are front-end only. This is suitable for Sprint 5 backlog grooming.
