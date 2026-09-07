@@ -83,20 +83,27 @@ public sealed class FieldingReadService(
             })
             .ToList();
 
-        var careerByPosition = seasons
-            .GroupBy(s => s.Position)
+        // Career totals must reflect the player's entire fielding history, not just
+        // the (possibly capped) season rows returned above, so query them separately
+        // without the Take(maxRows) limit.
+        var careerRowsRaw = await fieldingQuery
+            .Select(f => new { f.Pos, f.G, f.Po, f.A, f.E, f.Dp })
+            .ToListAsync(cancellationToken);
+
+        var careerByPosition = careerRowsRaw
+            .GroupBy(f => f.Pos)
             .Select(g =>
             {
-                var putouts = g.Sum(s => s.Putouts);
-                var assists = g.Sum(s => s.Assists);
-                var errors = g.Sum(s => s.Errors);
+                var putouts = g.Sum(f => ParseIntOrZero(f.Po));
+                var assists = g.Sum(f => ParseIntOrZero(f.A));
+                var errors = g.Sum(f => ParseIntOrZero(f.E));
                 return new FieldingCareerPositionReadModel(
                     g.Key,
-                    g.Sum(s => s.Games),
+                    g.Sum(f => f.G ?? 0),
                     putouts,
                     assists,
                     errors,
-                    g.Sum(s => s.DoublePlays),
+                    g.Sum(f => ParseIntOrZero(f.Dp)),
                     FieldingPercentage(putouts, assists, errors));
             })
             .OrderByDescending(p => p.Games)

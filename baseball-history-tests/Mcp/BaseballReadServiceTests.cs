@@ -408,6 +408,29 @@ public class BaseballReadServiceTests
     }
 
     [Fact]
+    public async Task GetPlayerFieldingAsync_WithCappedSeasonRows_CareerTotalsCoverFullHistory()
+    {
+        // Ruth's fielding history spans more rows than a small cap allows; career
+        // totals must still reflect every season, not just the capped rows returned.
+        var cappedService = CreateFieldingReadService(fieldingSeasonRowsMax: 3);
+        var uncappedService = CreateFieldingReadService(fieldingSeasonRowsMax: 200);
+
+        var capped = await cappedService.GetPlayerFieldingAsync("ruthba01");
+        var uncapped = await uncappedService.GetPlayerFieldingAsync("ruthba01");
+
+        Assert.NotNull(capped);
+        Assert.NotNull(uncapped);
+        Assert.True(capped.WasSeasonListCapped);
+        Assert.Equal(3, capped.Seasons.Count);
+
+        var cappedTotalGames = capped.CareerByPosition.Sum(p => p.Games);
+        var uncappedTotalGames = uncapped.CareerByPosition.Sum(p => p.Games);
+
+        Assert.Equal(uncappedTotalGames, cappedTotalGames);
+        Assert.True(cappedTotalGames > capped.Seasons.Sum(s => s.Games));
+    }
+
+    [Fact]
     public async Task SearchParksAsync_ByName_FindsFenway()
     {
         var service = CreateParkReadService();
