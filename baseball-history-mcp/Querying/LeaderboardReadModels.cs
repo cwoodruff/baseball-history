@@ -40,6 +40,7 @@ public sealed record BattingLeaderboardEntry(
     int Rbi,
     int StolenBases,
     int Walks,
+    int Strikeouts,
     double BattingAverage,
     double Obp,
     double Slg,

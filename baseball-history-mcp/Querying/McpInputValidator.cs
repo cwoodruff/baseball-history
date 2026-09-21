@@ -4,7 +4,7 @@ internal static class McpInputValidator
 {
     private static readonly HashSet<string> BattingStats =
     [
-        "hr", "h", "r", "rbi", "sb", "2b", "3b", "bb", "g", "ab", "avg", "obp", "slg", "ops"
+        "hr", "h", "r", "rbi", "sb", "2b", "3b", "bb", "so", "g", "ab", "avg", "obp", "slg", "ops"
     ];
 
     private static readonly HashSet<string> PitchingStats =

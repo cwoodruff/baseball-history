@@ -180,6 +180,30 @@ public class BaseballReadServiceTests
     }
 
     [Fact]
+    public async Task GetBattingLeadersAsync_WithCareerStrikeouts_ReturnsDescendingResults()
+    {
+        var service = CreateLeaderboardReadService();
+
+        var result = await service.GetBattingLeadersAsync(new BattingLeaderboardQuery(Stat: "so", PageSize: 5));
+
+        Assert.Equal(5, result.Items.Count);
+        Assert.True(result.Items[0].Strikeouts > 0);
+        Assert.True(result.Items[0].Strikeouts >= result.Items[4].Strikeouts);
+    }
+
+    [Fact]
+    public async Task GetBattingLeadersAsync_WithSingleSeasonStrikeoutsAlias_ReturnsDescendingResults()
+    {
+        var service = CreateLeaderboardReadService();
+
+        var result = await service.GetBattingLeadersAsync(new BattingLeaderboardQuery(Stat: "strikeouts", SingleSeason: true, PageSize: 5));
+
+        Assert.Equal(5, result.Items.Count);
+        Assert.All(result.Items, item => Assert.NotNull(item.Year));
+        Assert.True(result.Items[0].Strikeouts >= result.Items[4].Strikeouts);
+    }
+
+    [Fact]
     public async Task GetBattingLeadersAsync_WithInvalidStat_ThrowsUsageError()
     {
         var service = CreateLeaderboardReadService();

@@ -52,6 +52,7 @@ public sealed class LeaderboardReadService(
             Rbi: r.RBI,
             StolenBases: r.SB,
             Walks: r.BB,
+            Strikeouts: r.SO,
             BattingAverage: (double)(r.AVG ?? 0),
             Obp: (double)(r.OBP ?? 0),
             Slg: (double)(r.SLG ?? 0),

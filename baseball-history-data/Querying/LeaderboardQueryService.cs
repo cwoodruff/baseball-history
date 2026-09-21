@@ -70,6 +70,7 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
                 RBI = (int)(b.Rbi ?? 0),
                 SB = (int)(b.Sb ?? 0),
                 BB = (int)(b.Bb ?? 0),
+                SO = (int)(b.So ?? 0),
                 HBP = (int?)(b.Hbp),
                 SH = (int?)(b.Sh),
                 SF = (int?)(b.Sf),
@@ -124,11 +125,12 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
             x.RBI,
             x.SB,
             x.BB,
+            x.SO,
             AVG = x.AB > 0 ? (decimal)x.H / x.AB : (decimal?)null,
             OBP = ComputeOBP(x.H, x.BB, x.HBP, x.AB, x.SF),
             SLG = ComputeSLG(x.H, x.Doubles, x.Triples, x.HR, x.AB),
             OPS = ComputeOBP(x.H, x.BB, x.HBP, x.AB, x.SF) + ComputeSLG(x.H, x.Doubles, x.Triples, x.HR, x.AB),
-            SortKey = GetBattingSortKey(statDef.Key, x.H, x.BB, x.HBP, x.AB, x.SF, x.Doubles, x.Triples, x.HR, x.R, x.RBI, x.SB, x.G)
+            SortKey = GetBattingSortKey(statDef.Key, x.H, x.BB, x.HBP, x.AB, x.SF, x.Doubles, x.Triples, x.HR, x.R, x.RBI, x.SB, x.G, x.SO)
         }).ToList();
 
         // Sort
@@ -160,6 +162,7 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
                 x.RBI,
                 x.SB,
                 x.BB,
+                x.SO,
                 x.AVG,
                 x.OBP,
                 x.SLG,
@@ -193,6 +196,7 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
                 RBI = g.Sum(b => (int?)(b.Rbi)) ?? 0,
                 SB = g.Sum(b => (int?)(b.Sb)) ?? 0,
                 BB = g.Sum(b => (int?)(b.Bb)) ?? 0,
+                SO = g.Sum(b => (int?)(b.So)) ?? 0,
                 HBP = g.Sum(b => (int?)(b.Hbp)),
                 SH = g.Sum(b => (int?)(b.Sh)),
                 SF = g.Sum(b => (int?)(b.Sf)),
@@ -256,11 +260,12 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
             x.RBI,
             x.SB,
             x.BB,
+            x.SO,
             AVG = x.AB > 0 ? (decimal)x.H / x.AB : (decimal?)null,
             OBP = ComputeOBP(x.H, x.BB, x.HBP, x.AB, x.SF),
             SLG = ComputeSLG(x.H, x.Doubles, x.Triples, x.HR, x.AB),
             OPS = ComputeOBP(x.H, x.BB, x.HBP, x.AB, x.SF) + ComputeSLG(x.H, x.Doubles, x.Triples, x.HR, x.AB),
-            SortKey = GetBattingSortKey(statDef.Key, x.H, x.BB, x.HBP, x.AB, x.SF, x.Doubles, x.Triples, x.HR, x.R, x.RBI, x.SB, x.G)
+            SortKey = GetBattingSortKey(statDef.Key, x.H, x.BB, x.HBP, x.AB, x.SF, x.Doubles, x.Triples, x.HR, x.R, x.RBI, x.SB, x.G, x.SO)
         }).ToList();
 
         // Sort with tie-breaker
@@ -292,6 +297,7 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
                 x.RBI,
                 x.SB,
                 x.BB,
+                x.SO,
                 x.AVG,
                 x.OBP,
                 x.SLG,
@@ -635,7 +641,7 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
         return (decimal)w / decisions;
     }
 
-    private static decimal GetBattingSortKey(string stat, int h, int bb, int? hbp, int ab, int? sf, int doubles, int triples, int hr, int r, int rbi, int sb, int g)
+    private static decimal GetBattingSortKey(string stat, int h, int bb, int? hbp, int ab, int? sf, int doubles, int triples, int hr, int r, int rbi, int sb, int g, int so)
     {
         return stat switch
         {
@@ -647,6 +653,7 @@ public sealed class LeaderboardQueryService : ILeaderboardQueryService
             "2b" => doubles,
             "3b" => triples,
             "bb" => bb,
+            "so" => so,
             "g" => g,
             "ab" => ab,
             "avg" => ab > 0 ? (decimal)h / ab : 0,

@@ -55,9 +55,9 @@ public sealed class BaseballReferenceTools(
         CancellationToken cancellationToken = default)
         => teams.GetTeamSeasonAsync(teamId, league, year, cancellationToken);
 
-    [McpServerTool(Name = "get_batting_leaders", ReadOnly = true, Title = "Get Batting Leaders"), Description("Read batting leaderboards in career or single-season form. Supported stats: hr, h, r, rbi, sb, 2b, 3b, bb, g, ab, avg, obp, slg, ops.")]
+    [McpServerTool(Name = "get_batting_leaders", ReadOnly = true, Title = "Get Batting Leaders"), Description("Read batting leaderboards in career or single-season form. Supported stats: hr, h, r, rbi, sb, 2b, 3b, bb, so, g, ab, avg, obp, slg, ops.")]
     public Task<PagedReadResult<BattingLeaderboardEntry>> GetBattingLeadersAsync(
-        [Description("Stat to rank by. Use one of: hr, h, r, rbi, sb, 2b, 3b, bb, g, ab, avg, obp, slg, ops. Aliases like hits and homeruns are also accepted.")] string stat = "hr",
+        [Description("Stat to rank by. Use one of: hr, h, r, rbi, sb, 2b, 3b, bb, so, g, ab, avg, obp, slg, ops. Aliases like hits, homeruns, and strikeouts are also accepted.")] string stat = "hr",
         [Description("Optional lower year bound.")] int? fromYear = null,
         [Description("Optional upper year bound.")] int? toYear = null,
         [Description("Optional league filter such as AL or NL.")] string? league = null,

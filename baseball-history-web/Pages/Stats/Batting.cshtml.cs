@@ -109,7 +109,7 @@ public class BattingModel(ILeaderboardQueryService leaderboardService, BaseballD
             Rbi = r.RBI,
             StolenBases = r.SB,
             Walks = r.BB,
-            Strikeouts = 0 // Not in service response
+            Strikeouts = r.SO
         }).ToList();
 
         // Return appropriate view

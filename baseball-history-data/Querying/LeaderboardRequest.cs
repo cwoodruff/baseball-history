@@ -37,6 +37,7 @@ public sealed record BattingLeaderRow(
     int RBI,
     int SB,
     int BB,
+    int SO,
     decimal? AVG,
     decimal? OBP,
     decimal? SLG,

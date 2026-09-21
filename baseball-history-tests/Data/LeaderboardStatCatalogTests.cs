@@ -52,6 +52,20 @@ public class LeaderboardStatCatalogTests
     }
 
     [Fact]
+    public void GetBattingStat_ForStrikeouts_IsCountingStatWithAlias()
+    {
+        var byAlias = LeaderboardStatCatalog.GetBattingStat("strikeouts");
+        var byKey = LeaderboardStatCatalog.GetBattingStat("so");
+
+        Assert.NotNull(byAlias);
+        Assert.Same(byKey, byAlias);
+        Assert.Equal("so", byAlias.Key);
+        Assert.Equal("Strikeouts", byAlias.Label);
+        Assert.Equal("descending", byAlias.SortDirection);
+        Assert.False(byAlias.IsRateStat);
+    }
+
+    [Fact]
     public void GetBattingStat_WithUnknownKey_ReturnsNull()
     {
         Assert.Null(LeaderboardStatCatalog.GetBattingStat("sluggingplus"));

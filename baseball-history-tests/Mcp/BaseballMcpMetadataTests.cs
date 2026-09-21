@@ -75,6 +75,7 @@ public class BaseballMcpMetadataTests
         var pitching = Assert.Single(catalog.Categories, category => category.Category == "pitching");
 
         Assert.Contains(batting.Stats, stat => stat.Key == "ops");
+        Assert.Contains(batting.Stats, stat => stat.Key == "so" && stat.SortDirection == "descending");
         Assert.Contains(pitching.Stats, stat => stat.Key == "era" && stat.SortDirection == "ascending");
     }
 

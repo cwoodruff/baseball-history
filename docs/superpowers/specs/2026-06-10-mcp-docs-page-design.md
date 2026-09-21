@@ -130,7 +130,7 @@ Domains and tools:
 
 **Full parameter tables only** for `get_batting_leaders` and `get_pitching_leaders`
 (parameter / type / default / description), because they carry the stat lists:
-- Batting stats: `hr, h, r, rbi, sb, 2b, 3b, bb, g, ab, avg, obp, slg, ops`
+- Batting stats: `hr, h, r, rbi, sb, 2b, 3b, bb, so, g, ab, avg, obp, slg, ops`
 - Pitching stats: `w, l, so, sv, cg, sho, ip, g, gs, hr, k9, wpct, era, whip, bb9`
   (era, whip, bb9 sort ascending — lower is better)
 

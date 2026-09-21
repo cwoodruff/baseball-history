@@ -19,6 +19,7 @@ public static class LeaderboardStatCatalog
         new("2b", "Doubles", ["doubles"], "descending", false),
         new("3b", "Triples", ["triples"], "descending", false),
         new("bb", "Walks", ["walks"], "descending", false),
+        new("so", "Strikeouts", ["strikeouts"], "descending", false),
         new("g", "Games", ["games"], "descending", false),
         new("ab", "At-bats", ["atbats"], "descending", false),
         new("avg", "Batting Average", ["battingaverage"], "descending", true),
