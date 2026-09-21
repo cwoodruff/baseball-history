@@ -4,7 +4,8 @@
 
 `baseball-history-mcp` is the shipped MCP server for this repository.
 
-- **Transport:** streamable HTTP on port 5190
+- **Hosted endpoint:** https://baseball-history-mcp.azurewebsites.net/
+- **Transport:** stateless streamable HTTP (port 5190 when run locally)
 - **Runtime database contract:** `ConnectionStrings:Lahman`
 - **Database provider:** PostgreSQL via Npgsql
 - **Posture:** read-only, bounded queries, no mutations
@@ -96,14 +97,16 @@ If you need capabilities beyond that surface, treat them as follow-on work. Do n
 
 ## Transport
 
-The server serves streamable HTTP at `http://localhost:5190/`, with health endpoints at `/healthz` and `/alive` from the shared service defaults. Port 5190 is unique within this solution (the web app uses 5186/7209; Aspire infrastructure uses 15066–23211). The client connects to the running server over that URL; it does not launch the process itself.
+The hosted server serves stateless streamable HTTP at `https://baseball-history-mcp.azurewebsites.net/` on Azure App Service, with health endpoints at `/healthz` and `/alive` from the shared service defaults. Clients connect to that URL directly; there is nothing to install or launch.
 
-Hardening currently in place, per the MCP C# SDK guidance for local HTTP hosting:
+When run locally, the same server listens at `http://localhost:5190/`. Port 5190 is unique within this solution (the web app uses 5186/7209; Aspire infrastructure uses 15066–23211). The client connects to the running server over that URL; it does not launch the process itself.
 
-- The server binds to localhost only; there is no remote or public hosting story.
-- `AllowedHosts` is restricted to `localhost;127.0.0.1` because Kestrel does not validate `Host` headers by default.
+Hardening currently in place, per the MCP C# SDK guidance for HTTP hosting:
+
+- The hosted endpoint is served over HTTPS by Azure App Service. A locally run copy binds to localhost only.
+- `AllowedHosts` is restricted because Kestrel does not validate `Host` headers by default; a local run accepts only `localhost;127.0.0.1`.
 - No CORS is enabled; browser-based cross-origin access is not a supported scenario.
-- There is no authentication — do not expose the port beyond the local machine.
+- There is no authentication. The server is read-only, every query is bounded and capped, and it never exposes secrets or raw connection details.
 
 ### Aspire orchestration
 
@@ -160,9 +163,22 @@ dotnet test baseball-history-tests --filter "FullyQualifiedName~baseball_history
 
 This includes protocol integration tests and HTTP smoke tests that spawn the server and exercise it over HTTP.
 
-## Sample local client configuration
+## Sample client configuration
 
-The server must already be running (for example under `aspire run` or `dotnet run --project baseball-history-mcp`). This repository's own `.mcp.json` connects to it over HTTP:
+Point your MCP client at the hosted endpoint:
+
+```json
+{
+  "mcpServers": {
+    "baseball-history": {
+      "type": "http",
+      "url": "https://baseball-history-mcp.azurewebsites.net/"
+    }
+  }
+}
+```
+
+To use a locally run copy instead, start the server first (for example under `aspire run` or `dotnet run --project baseball-history-mcp`) and swap in its URL:
 
 ```json
 {
@@ -177,8 +193,8 @@ The server must already be running (for example under `aspire run` or `dotnet ru
 
 Notes:
 
-- Start the server before the client connects; the client no longer launches the process itself.
-- The `ConnectionStrings:Lahman` value is configured on the server (through user-secrets or environment variables), not by the client.
+- For a local run, start the server before the client connects; the client does not launch the process itself.
+- The `ConnectionStrings:Lahman` value is configured on the server (through user-secrets or environment variables), not by the client. The hosted instance is already connected.
 
 ## How client authors should adopt the server
 
@@ -204,7 +220,7 @@ Client authors should assume:
 
 Client authors should **not** assume:
 
-- Remote or authenticated HTTP access (the HTTP transport is localhost-only)
+- Authenticated access or per-user state (the hosted endpoint is public, anonymous, and read-only)
 - Browser/CORS compatibility
 - Write tools
 - Arbitrary table/query access

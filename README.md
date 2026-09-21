@@ -17,7 +17,8 @@ Leagues, built on the Lahman Baseball Database. Three things set it apart:
   exposes players, franchises, leaderboards, Hall of Fame history, and salary
   data as MCP tools and resources — speaking the current stateless Streamable
   HTTP revision, so Claude and other MCP clients can answer baseball questions
-  against the real data.
+  against the real data. The hosted endpoint is live at
+  <https://baseball-history-mcp.azurewebsites.net/>; point any MCP client at it.
 - **Everything is open through a REST API.** 30+ JSON endpoints with no
   authentication — players, teams, leaders, awards voting, postseason,
   salaries, search — with an interactive Scalar explorer and OpenAPI spec.
@@ -70,7 +71,7 @@ local development is orchestrated with .NET Aspire.
 - [PostgreSQL Migration Guide](./docs/POSTGRES-MIGRATION.md) - Configuration for
   local development (User Secrets) and Azure deployment (Key Vault)
 - [MCP Server Guide](./docs/MCP-SERVER-PLAN.md) - Shipped MCP v1 surface,
-  local setup, sample client config, and rollout boundaries
+  hosted endpoint, local setup, sample client config, and rollout boundaries
 - [Frontend Design](./docs/FRONTEND.md) - htmx patterns, Bootstrap theming, and CSS
   architecture
 - [Features](./docs/FEATURES.md) - Detailed feature documentation
@@ -96,8 +97,9 @@ dotnet user-secrets set --project baseball-history-web \
 
 See [POSTGRES-MIGRATION.md](./docs/POSTGRES-MIGRATION.md) for the full local and Azure setup story.
 
-For local MCP setup and client adoption guidance, see the
-[MCP Server Guide](./docs/MCP-SERVER-PLAN.md).
+The MCP server is hosted at <https://baseball-history-mcp.azurewebsites.net/>, so
+you do not need to run it locally to use it. For local MCP setup and client
+adoption guidance, see the [MCP Server Guide](./docs/MCP-SERVER-PLAN.md).
 
 #### Preferred: Aspire AppHost orchestration
 

@@ -182,7 +182,8 @@ shelves are the whole point of this beta.
 
 ## Appendix: local setup for technical testers
 
-For testers comfortable with a terminal, before a hosted endpoint exists:
+For testers comfortable with a terminal who want to run their own copy instead
+of the hosted endpoint at https://baseball-history-mcp.azurewebsites.net/:
 
 1. Install the .NET 10 SDK and clone
    https://github.com/cwoodruff/baseball-history

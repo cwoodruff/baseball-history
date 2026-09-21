@@ -18,9 +18,11 @@
             <div>
                 <strong>What is MCP?</strong>
                 The <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">Model Context Protocol</a>
-                is an open standard that lets AI assistants call external tools. This server runs over
-                <strong>streamable HTTP on port 5190</strong>, is <strong>read-only</strong>, and has
-                <strong>no authentication</strong> &mdash; the endpoint binds to localhost only.
+                is an open standard that lets AI assistants call external tools. This server is hosted at
+                <strong><a href="https://baseball-history-mcp.azurewebsites.net/" target="_blank" rel="noopener">baseball-history-mcp.azurewebsites.net</a></strong>
+                over <strong>stateless streamable HTTP</strong>, is <strong>read-only</strong>, and needs
+                <strong>no authentication</strong> &mdash; point your MCP client at it and start asking questions.
+                You can also run your own copy locally on port 5190.
             </div>
         </div>
 
@@ -70,12 +72,14 @@
             <h2 class="border-bottom pb-2">How it works</h2>
             <p>
                 The server exposes <strong>17 read-only tools</strong> and <strong>6 JSON resources</strong> over
-                streamable HTTP at <code>http://localhost:5190</code>. Start the server yourself with
-                <code>dotnet run --project baseball-history-mcp</code> (or let the Aspire AppHost host it), then point
-                your MCP client at the URL. Health endpoints are available at <code>/healthz</code> and <code>/alive</code>.
+                streamable HTTP. The hosted endpoint is <code>https://baseball-history-mcp.azurewebsites.net/</code>; point your
+                MCP client at that URL and it is ready to use. If you prefer to run your own copy, start it with
+                <code>dotnet run --project baseball-history-mcp</code> (or let the Aspire AppHost host it) and it
+                listens at <code>http://localhost:5190</code>. Health endpoints are available at <code>/healthz</code>
+                and <code>/alive</code> on either instance.
             </p>
             <ul>
-                <li>Requires a <code>ConnectionStrings:Lahman</code> value at startup. Placeholder strings containing <code>&lt;</code> are rejected.</li>
+                <li>The hosted instance is already connected to the database. A locally run copy requires a <code>ConnectionStrings:Lahman</code> value at startup; placeholder strings containing <code>&lt;</code> are rejected.</li>
                 <li>Every tool is read-only; the server never mutates data.</li>
                 <li>Start with the <code>get_server_diagnostics</code> tool or the <code>baseball-history://server/info</code> resource to discover the surface before calling domain tools.</li>
             </ul>
@@ -85,13 +89,9 @@
         <section class="mb-5">
             <h2 class="border-bottom pb-2">Connecting</h2>
             <p>
-                First start the server so the HTTP endpoint is listening. The server reads its database connection
-                string from the <code>ConnectionStrings__Lahman</code> environment variable (the .NET double-underscore
-                convention) or from user-secrets during local development &mdash; the client does not supply it.
+                Point your MCP client at the hosted endpoint <code>https://baseball-history-mcp.azurewebsites.net/</code>. There is
+                nothing to install, no server process to start, and no connection string or API key to supply.
             </p>
-            <pre class="bg-dark text-light p-3 rounded"><code>ConnectionStrings__Lahman="Host=your-host;Database=baseball-history;Username=user;Password=secret" \
-  dotnet run --project /path/to/baseball-history-mcp</code></pre>
-            <p>Then point your MCP client at <code>http://localhost:5190/</code>.</p>
 
             <h5 class="mt-4">Claude Desktop / Claude Code</h5>
             <p>Add the server to your MCP configuration:</p>
@@ -99,7 +99,7 @@
   "mcpServers": {
     "baseball-history": {
       "type": "http",
-      "url": "http://localhost:5190/"
+      "url": "https://baseball-history-mcp.azurewebsites.net/"
     }
   }
 }</code></pre>
@@ -110,10 +110,20 @@
   "servers": {
     "baseball-history": {
       "type": "http",
-      "url": "http://localhost:5190/"
+      "url": "https://baseball-history-mcp.azurewebsites.net/"
     }
   }
 }</code></pre>
+
+            <h5 class="mt-4">Running your own copy instead</h5>
+            <p>
+                To run the server locally, supply a database connection string through the
+                <code>ConnectionStrings__Lahman</code> environment variable (the .NET double-underscore convention)
+                or user-secrets, start the server, and swap <code>http://localhost:5190/</code> into the
+                <code>url</code> value above. The client never supplies the connection string.
+            </p>
+            <pre class="bg-dark text-light p-3 rounded"><code>ConnectionStrings__Lahman="Host=your-host;Database=baseball-history;Username=user;Password=secret" \
+  dotnet run --project /path/to/baseball-history-mcp</code></pre>
         </section>
 
         <!-- Example prompts -->
@@ -259,7 +269,7 @@
 var transport = new HttpClientTransport(new HttpClientTransportOptions
 {
     Name = "baseball-history",
-    Endpoint = new Uri("http://localhost:5190/")
+    Endpoint = new Uri("https://baseball-history-mcp.azurewebsites.net/")
 });
 
 await using var client = await McpClientFactory.CreateAsync(transport);

@@ -51,7 +51,9 @@ project startup flow.
 ### Optional: Run the MCP server locally
 
 The repository also ships an MCP host in `baseball-history-mcp` that serves
-streamable HTTP on port 5190.
+streamable HTTP on port 5190. A hosted instance is live at
+<https://baseball-history-mcp.azurewebsites.net/>, so running it locally is only
+needed when you are changing the server itself.
 
 ```bash
 # Configure the shared PostgreSQL connection string
