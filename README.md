@@ -14,8 +14,8 @@ Leagues, built on the Lahman Baseball Database. Three things set it apart:
   and every leaderboard carries a plain statement that raw totals are not
   context-adjusted across eras.
 - **AI assistants can query it directly.** A [Model Context Protocol server](./docs/MCP-SERVER-PLAN.md)
-  exposes players, franchises, leaderboards, Hall of Fame history, and salary
-  data as MCP tools and resources — speaking the current stateless Streamable
+  exposes players, franchises, managers, leaderboards, Hall of Fame history,
+  salaries, All-Star games, and the Negro Leagues as 25 MCP tools and resources — speaking the current stateless Streamable
   HTTP revision, so Claude and other MCP clients can answer baseball questions
   against the real data. The hosted endpoint is live at
   <https://baseball-history-mcp.azurewebsites.net/>; point any MCP client at it.

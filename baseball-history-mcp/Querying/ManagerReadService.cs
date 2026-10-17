@@ -7,8 +7,78 @@ namespace baseball_history_mcp.Querying;
 
 public sealed class ManagerReadService(
     IDbContextFactory<BaseballDbContext> contextFactory,
-    IOptions<BaseballMcpOptions> options) : IManagerReadService
+    IOptions<BaseballMcpOptions> options,
+    IHallOfFameReadService hallOfFameReadService,
+    BaseballMcpRequestPolicy requestPolicy) : IManagerReadService
 {
+    public async Task<PagedReadResult<ManagerLookupItem>> ListManagersAsync(
+        ManagerLookupRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        McpInputValidation.ValidatePage(request.Page);
+        McpInputValidation.ValidatePageSize(request.PageSize);
+
+        var searchQuery = McpInputValidation.NormalizeOptionalText(request.Query);
+        var sort = McpInputValidation.NormalizeOptionalText(request.Sort)?.ToLowerInvariant() ?? "wins";
+        if (sort is not ("wins" or "name"))
+        {
+            throw new BaseballMcpUsageException("sort must be 'wins' or 'name'.");
+        }
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var people = context.People.Where(p => p.Managers.Any());
+        if (searchQuery is not null)
+        {
+            var pattern = $"%{searchQuery}%";
+            people = people.Where(p =>
+                (p.NameFirst != null && EF.Functions.ILike(p.NameFirst, pattern)) ||
+                (p.NameLast != null && EF.Functions.ILike(p.NameLast, pattern)));
+        }
+
+        var summaries = people.Select(p => new
+        {
+            p.PlayerId,
+            p.NameFirst,
+            p.NameLast,
+            SortName = (p.NameFirst ?? "") + " " + (p.NameLast ?? ""),
+            FirstYear = p.Managers.Min(m => m.YearId),
+            LastYear = p.Managers.Max(m => m.YearId),
+            Seasons = p.Managers.Select(m => m.YearId).Distinct().Count(),
+            Games = p.Managers.Sum(m => (int)(m.G ?? 0)),
+            Wins = p.Managers.Sum(m => (int)(m.W ?? 0)),
+            Losses = p.Managers.Sum(m => (int)(m.L ?? 0))
+        });
+
+        summaries = sort == "name"
+            ? summaries.OrderBy(s => s.SortName).ThenBy(s => s.PlayerId)
+            : summaries.OrderByDescending(s => s.Wins).ThenBy(s => s.PlayerId);
+
+        var totalCount = await summaries.CountAsync(cancellationToken);
+        var pageWindow = requestPolicy.CreateManagerListWindow(request.Page, request.PageSize, totalCount);
+        var hallOfFamers = await hallOfFameReadService.GetInductedPlayerIdsAsync(cancellationToken);
+
+        var rows = await summaries
+            .Skip((pageWindow.Page - 1) * pageWindow.PageSize)
+            .Take(pageWindow.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return pageWindow.CreateResult(
+            rows.Select(m => new ManagerLookupItem(
+                    m.PlayerId,
+                    FormatName(m.NameFirst, m.NameLast, m.PlayerId),
+                    m.FirstYear,
+                    m.LastYear,
+                    m.Seasons,
+                    m.Games,
+                    m.Wins,
+                    m.Losses,
+                    m.Wins + m.Losses > 0 ? Math.Round((double)m.Wins / (m.Wins + m.Losses), 3) : 0,
+                    hallOfFamers.Contains(m.PlayerId)))
+                .ToList(),
+            totalCount);
+    }
+
     public async Task<ManagerReadModel?> GetManagerAsync(
         string playerId,
         CancellationToken cancellationToken = default)

@@ -1,4 +1,4 @@
-namespace baseball_history_web.Services;
+namespace BaseballHistory.Data.Reference;
 
 /// <summary>
 /// One of the seven Negro Leagues recognized by MLB as major leagues.

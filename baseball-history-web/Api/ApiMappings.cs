@@ -1,5 +1,6 @@
 using baseball_history_web.Api.Dtos;
 using baseball_history_web.ViewModels;
+using BaseballHistory.Data.Reference;
 
 namespace baseball_history_web.Api;
 
@@ -35,7 +36,7 @@ internal static class ApiMappings
         y.Year, y.PreviousYear, y.NextYear,
         y.Games.Select(g => new AllStarGameDto(
             g.Title,
-            AllStarGameType(g.GroupKey),
+            AllStarGames.GameType(g.GroupKey),
             g.GameNum,
             g.GameDate,
             g.Rosters.Select(r => new AllStarRosterDto(
@@ -45,14 +46,6 @@ internal static class ApiMappings
                     p.PlayerId, p.FullName, p.TeamId, p.TeamName, p.LinkLgId,
                     p.IsStarter, p.StartingPos, p.IsStarter ? p.PositionName : null,
                     p.Played, p.IsInHallOfFame)).ToList())).ToList())).ToList());
-
-    private static string AllStarGameType(string groupKey) => groupKey switch
-    {
-        AllStarGames.EastWestKey => "EastWest",
-        AllStarGames.NorthSouthKey => "NorthSouth",
-        _ when groupKey.StartsWith("MLB|") => "AllStar",
-        _ => "Other"
-    };
 
     public static NegroLeagueDetail ToDto(this NegroLeagueDetailViewModel l) => new(
         l.Info.Id, l.Info.Name, l.Info.FirstYear, l.Info.LastYear, l.Info.Summary,

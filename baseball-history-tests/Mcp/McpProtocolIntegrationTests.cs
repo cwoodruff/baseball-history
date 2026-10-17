@@ -42,6 +42,14 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
             "search_parks",
             "get_park",
             "get_manager",
+            "get_player_advanced_stats",
+            "list_managers",
+            "list_all_star_years",
+            "get_all_star_year",
+            "list_negro_leagues",
+            "get_negro_league",
+            "get_negro_league_season",
+            "get_this_day",
             "get_server_diagnostics"
         }, toolNames);
 
@@ -136,6 +144,58 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         using var managerPayload = McpHostFixture.ReadToolPayload(managerResponse);
         Assert.Equal(3731, managerPayload.RootElement.GetProperty("wins").GetInt32());
         Assert.Equal(9, managerPayload.RootElement.GetProperty("pennants").GetInt32());
+    }
+
+    [Fact]
+    public async Task Host_CallsWebParityToolsTheWayClientsDo()
+    {
+        using var searchResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "search_players", arguments = new { position = "SS", era = 1920, sort = "hr", pageSize = 3 } });
+        Assert.False(McpHostFixture.IsToolError(searchResponse), McpHostFixture.ReadToolMessage(searchResponse));
+        using var searchPayload = McpHostFixture.ReadToolPayload(searchResponse);
+        Assert.Equal(3, searchPayload.RootElement.GetProperty("items").GetArrayLength());
+
+        using var managersResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "list_managers", arguments = new { pageSize = 3 } });
+        Assert.False(McpHostFixture.IsToolError(managersResponse), McpHostFixture.ReadToolMessage(managersResponse));
+        using var managersPayload = McpHostFixture.ReadToolPayload(managersResponse);
+        Assert.Equal("mackco01", managersPayload.RootElement.GetProperty("items")[0].GetProperty("playerId").GetString());
+
+        using var allStarResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_all_star_year", arguments = new { year = 1943 } });
+        Assert.False(McpHostFixture.IsToolError(allStarResponse), McpHostFixture.ReadToolMessage(allStarResponse));
+        using var allStarPayload = McpHostFixture.ReadToolPayload(allStarResponse);
+        Assert.True(allStarPayload.RootElement.GetProperty("games").GetArrayLength() >= 2);
+
+        using var seasonResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_negro_league_season", arguments = new { leagueId = "NN2", year = 1943 } });
+        Assert.False(McpHostFixture.IsToolError(seasonResponse), McpHostFixture.ReadToolMessage(seasonResponse));
+        using var seasonPayload = McpHostFixture.ReadToolPayload(seasonResponse);
+        Assert.Equal("HG", seasonPayload.RootElement.GetProperty("standings")[0].GetProperty("teamId").GetString());
+
+        using var thisDayResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_this_day", arguments = new { date = "02-06", limit = 2 } });
+        Assert.False(McpHostFixture.IsToolError(thisDayResponse), McpHostFixture.ReadToolMessage(thisDayResponse));
+        using var thisDayPayload = McpHostFixture.ReadToolPayload(thisDayResponse);
+        Assert.Equal("ruthba01", thisDayPayload.RootElement.GetProperty("birthdays")[0].GetProperty("playerId").GetString());
+
+        using var advancedResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_player_advanced_stats", arguments = new { playerId = "ruthba01" } });
+        Assert.False(McpHostFixture.IsToolError(advancedResponse), McpHostFixture.ReadToolMessage(advancedResponse));
+        using var advancedPayload = McpHostFixture.ReadToolPayload(advancedResponse);
+        Assert.True(advancedPayload.RootElement.GetProperty("battingSeasons").GetArrayLength() > 0);
+        Assert.True(advancedPayload.RootElement.GetProperty("pitchingSeasons").GetArrayLength() > 0);
+
+        using var badFilterResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "search_players", arguments = new { position = "XX" } });
+        Assert.True(McpHostFixture.IsToolError(badFilterResponse));
     }
 
     [Fact]
@@ -244,7 +304,7 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         Assert.False(McpHostFixture.IsToolError(diagnosticsResponse), McpHostFixture.ReadToolMessage(diagnosticsResponse));
         using var diagnosticsPayload = McpHostFixture.ReadToolPayload(diagnosticsResponse);
         Assert.True(diagnosticsPayload.RootElement.GetProperty("databaseReachable").GetBoolean());
-        Assert.True(diagnosticsPayload.RootElement.GetProperty("toolCount").GetInt32() >= 17);
+        Assert.True(diagnosticsPayload.RootElement.GetProperty("toolCount").GetInt32() >= 25);
     }
 
     [Fact]

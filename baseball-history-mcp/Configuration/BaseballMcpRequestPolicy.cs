@@ -10,13 +10,16 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
         request with
         {
             Query = NormalizeOptionalText(request.Query),
-            LastNameStartsWith = NormalizePrefix(request.LastNameStartsWith)
+            LastNameStartsWith = NormalizePrefix(request.LastNameStartsWith),
+            Position = NormalizeOptionalText(request.Position)?.ToUpperInvariant(),
+            Sort = NormalizeOptionalText(request.Sort)?.ToLowerInvariant()
         };
 
     public FranchiseLookupRequest Normalize(FranchiseLookupRequest request) =>
         request with
         {
-            League = NormalizeLeague(request.League)
+            League = NormalizeLeague(request.League),
+            Query = NormalizeOptionalText(request.Query)
         };
 
     public BattingLeaderboardQuery Normalize(BattingLeaderboardQuery request)
@@ -92,6 +95,9 @@ public sealed class BaseballMcpRequestPolicy(IOptions<BaseballMcpOptions> option
 
     public PageWindow CreateHallOfFameLookupWindow(HallOfFameLookupRequest request, int totalCount) =>
         PageWindow.Create(request.Page, request.PageSize, options.Value.Limits.HallOfFamePageSizeMax, totalCount);
+
+    public PageWindow CreateManagerListWindow(int requestedPage, int requestedPageSize, int totalCount) =>
+        PageWindow.Create(requestedPage, requestedPageSize, options.Value.Limits.ManagerListPageSizeMax, totalCount);
 
     public PageWindow CreateLeaderboardWindow(int requestedPage, int requestedPageSize, int totalCount) =>
         PageWindow.Create(requestedPage, requestedPageSize, options.Value.Limits.LeaderboardPageSizeMax, totalCount);

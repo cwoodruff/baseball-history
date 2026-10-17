@@ -17,7 +17,12 @@ public class McpDocsPageTests(WebApplicationFactory<Program> factory) : Integrat
         Assert.Contains("search_parks", html);
         Assert.Contains("get_park", html);
         Assert.Contains("get_manager", html);
-        Assert.Contains("17 read-only tools", html);
+        Assert.Contains("25 read-only tools", html);
+        Assert.Contains("get_all_star_year", html);
+        Assert.Contains("get_negro_league_season", html);
+        Assert.Contains("get_this_day", html);
+        Assert.Contains("list_managers", html);
+        Assert.Contains("get_player_advanced_stats", html);
         Assert.Contains("get_server_diagnostics", html);
         // What's-new section links the expanded surface to the new site features
         Assert.Contains("id=\"whats-new\"", html);

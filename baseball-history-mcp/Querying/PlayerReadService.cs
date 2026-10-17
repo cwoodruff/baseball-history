@@ -1,5 +1,7 @@
 using baseball_history_mcp.Configuration;
 using BaseballHistory.Data.Models;
+using BaseballHistory.Data.Querying;
+using BaseballHistory.Data.Reference;
 using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_mcp.Querying;
@@ -22,6 +24,21 @@ public sealed class PlayerReadService(
 
         McpInputValidation.ValidatePage(request.Page);
         McpInputValidation.ValidatePageSize(request.PageSize);
+
+        if (normalizedRequest.Position is not null && !PlayerListFilters.IsValidPosition(normalizedRequest.Position))
+        {
+            throw new BaseballMcpUsageException($"position must be one of {string.Join(", ", PlayerListFilters.Positions)}.");
+        }
+
+        if (normalizedRequest.Sort is not null && !PlayerListFilters.IsValidSort(normalizedRequest.Sort))
+        {
+            throw new BaseballMcpUsageException($"sort must be one of {string.Join(", ", PlayerListFilters.Sorts)}.");
+        }
+
+        if (normalizedRequest.Era is not null && !EraDecade.IsValid(normalizedRequest.Era))
+        {
+            throw new BaseballMcpUsageException("era must be a year from 1870 to 2030.");
+        }
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -49,10 +66,16 @@ public sealed class PlayerReadService(
             query = query.Where(p => p.NameLast != null && EF.Functions.ILike(p.NameLast, $"{normalizedRequest.LastNameStartsWith}%"));
         }
 
-        query = query
-            .OrderBy(p => p.NameLast)
-            .ThenBy(p => p.NameFirst)
-            .ThenBy(p => p.PlayerId);
+        query = PlayerListFilters.ApplyPosition(query, normalizedRequest.Position);
+        query = PlayerListFilters.ApplyEra(query, EraDecade.From(normalizedRequest.Era));
+
+        query = normalizedRequest.Sort is null or PlayerListFilters.DefaultSort
+            ? query
+                .OrderBy(p => p.NameLast)
+                .ThenBy(p => p.NameFirst)
+                .ThenBy(p => p.PlayerId)
+            : PlayerListFilters.ApplySort(query, normalizedRequest.Sort)
+                .ThenBy(p => p.PlayerId);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var pageWindow = requestPolicy.CreatePlayerLookupWindow(normalizedRequest, totalCount);
@@ -255,6 +278,21 @@ public sealed class PlayerReadService(
             t.LastYear,
             t.Seasons)).ToList();
 
+        var careerIndex = await context.CareerBattingSummaries
+            .Where(c => c.PlayerId == normalizedPlayerId)
+            .Select(c => new { c.OpsIndex, c.Qualified })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var allStarYears = await context.AllstarFull
+            .Where(a => a.PlayerId == normalizedPlayerId)
+            .Select(a => a.YearId)
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToListAsync(cancellationToken);
+
+        var hasManagerialCareer = await context.Managers
+            .AnyAsync(m => m.PlayerId == normalizedPlayerId, cancellationToken);
+
         return new PlayerReadModel(
             person.PlayerId,
             FormatName(person.NameFirst, person.NameLast, person.PlayerId),
@@ -269,7 +307,61 @@ public sealed class PlayerReadService(
             hallOfFameInductionYear,
             careerBatting,
             careerPitching,
-            teams);
+            teams,
+            (int?)careerIndex?.OpsIndex,
+            careerIndex?.Qualified,
+            allStarYears.Count,
+            allStarYears,
+            hasManagerialCareer);
+    }
+
+    public async Task<PlayerAdvancedStatsReadModel?> GetPlayerAdvancedStatsAsync(
+        string playerId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedPlayerId = requestPolicy.NormalizeRequiredId(playerId, "playerId").ToLowerInvariant();
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var person = await context.People
+            .Where(p => p.PlayerId == normalizedPlayerId)
+            .Select(p => new { p.PlayerId, p.NameFirst, p.NameLast })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (person is null)
+        {
+            return null;
+        }
+
+        var careerIndex = await context.CareerBattingSummaries
+            .Where(c => c.PlayerId == normalizedPlayerId)
+            .Select(c => new { c.OpsIndex, c.Qualified })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var batting = await context.PlayerSeasonRates
+            .Where(r => r.PlayerId == normalizedPlayerId && r.Pa > 0)
+            .OrderByDescending(r => r.YearId)
+            .Select(r => new PlayerAdvancedBattingSeason(
+                r.YearId, r.LgId, r.Pa ?? 0,
+                (double?)r.Iso, (double?)r.Babip, (double?)r.BbPct, (double?)r.KPct,
+                (double?)r.OpsIndex, (double?)r.HrPer162, r.Qualified ?? false))
+            .ToListAsync(cancellationToken);
+
+        var pitching = await context.PlayerSeasonPitchingAdvanced
+            .Where(p => p.PlayerId == normalizedPlayerId)
+            .OrderByDescending(p => p.YearId)
+            .Select(p => new PlayerAdvancedPitchingSeason(
+                p.YearId, p.LgId, (int)(p.G ?? 0), (int)(p.Gs ?? 0), (double?)p.Ip,
+                (double?)p.Era, (double?)p.Whip, (double?)p.K9, (double?)p.Bb9, p.Qualified ?? false))
+            .ToListAsync(cancellationToken);
+
+        return new PlayerAdvancedStatsReadModel(
+            person.PlayerId,
+            FormatName(person.NameFirst, person.NameLast, person.PlayerId),
+            (int?)careerIndex?.OpsIndex,
+            careerIndex?.Qualified,
+            batting,
+            pitching);
     }
 
     private static string FormatName(string? firstName, string? lastName, string fallback) =>

@@ -1,8 +1,8 @@
-namespace baseball_history_web.Services;
+namespace BaseballHistory.Data.Reference;
 
 /// <summary>
-/// The decade filter used by the Players and Teams browsers and their API
-/// endpoints: any year in a decade selects that decade (1927 -> 1920).
+/// The decade filter used by the Players and Teams browsers, the REST API,
+/// and the MCP server: any year in a decade selects that decade (1927 -> 1920).
 /// </summary>
 public static class EraDecade
 {

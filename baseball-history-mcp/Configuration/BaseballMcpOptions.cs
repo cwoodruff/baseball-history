@@ -38,6 +38,8 @@ public sealed class BaseballMcpLimitOptions
     public int ParkSeasonRowsMax { get; init; } = 160;
 
     public int ManagerSeasonRowsMax { get; init; } = 80;
+
+    public int ManagerListPageSizeMax { get; init; } = 50;
 }
 
 internal static class BaseballMcpOptionsValidator
@@ -134,6 +136,12 @@ internal static class BaseballMcpOptionsValidator
         {
             throw new InvalidOperationException(
                 $"{BaseballMcpOptions.SectionName}:Limits:ManagerSeasonRowsMax must be greater than zero.");
+        }
+
+        if (options.Limits.ManagerListPageSizeMax <= 0)
+        {
+            throw new InvalidOperationException(
+                $"{BaseballMcpOptions.SectionName}:Limits:ManagerListPageSizeMax must be greater than zero.");
         }
 
         return options;

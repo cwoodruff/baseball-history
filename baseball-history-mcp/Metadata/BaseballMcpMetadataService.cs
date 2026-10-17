@@ -26,6 +26,7 @@ public sealed class BaseballMcpMetadataService(
     [
         "search_players",
         "get_player",
+        "get_player_advanced_stats",
         "list_franchises",
         "get_franchise",
         "get_team_season",
@@ -39,7 +40,14 @@ public sealed class BaseballMcpMetadataService(
         "get_player_fielding",
         "search_parks",
         "get_park",
+        "list_managers",
         "get_manager",
+        "list_all_star_years",
+        "get_all_star_year",
+        "list_negro_leagues",
+        "get_negro_league",
+        "get_negro_league_season",
+        "get_this_day",
         "get_server_diagnostics"
     ];
 
@@ -62,7 +70,7 @@ public sealed class BaseballMcpMetadataService(
     private static readonly IReadOnlyList<ServerResourceLink> ResourceLinks =
     [
         new("baseball-history://server/info", "Server Info", "Read server identity, startup requirements, and configured limits."),
-        new("baseball-history://server/workflow-guide", "Workflow Guide", "Choose the right tool or guide resource for player, franchise, team-season, leaderboard, Hall of Fame, salary, postseason, fielding, ballpark, manager, and diagnostics questions."),
+        new("baseball-history://server/workflow-guide", "Workflow Guide", "Choose the right tool or guide resource for player, franchise, team-season, leaderboard, Hall of Fame, salary, postseason, fielding, ballpark, manager, All-Star, Negro Leagues, this-day, and diagnostics questions."),
         new("baseball-history://server/stats-catalog", "Stats Catalog", "Discover supported batting and pitching stat categories plus the supported year span."),
         new("baseball-history://server/diagnostics", "Server Diagnostics", "Inspect safe runtime posture, configured limits, and connectivity without exposing secrets."),
         new("baseball-history://hall-of-fame/guide", "Hall of Fame Guide", "Review Hall of Fame tool limits, year coverage, and voting-history caveats."),
@@ -89,7 +97,7 @@ public sealed class BaseballMcpMetadataService(
                 "ConnectionStrings:Lahman must be configured before the server starts.",
                 "Placeholder connection strings containing '<' are rejected at startup.",
                 $"Player search page size is capped at {options.Value.Limits.PlayerSearchPageSizeMax} rows, franchise listing page size is capped at {options.Value.Limits.FranchiseListPageSizeMax} rows, Hall of Fame page size is capped at {options.Value.Limits.HallOfFamePageSizeMax} rows, batting and pitching leaderboard page size is capped at {options.Value.Limits.LeaderboardPageSizeMax} rows, salary history is capped at {options.Value.Limits.SalaryHistorySeasonsMax} seasons, and salary leaderboard page size is capped at {options.Value.Limits.SalaryLeaderboardPageSizeMax} rows.",
-                $"Postseason lines are capped at {options.Value.Limits.PostseasonRowsPerCategoryMax} rows per category, fielding at {options.Value.Limits.FieldingSeasonRowsMax} season rows, park search page size at {options.Value.Limits.ParkSearchPageSizeMax} rows, park season history at {options.Value.Limits.ParkSeasonRowsMax} rows, and manager careers at {options.Value.Limits.ManagerSeasonRowsMax} season rows.",
+                $"Postseason lines are capped at {options.Value.Limits.PostseasonRowsPerCategoryMax} rows per category, fielding at {options.Value.Limits.FieldingSeasonRowsMax} season rows, park search page size at {options.Value.Limits.ParkSearchPageSizeMax} rows, park season history at {options.Value.Limits.ParkSeasonRowsMax} rows, manager careers at {options.Value.Limits.ManagerSeasonRowsMax} season rows, and manager list page size at {options.Value.Limits.ManagerListPageSizeMax} rows.",
                 $"Database commands use a configured timeout of {options.Value.QueryTimeoutSeconds} seconds.",
                 "Client workflows should start with baseball-history://server/info and baseball-history://server/workflow-guide before calling domain tools."
             ],
@@ -137,7 +145,9 @@ public sealed class BaseballMcpMetadataService(
                         CommonQuestions:
                         [
                             "Which player matches this name or partial name?",
-                            "Show me one player's structured career batting, pitching, and team-tenure detail."
+                            "Which shortstops played in the 1920s, ranked by career home runs?",
+                            "Show me one player's structured career batting, pitching, and team-tenure detail.",
+                            "What were this player's BABIP, OPS vs. league, or K/9 by season?"
                         ],
                         RecommendedResources:
                         [
@@ -146,13 +156,16 @@ public sealed class BaseballMcpMetadataService(
                         RecommendedTools:
                         [
                             "search_players",
-                            "get_player"
+                            "get_player",
+                            "get_player_advanced_stats"
                         ],
                         SupportedQueryShapes:
                         [
                             $"Free-text player lookup with search_players(query, page, pageSize) up to {options.Value.Limits.PlayerSearchPageSizeMax} rows per page.",
                             "Alphabetical last-name prefix lookup with search_players(lastNameStartsWith, page, pageSize).",
-                            "Exact player detail by Lahman player id with get_player(playerId)."
+                            "Filtered browsing with search_players(position?, era?, sort?) — position P/C/1B/2B/3B/SS/OF/DH, era as a decade, sort name/hr/hits/games.",
+                            "Exact player detail by Lahman player id with get_player(playerId), including career OPS vs. league, All-Star selection years, and whether the player managed.",
+                            "Season advanced batting and pitching rates with get_player_advanced_stats(playerId)."
                         ],
                         UnsupportedQueryShapes:
                         [
@@ -164,6 +177,7 @@ public sealed class BaseballMcpMetadataService(
                         CommonQuestions:
                         [
                             "Which franchises are active or in a specific league?",
+                            "Which franchises with Giants in the name played in the 1930s?",
                             "Show me one franchise and its season-by-season history."
                         ],
                         RecommendedResources:
@@ -177,12 +191,12 @@ public sealed class BaseballMcpMetadataService(
                         ],
                         SupportedQueryShapes:
                         [
-                            $"Paged franchise summaries with list_franchises(league?, activeOnly, page, pageSize) up to {options.Value.Limits.FranchiseListPageSizeMax} rows per page.",
+                            $"Paged franchise summaries with list_franchises(league?, activeOnly, query?, era?, page, pageSize) up to {options.Value.Limits.FranchiseListPageSizeMax} rows per page.",
                             "Exact franchise detail by franchiseId with get_franchise(franchiseId)."
                         ],
                         UnsupportedQueryShapes:
                         [
-                            "Fuzzy franchise search by nickname or city substring.",
+                            "Fuzzy franchise search by city when the city isn't part of the franchise name.",
                             "A deterministic single team-season row without an explicit team id, league, and year."
                         ]),
                     new(
@@ -347,6 +361,7 @@ public sealed class BaseballMcpMetadataService(
                         Name: "manager-careers",
                         CommonQuestions:
                         [
+                            "Who won the most games as a manager?",
                             "What is this manager's career record?",
                             "Which seasons did a manager win the pennant or a Manager of the Year award?"
                         ],
@@ -356,18 +371,100 @@ public sealed class BaseballMcpMetadataService(
                         ],
                         RecommendedTools:
                         [
-                            "search_players",
+                            "list_managers",
                             "get_manager"
                         ],
                         SupportedQueryShapes:
                         [
                             $"One-manager career with get_manager(playerId) — season-by-season records, pennant and World Series flags, player-manager stints, and manager awards, capped at {options.Value.Limits.ManagerSeasonRowsMax} season rows.",
-                            "Manager ids are People ids; find them with search_players first."
+                            $"Paged manager list with list_managers(query?, sort?, page, pageSize) — career records sorted by wins or name, up to {options.Value.Limits.ManagerListPageSizeMax} rows per page.",
+                            "Manager ids are People ids; find them with list_managers or search_players."
                         ],
                         UnsupportedQueryShapes:
                         [
-                            "Manager leaderboards or cross-manager comparisons in one call.",
+                            "Manager leaderboards on stats other than career wins, or cross-manager comparisons in one call.",
                             "Manager of the Year voting shares (only award wins are returned)."
+                        ]),
+                    new(
+                        Name: "all-star-games",
+                        CommonQuestions:
+                        [
+                            "Who started the 1943 All-Star Game?",
+                            "How many times was this player an All-Star?"
+                        ],
+                        RecommendedResources:
+                        [
+                            "baseball-history://server/workflow-guide"
+                        ],
+                        RecommendedTools:
+                        [
+                            "list_all_star_years",
+                            "get_all_star_year",
+                            "get_player"
+                        ],
+                        SupportedQueryShapes:
+                        [
+                            "All-Star seasons with game and selection counts with list_all_star_years().",
+                            "One season's games and rosters, including the Negro Leagues East-West and North-South games, with get_all_star_year(year).",
+                            "A player's All-Star selection count and years from get_player(playerId)."
+                        ],
+                        UnsupportedQueryShapes:
+                        [
+                            "All-Star game box scores, final scores, or MVPs.",
+                            "Fan or player voting totals."
+                        ]),
+                    new(
+                        Name: "negro-leagues",
+                        CommonQuestions:
+                        [
+                            "Which Negro Leagues are recognized as major leagues?",
+                            "Who won the 1943 Negro National League, and who led it in batting?"
+                        ],
+                        RecommendedResources:
+                        [
+                            "baseball-history://server/workflow-guide"
+                        ],
+                        RecommendedTools:
+                        [
+                            "list_negro_leagues",
+                            "get_negro_league",
+                            "get_negro_league_season"
+                        ],
+                        SupportedQueryShapes:
+                        [
+                            "The seven recognized leagues (1920-1948) with list_negro_leagues().",
+                            "A league's seasons, champions, and club records with get_negro_league(leagueId).",
+                            "Season standings and top-five AVG/HR/ERA/W leaders with get_negro_league_season(leagueId, year).",
+                            "Negro Leagues player stats also flow through get_player, get_batting_leaders, and get_pitching_leaders with league NNL, ECL, ANL, EWL, NSL, NN2, or NAL."
+                        ],
+                        UnsupportedQueryShapes:
+                        [
+                            "Pre-1920 independent Black baseball (lgIDs IND, EAS, WES, NAC) as a league hub.",
+                            "Barnstorming or non-league games."
+                        ]),
+                    new(
+                        Name: "this-day-in-baseball",
+                        CommonQuestions:
+                        [
+                            "Which players were born on February 6?",
+                            "Who debuted or played a final game on this date?"
+                        ],
+                        RecommendedResources:
+                        [
+                            "baseball-history://server/workflow-guide"
+                        ],
+                        RecommendedTools:
+                        [
+                            "get_this_day"
+                        ],
+                        SupportedQueryShapes:
+                        [
+                            "Birthdays, debuts, and final games on a calendar day with get_this_day(date?, limit), Hall of Famers first, up to 25 per category."
+                        ],
+                        UnsupportedQueryShapes:
+                        [
+                            "Game results, milestones, or transactions on a date.",
+                            "Deaths on a date."
                         ]),
                     new(
                         Name: "diagnostics-and-server-capabilities",
@@ -401,7 +498,7 @@ public sealed class BaseballMcpMetadataService(
                 [
                     "The server does not mutate baseball data or runtime configuration.",
                     "The server does not expose arbitrary SQL, custom joins, or raw table browsing tools.",
-                    "The server does not provide unsupported stat families beyond the shipped player, franchise, team-season, leaderboard, Hall of Fame, salary, postseason, fielding, ballpark, manager, and diagnostics surfaces."
+                    "The server does not provide unsupported stat families beyond the shipped player, advanced-rate, franchise, team-season, leaderboard, Hall of Fame, salary, postseason, fielding, ballpark, manager, All-Star, Negro Leagues, this-day, and diagnostics surfaces."
                 ]));
 
     public async Task<ServerDiagnosticsDocument> GetServerDiagnosticsAsync(CancellationToken cancellationToken = default)
@@ -482,7 +579,8 @@ public sealed class BaseballMcpMetadataService(
             options.Value.Limits.FieldingSeasonRowsMax,
             options.Value.Limits.ParkSearchPageSizeMax,
             options.Value.Limits.ParkSeasonRowsMax,
-            options.Value.Limits.ManagerSeasonRowsMax);
+            options.Value.Limits.ManagerSeasonRowsMax,
+            options.Value.Limits.ManagerListPageSizeMax);
 
     private async Task<SupportedYearSpan?> GetSupportedYearSpanAsync(CancellationToken cancellationToken)
     {

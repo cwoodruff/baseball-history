@@ -40,7 +40,26 @@ public sealed record ManagerReadModel(
     IReadOnlyList<ManagerAwardReadModel> Awards,
     IReadOnlyList<ManagerSeasonReadModel> Seasons);
 
+public sealed record ManagerLookupRequest(
+    string? Query = null,
+    string? Sort = null,
+    int Page = 1,
+    int PageSize = 25);
+
+public sealed record ManagerLookupItem(
+    string PlayerId,
+    string FullName,
+    short FirstYear,
+    short LastYear,
+    int Seasons,
+    int Games,
+    int Wins,
+    int Losses,
+    double WinningPercentage,
+    bool IsInHallOfFame);
+
 public interface IManagerReadService
 {
+    Task<PagedReadResult<ManagerLookupItem>> ListManagersAsync(ManagerLookupRequest request, CancellationToken cancellationToken = default);
     Task<ManagerReadModel?> GetManagerAsync(string playerId, CancellationToken cancellationToken = default);
 }

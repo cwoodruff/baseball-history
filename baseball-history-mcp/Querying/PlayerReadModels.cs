@@ -4,7 +4,10 @@ public sealed record PlayerLookupRequest(
     string? Query = null,
     string? LastNameStartsWith = null,
     int Page = 1,
-    int PageSize = 25);
+    int PageSize = 25,
+    string? Position = null,
+    int? Era = null,
+    string? Sort = null);
 
 public sealed record PlayerLookupItem(
     string PlayerId,
@@ -72,10 +75,54 @@ public sealed record PlayerReadModel(
     int? HallOfFameInductionYear,
     PlayerCareerBattingSummary? CareerBatting,
     PlayerCareerPitchingSummary? CareerPitching,
-    IReadOnlyList<PlayerTeamTenure> Teams);
+    IReadOnlyList<PlayerTeamTenure> Teams,
+    int? CareerOpsIndex = null,
+    bool? CareerQualified = null,
+    int AllStarSelectionCount = 0,
+    IReadOnlyList<short>? AllStarYears = null,
+    bool HasManagerialCareer = false);
+
+/// <summary>
+/// League-indexed season batting rates (stints combined). OpsIndex is OPS
+/// relative to league, 100 = average, not park-adjusted; BbPct and KPct are
+/// percentages. Null means the inputs weren't recorded that season.
+/// </summary>
+public sealed record PlayerAdvancedBattingSeason(
+    short Year,
+    string? LeagueId,
+    long PlateAppearances,
+    double? Iso,
+    double? Babip,
+    double? BbPct,
+    double? KPct,
+    double? OpsIndex,
+    double? HrPer162,
+    bool Qualified);
+
+/// <summary>Season pitching rates (stints combined); null when innings weren't recorded</summary>
+public sealed record PlayerAdvancedPitchingSeason(
+    short Year,
+    string? LeagueId,
+    int Games,
+    int GamesStarted,
+    double? InningsPitched,
+    double? Era,
+    double? Whip,
+    double? K9,
+    double? Bb9,
+    bool Qualified);
+
+public sealed record PlayerAdvancedStatsReadModel(
+    string PlayerId,
+    string FullName,
+    int? CareerOpsIndex,
+    bool? CareerQualified,
+    IReadOnlyList<PlayerAdvancedBattingSeason> BattingSeasons,
+    IReadOnlyList<PlayerAdvancedPitchingSeason> PitchingSeasons);
 
 public interface IPlayerReadService
 {
     Task<PagedReadResult<PlayerLookupItem>> SearchPlayersAsync(PlayerLookupRequest request, CancellationToken cancellationToken = default);
     Task<PlayerReadModel?> GetPlayerAsync(string playerId, CancellationToken cancellationToken = default);
+    Task<PlayerAdvancedStatsReadModel?> GetPlayerAdvancedStatsAsync(string playerId, CancellationToken cancellationToken = default);
 }

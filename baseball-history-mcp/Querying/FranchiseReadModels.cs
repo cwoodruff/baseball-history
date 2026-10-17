@@ -4,7 +4,9 @@ public sealed record FranchiseLookupRequest(
     string? League = null,
     bool ActiveOnly = false,
     int Page = 1,
-    int PageSize = 25);
+    int PageSize = 25,
+    string? Query = null,
+    int? Era = null);
 
 public sealed record FranchiseLookupItem(
     string FranchiseId,

@@ -15,31 +15,45 @@ public sealed class BaseballReferenceTools(
     IPostseasonReadService postseason,
     IFieldingReadService fielding,
     IParkReadService parks,
-    IManagerReadService managers)
+    IManagerReadService managers,
+    IAllStarReadService allStar,
+    INegroLeagueReadService negroLeagues,
+    IThisDayReadService thisDay)
 {
-    [McpServerTool(Name = "search_players", ReadOnly = true, Title = "Search Players"), Description("Search players by free-text query or last-name prefix with paging.")]
+    [McpServerTool(Name = "search_players", ReadOnly = true, Title = "Search Players"), Description("Search players by free-text query or last-name prefix, optionally filtered by position and era and sorted by career totals, with paging.")]
     public Task<PagedReadResult<PlayerLookupItem>> SearchPlayersAsync(
         [Description("Optional free-text player search across player id, first name, and last name.")] string? query = null,
         [Description("Optional last-name prefix when you want alphabetical lookup instead of full-text search.")] string? lastNameStartsWith = null,
         [Description("1-based results page.")] int page = 1,
         [Description("Page size from 1 up to the configured server max.")] int pageSize = 25,
+        [Description("Optional position ever fielded: P, C, 1B, 2B, 3B, SS, OF (includes LF/CF/RF), or DH.")] string? position = null,
+        [Description("Optional decade such as 1920 (any year in it works); keeps players active during that decade.")] int? era = null,
+        [Description("Optional sort: name (default), or hr, hits, games for career totals descending.")] string? sort = null,
         CancellationToken cancellationToken = default)
-        => players.SearchPlayersAsync(new PlayerLookupRequest(query, lastNameStartsWith, page, pageSize), cancellationToken);
+        => players.SearchPlayersAsync(new PlayerLookupRequest(query, lastNameStartsWith, page, pageSize, position, era, sort), cancellationToken);
 
-    [McpServerTool(Name = "get_player", ReadOnly = true, Title = "Get Player"), Description("Get read-only detail for one player, including career batting, career pitching, and team tenures.")]
+    [McpServerTool(Name = "get_player", ReadOnly = true, Title = "Get Player"), Description("Get read-only detail for one player, including career batting, career pitching, team tenures, career OPS vs. league, All-Star selection years, and whether the player also managed.")]
     public Task<PlayerReadModel?> GetPlayerAsync(
         [Description("Lahman player id, for example ruthba01.")] string playerId,
         CancellationToken cancellationToken = default)
         => players.GetPlayerAsync(McpInputValidator.NormalizePlayerId(playerId), cancellationToken);
 
-    [McpServerTool(Name = "list_franchises", ReadOnly = true, Title = "List Franchises"), Description("List franchise summaries with optional filters and bounded paging.")]
+    [McpServerTool(Name = "get_player_advanced_stats", ReadOnly = true, Title = "Get Player Advanced Stats"), Description("Get one player's season advanced rates with stints combined: batting PA, ISO, BABIP, BB%, K%, OPS vs. league (100 = average, not park-adjusted), HR per 162; pitching IP, ERA, WHIP, K/9, BB/9; each with season-relative qualification.")]
+    public Task<PlayerAdvancedStatsReadModel?> GetPlayerAdvancedStatsAsync(
+        [Description("Lahman player id, for example ruthba01.")] string playerId,
+        CancellationToken cancellationToken = default)
+        => players.GetPlayerAdvancedStatsAsync(McpInputValidator.NormalizePlayerId(playerId), cancellationToken);
+
+    [McpServerTool(Name = "list_franchises", ReadOnly = true, Title = "List Franchises"), Description("List franchise summaries with optional league, name, and era filters and bounded paging.")]
     public Task<PagedReadResult<FranchiseLookupItem>> ListFranchisesAsync(
         [Description("Optional league filter such as AL or NL.")] string? league = null,
         [Description("Set true to return only active franchises.")] bool activeOnly = false,
         [Description("1-based results page.")] int page = 1,
         [Description("Page size from 1 up to the configured server max.")] int pageSize = 25,
+        [Description("Optional franchise name contains filter (case-insensitive), for example Giants.")] string? query = null,
+        [Description("Optional decade such as 1900 (any year in it works); keeps franchises that fielded a team during it.")] int? era = null,
         CancellationToken cancellationToken = default)
-        => franchises.ListFranchisesAsync(new FranchiseLookupRequest(league, activeOnly, page, pageSize), cancellationToken);
+        => franchises.ListFranchisesAsync(new FranchiseLookupRequest(league, activeOnly, page, pageSize, query, era), cancellationToken);
 
     [McpServerTool(Name = "get_franchise", ReadOnly = true, Title = "Get Franchise"), Description("Get one franchise with season-by-season history.")]
     public Task<FranchiseReadModel?> GetFranchiseAsync(
@@ -167,9 +181,52 @@ public sealed class BaseballReferenceTools(
         CancellationToken cancellationToken = default)
         => parks.GetParkAsync(parkKey, cancellationToken);
 
+    [McpServerTool(Name = "list_managers", ReadOnly = true, Title = "List Managers"), Description("List managers with career records and Hall of Fame flags, optionally filtered by name, sorted by career wins or name, with bounded paging. Returns player ids for get_manager.")]
+    public Task<PagedReadResult<ManagerLookupItem>> ListManagersAsync(
+        [Description("Optional first- or last-name contains filter, for example Mack.")] string? query = null,
+        [Description("Optional sort: wins (default, career wins descending) or name.")] string? sort = null,
+        [Description("1-based results page.")] int page = 1,
+        [Description("Page size from 1 up to the configured manager list max.")] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+        => managers.ListManagersAsync(new ManagerLookupRequest(query, sort, page, pageSize), cancellationToken);
+
     [McpServerTool(Name = "get_manager", ReadOnly = true, Title = "Get Manager"), Description("Get one manager's career by player id: bounded season-by-season records with pennant/World Series flags, player-manager stints, and manager awards.")]
     public Task<ManagerReadModel?> GetManagerAsync(
         [Description("Lahman player id, for example mackco01 for Connie Mack.")] string playerId,
         CancellationToken cancellationToken = default)
         => managers.GetManagerAsync(playerId, cancellationToken);
+
+    [McpServerTool(Name = "list_all_star_years", ReadOnly = true, Title = "List All-Star Years"), Description("List every All-Star season, newest first, with game count, distinct selections, and whether the Negro Leagues East-West Game was played (1933-1948). 1959-1962 had two AL-NL games.")]
+    public Task<IReadOnlyList<AllStarYearSummaryReadModel>> ListAllStarYearsAsync(CancellationToken cancellationToken = default)
+        => allStar.ListAllStarYearsAsync(cancellationToken);
+
+    [McpServerTool(Name = "get_all_star_year", ReadOnly = true, Title = "Get All-Star Year"), Description("Get one season's All-Star games with rosters by league or squad: starters first with position numbers (1=P ... 9=RF, 10=DH), whether each player appeared, and Hall of Fame flags. Includes the Negro Leagues East-West and North-South games.")]
+    public Task<AllStarYearReadModel?> GetAllStarYearAsync(
+        [Description("All-Star season year, for example 1943.")] int year,
+        CancellationToken cancellationToken = default)
+        => allStar.GetAllStarYearAsync(year, cancellationToken);
+
+    [McpServerTool(Name = "list_negro_leagues", ReadOnly = true, Title = "List Negro Leagues"), Description("List the seven Negro Leagues MLB recognizes as major leagues (1920-1948) with league ids, years, a summary, and team-season and club counts.")]
+    public Task<IReadOnlyList<NegroLeagueSummaryReadModel>> ListNegroLeaguesAsync(CancellationToken cancellationToken = default)
+        => negroLeagues.ListLeaguesAsync(cancellationToken);
+
+    [McpServerTool(Name = "get_negro_league", ReadOnly = true, Title = "Get Negro League"), Description("Get one Negro League's seasons with champions and its clubs' aggregate records.")]
+    public Task<NegroLeagueReadModel?> GetNegroLeagueAsync(
+        [Description("League id: NNL, ECL, ANL, EWL, NSL, NN2, or NAL (case-insensitive).")] string leagueId,
+        CancellationToken cancellationToken = default)
+        => negroLeagues.GetLeagueAsync(leagueId, cancellationToken);
+
+    [McpServerTool(Name = "get_negro_league_season", ReadOnly = true, Title = "Get Negro League Season"), Description("Get one Negro League season: standings with games behind plus the top five in batting average and ERA (qualified), home runs, and wins.")]
+    public Task<NegroLeagueSeasonReadModel?> GetNegroLeagueSeasonAsync(
+        [Description("League id: NNL, ECL, ANL, EWL, NSL, NN2, or NAL (case-insensitive).")] string leagueId,
+        [Description("Season year, for example 1943.")] int year,
+        CancellationToken cancellationToken = default)
+        => negroLeagues.GetLeagueSeasonAsync(leagueId, year, cancellationToken);
+
+    [McpServerTool(Name = "get_this_day", ReadOnly = true, Title = "Get This Day in Baseball"), Description("Get birthdays, major league debuts, and final games on one calendar day, Hall of Famers first and then most recent.")]
+    public Task<ThisDayReadModel> GetThisDayAsync(
+        [Description("Optional month and day as MM-DD, for example 02-06; defaults to today's server date.")] string? date = null,
+        [Description("Entries per category, 1 to 25.")] int limit = 5,
+        CancellationToken cancellationToken = default)
+        => thisDay.GetThisDayAsync(date, limit, cancellationToken);
 }

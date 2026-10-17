@@ -28,7 +28,47 @@
 
         <!-- What's new -->
         <section class="mb-5" id="whats-new">
-            <h2 class="border-bottom pb-2">What's new &mdash; September 2026</h2>
+            <h2 class="border-bottom pb-2">What's new &mdash; October 2026</h2>
+            <p>
+                The server now has <strong>25 read-only tools</strong>, up from 17. Everything the site's
+                browsers show, an AI assistant can now query too:
+            </p>
+            <ul>
+                <li class="mb-2">
+                    <rhx-badge rhx-variant="brand" class="me-1">list_all_star_years</rhx-badge>
+                    <rhx-badge rhx-variant="brand" class="me-2">get_all_star_year</rhx-badge>
+                    Every All-Star season and roster, including the Negro Leagues East-West Game, matching the
+                    <a href="/AllStar">All-Star browser</a>.
+                </li>
+                <li class="mb-2">
+                    <rhx-badge rhx-variant="brand" class="me-1">list_negro_leagues</rhx-badge>
+                    <rhx-badge rhx-variant="brand" class="me-1">get_negro_league</rhx-badge>
+                    <rhx-badge rhx-variant="brand" class="me-2">get_negro_league_season</rhx-badge>
+                    The seven recognized leagues, their champions and clubs, and season standings with leaders, matching the
+                    <a href="/NegroLeagues">Negro Leagues hub</a>.
+                </li>
+                <li class="mb-2">
+                    <rhx-badge rhx-variant="brand" class="me-2">get_this_day</rhx-badge>
+                    Birthdays, debuts, and final games on any date &mdash; the home page&rsquo;s This Day in Baseball.
+                </li>
+                <li class="mb-2">
+                    <rhx-badge rhx-variant="brand" class="me-2">list_managers</rhx-badge>
+                    Browse managers by career wins or name, matching the <a href="/Managers">Managers browser</a>.
+                </li>
+                <li class="mb-2">
+                    <rhx-badge rhx-variant="brand" class="me-2">get_player_advanced_stats</rhx-badge>
+                    Season PA, BABIP, OPS vs. league, K/9, WHIP and more from the player page&rsquo;s advanced tables.
+                </li>
+                <li class="mb-2">
+                    <code>search_players</code> now takes the Players browser&rsquo;s <code>position</code>, <code>era</code>,
+                    and <code>sort</code> filters; <code>list_franchises</code> takes <code>query</code> and <code>era</code>;
+                    and <code>get_player</code> adds career OPS vs. league, All-Star selection years, and whether the player managed.
+                </li>
+            </ul>
+        </section>
+
+        <section class="mb-5">
+            <h2 class="border-bottom pb-2">September 2026</h2>
             <p>
                 The server just grew from <strong>12 to 17 read-only tools</strong>, shipping alongside a
                 wave of six new features across the site. Everything the new browsers show, an AI
@@ -71,7 +111,7 @@
         <section class="mb-5">
             <h2 class="border-bottom pb-2">How it works</h2>
             <p>
-                The server exposes <strong>17 read-only tools</strong> and <strong>6 JSON resources</strong> over
+                The server exposes <strong>25 read-only tools</strong> and <strong>6 JSON resources</strong> over
                 streamable HTTP. The hosted endpoint is <code>https://baseball-history-mcp.azurewebsites.net/</code>; point your
                 MCP client at that URL and it is ready to use. If you prefer to run your own copy, start it with
                 <code>dotnet run --project baseball-history-mcp</code> (or let the Aspire AppHost host it) and it
@@ -142,6 +182,11 @@
                     <tr><td>&ldquo;How did Derek Jeter hit in the postseason?&rdquo;</td><td><code>get_player_postseason</code></td></tr>
                     <tr><td>&ldquo;What was Connie Mack's managerial record?&rdquo;</td><td><code>get_manager</code></td></tr>
                     <tr><td>&ldquo;Who called Fenway Park home?&rdquo;</td><td><code>search_parks</code> then <code>get_park</code></td></tr>
+                    <tr><td>&ldquo;Which 1920s shortstops hit the most home runs?&rdquo;</td><td><code>search_players</code></td></tr>
+                    <tr><td>&ldquo;What was Ted Williams' BABIP in 1941?&rdquo;</td><td><code>get_player_advanced_stats</code></td></tr>
+                    <tr><td>&ldquo;Who started the 1943 All-Star Game?&rdquo;</td><td><code>get_all_star_year</code></td></tr>
+                    <tr><td>&ldquo;Who won the 1943 Negro National League?&rdquo;</td><td><code>get_negro_league_season</code></td></tr>
+                    <tr><td>&ldquo;Which players were born today?&rdquo;</td><td><code>get_this_day</code></td></tr>
                 </tbody>
             </table>
         </section>
@@ -152,13 +197,14 @@
 
             <h5 class="mt-3">Players</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">search_players</rhx-badge> Search players by free-text query or last-name prefix with paging.</li>
-                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player</rhx-badge> Get read-only detail for one player, including career batting, career pitching, and team tenures.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">search_players</rhx-badge> Search players by free-text query or last-name prefix, optionally filtered by <code>position</code> (P, C, 1B, 2B, 3B, SS, OF, DH) and <code>era</code> (a decade) and sorted by <code>sort</code> (name, hr, hits, games), with paging.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player</rhx-badge> Get read-only detail for one player, including career batting, career pitching, team tenures, career OPS vs. league, All-Star selection years, and whether the player managed.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_player_advanced_stats</rhx-badge> Get season advanced batting (PA, ISO, BABIP, BB%, K%, OPS vs. league, HR/162) and pitching (IP, ERA, WHIP, K/9, BB/9) rates with qualification.</li>
             </ul>
 
             <h5 class="mt-3">Franchises &amp; Teams</h5>
             <ul class="list-unstyled">
-                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_franchises</rhx-badge> List franchise summaries with optional filters and bounded paging.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_franchises</rhx-badge> List franchise summaries with optional league, name (<code>query</code>), and <code>era</code> filters and bounded paging.</li>
                 <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_franchise</rhx-badge> Get one franchise with season-by-season history.</li>
                 <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_team_season</rhx-badge> Get one exact team-season by team id, league, and year so franchise-era lookups stay deterministic.</li>
             </ul>
@@ -231,7 +277,26 @@
 
             <h5 class="mt-3">Managers</h5>
             <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_managers</rhx-badge> List managers with career records, filtered by name and sorted by career wins or name; returns ids for get_manager.</li>
                 <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_manager</rhx-badge> Get one manager's career: season records, pennant and World Series flags, and manager awards.</li>
+            </ul>
+
+            <h5 class="mt-3">All-Star Games</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_all_star_years</rhx-badge> List every All-Star season with game and selection counts and whether the East-West Game was played.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_all_star_year</rhx-badge> Get one season's games and rosters by league or squad, starters first, with Hall of Fame flags.</li>
+            </ul>
+
+            <h5 class="mt-3">Negro Leagues</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">list_negro_leagues</rhx-badge> List the seven Negro Leagues recognized as major leagues (1920&ndash;1948).</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_negro_league</rhx-badge> Get one league's seasons with champions and its clubs' records.</li>
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_negro_league_season</rhx-badge> Get one league season's standings and top-five AVG, HR, ERA, and wins leaders.</li>
+            </ul>
+
+            <h5 class="mt-3">This Day in Baseball</h5>
+            <ul class="list-unstyled">
+                <li class="mb-2"><rhx-badge rhx-variant="neutral" class="me-2">get_this_day</rhx-badge> Get birthdays, debuts, and final games on a calendar day (<code>date</code> as MM-DD), Hall of Famers first.</li>
             </ul>
 
             <h5 class="mt-3">Diagnostics</h5>

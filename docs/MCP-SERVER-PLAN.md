@@ -20,45 +20,72 @@ The server exposes a deliberately small MCP surface:
 
 1. `search_players`
    - Free-text or last-name-prefix player lookup
+   - Optional `position`, `era` (decade), and `sort` (name/hr/hits/games)
+     filters, shared with the web Players browser through
+     `BaseballHistory.Data.Querying.PlayerListFilters`
    - Paged, read-only results
 2. `get_player`
-   - One player with career batting, career pitching, and team tenures
-3. `list_franchises`
-   - Franchise summaries with optional league/active filters
-4. `get_franchise`
+   - One player with career batting, career pitching, team tenures, career OPS
+     vs. league, All-Star selection years, and a managerial-career flag
+3. `get_player_advanced_stats`
+   - Season advanced batting (PA, ISO, BABIP, BB%, K%, OPS vs. league, HR/162)
+     and pitching (IP, ERA, WHIP, K/9, BB/9) rates with qualification
+4. `list_franchises`
+   - Franchise summaries with optional league, active, name (`query`), and
+     `era` filters
+5. `get_franchise`
    - One franchise with season-by-season history
-5. `get_team_season`
+6. `get_team_season`
    - One team-season snapshot with roster, club batting, and club pitching context
-6. `get_batting_leaders`
+7. `get_batting_leaders`
    - Career or single-season batting leaderboards
    - Defaults to season-relative qualification for rate stats (qualified=true)
-7. `get_pitching_leaders`
+8. `get_pitching_leaders`
    - Career or single-season pitching leaderboards
    - Defaults to season-relative qualification for rate stats (qualified=true)
-8. `list_hall_of_fame_inductees`
+9. `list_hall_of_fame_inductees`
    - Bounded Hall of Fame inductee discovery with optional year/category filters
-9. `get_hall_of_fame_voting_history`
-   - Full Hall of Fame voting history for one player when Lahman voting rows exist
-10. `get_player_salary_history`
+10. `get_hall_of_fame_voting_history`
+    - Full Hall of Fame voting history for one player when Lahman voting rows exist
+11. `get_player_salary_history`
     - Salary history and career total for one player when Lahman salary rows exist
-11. `get_salary_leaders`
+12. `get_salary_leaders`
     - Highest-paid player rows with optional year filtering and paging
-12. `get_player_postseason`
+13. `get_player_postseason`
     - Postseason batting and pitching lines for one player, ordered by year then
       round (wild card through World Series)
-13. `get_player_fielding`
+14. `get_player_fielding`
     - Season fielding rows plus career-by-position totals for one player
-14. `search_parks`
+15. `search_parks`
     - Ballpark search by name, former name, or city with optional state filter;
       returns park keys for `get_park`
-15. `get_park`
+16. `get_park`
     - One ballpark: location, former names, home-team tenures, and per-season
       home games and attendance
-16. `get_manager`
+17. `list_managers`
+    - Paged manager list with career records, name filter, and wins/name sort
+18. `get_manager`
     - One manager's career: season records with pennant/World Series flags,
       player-manager stints, and manager awards
-17. `get_server_diagnostics`
+19. `list_all_star_years`
+    - Every All-Star season with game and selection counts
+20. `get_all_star_year`
+    - One season's games (AL-NL, East-West, North-South) and rosters
+21. `list_negro_leagues`
+    - The seven Negro Leagues recognized as major leagues (1920-1948)
+22. `get_negro_league`
+    - One league's seasons with champions and club records
+23. `get_negro_league_season`
+    - One league season's standings and top-five AVG/HR/ERA/W leaders
+24. `get_this_day`
+    - Birthdays, debuts, and final games on a calendar day (`MM-DD`), up to 25
+      per category
+25. `get_server_diagnostics`
     - Safe runtime posture and limits; no secrets returned
+
+The Negro Leagues registry, All-Star game classification, and decade filter
+live in `BaseballHistory.Data.Reference`, shared with the web app so both
+surfaces classify and filter the same way.
 
 ### Resources
 
@@ -92,6 +119,8 @@ These concrete caps match `appsettings.json` and the shipped `baseball-history:/
 - `search_parks` page size max: **50**
 - `get_park` season row cap: **160**
 - `get_manager` season row cap: **80**
+- `list_managers` page size max: **50**
+- `get_this_day` entries per category max: **25**
 
 If you need capabilities beyond that surface, treat them as follow-on work. Do not document or assume generic SQL, writes, or REST-parity tools because they are not part of the shipped MCP contract.
 
@@ -235,7 +264,6 @@ These are out of scope for the shipped server:
 - Authentication/authorization rollout beyond local execution
 - Generic SQL execution
 - Write/update/delete tools
-- Full REST parity with the web app
 - Reusing Razor `PageModel` types, partials, or HTML view models as MCP contracts
 - Additional baseball domains that are not currently exposed as MCP tools/resources
 
@@ -246,7 +274,7 @@ Reasonable follow-on directions:
 1. **Remote hosting**
    - Only after auth, exposure, and hardening decisions are explicit
 2. **Broader read surface**
-   - Additional baseball domains beyond the current player/franchise/team-season/leaderboard/Hall-of-Fame/salary surface, but only when shipped as bounded read models/tools
+   - Additional baseball domains beyond the current player/franchise/team-season/leaderboard/Hall-of-Fame/salary/postseason/fielding/park/manager/All-Star/Negro Leagues/this-day surface, but only when shipped as bounded read models/tools
 3. **More discoverability**
    - Additional metadata resources when they reflect real shipped behavior, not aspirational scope
 

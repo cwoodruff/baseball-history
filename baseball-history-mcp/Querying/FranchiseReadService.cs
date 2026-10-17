@@ -1,5 +1,6 @@
 using baseball_history_mcp.Configuration;
 using BaseballHistory.Data.Models;
+using BaseballHistory.Data.Reference;
 using Microsoft.EntityFrameworkCore;
 
 namespace baseball_history_mcp.Querying;
@@ -16,6 +17,11 @@ public sealed class FranchiseReadService(
         McpInputValidation.ValidatePageSize(request.PageSize);
 
         var normalizedRequest = requestPolicy.Normalize(request);
+
+        if (normalizedRequest.Era is not null && !EraDecade.IsValid(normalizedRequest.Era))
+        {
+            throw new BaseballMcpUsageException("era must be a year from 1870 to 2030.");
+        }
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -46,6 +52,18 @@ public sealed class FranchiseReadService(
         if (normalizedRequest.ActiveOnly)
         {
             query = query.Where(f => f.IsActive);
+        }
+
+        if (normalizedRequest.Query is not null)
+        {
+            var pattern = $"%{normalizedRequest.Query}%";
+            query = query.Where(f => EF.Functions.ILike(f.DisplayName, pattern));
+        }
+
+        // Fielded a team at some point during the decade (see EraDecade.Overlaps)
+        if (EraDecade.From(normalizedRequest.Era) is { } decade)
+        {
+            query = query.Where(f => f.FirstYear <= decade + 9 && f.LastYear >= decade);
         }
 
         query = query

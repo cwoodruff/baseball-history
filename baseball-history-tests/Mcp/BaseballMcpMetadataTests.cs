@@ -38,6 +38,7 @@ public class BaseballMcpMetadataTests
         Assert.Equal(50, options.Limits.ParkSearchPageSizeMax);
         Assert.Equal(160, options.Limits.ParkSeasonRowsMax);
         Assert.Equal(80, options.Limits.ManagerSeasonRowsMax);
+        Assert.Equal(50, options.Limits.ManagerListPageSizeMax);
     }
 
     [Fact]
@@ -55,7 +56,7 @@ public class BaseballMcpMetadataTests
         Assert.Equal(50, diagnostics.Limits.FranchiseListPageSizeMax);
         Assert.Equal(50, diagnostics.Limits.HallOfFamePageSizeMax);
         Assert.Equal(40, diagnostics.Limits.SalaryHistorySeasonsMax);
-        Assert.True(diagnostics.ToolCount >= 17);
+        Assert.True(diagnostics.ToolCount >= 25);
         Assert.Equal(6, diagnostics.ResourceCount);
         Assert.DoesNotContain("Password=", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Host=", json, StringComparison.OrdinalIgnoreCase);

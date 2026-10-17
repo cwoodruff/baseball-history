@@ -39,7 +39,8 @@ public sealed record McpLimitSnapshot(
     int FieldingSeasonRowsMax,
     int ParkSearchPageSizeMax,
     int ParkSeasonRowsMax,
-    int ManagerSeasonRowsMax);
+    int ManagerSeasonRowsMax,
+    int ManagerListPageSizeMax);
 
 public sealed record ServerResourceLink(
     string Uri,

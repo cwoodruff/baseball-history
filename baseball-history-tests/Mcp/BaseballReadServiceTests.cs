@@ -584,6 +584,160 @@ public class BaseballReadServiceTests
         Assert.Null(await service.GetManagerAsync("jeterde01"));
     }
 
+    [Fact]
+    public async Task SearchPlayersAsync_WithPositionEraAndSort_MatchesWebFilters()
+    {
+        var service = CreatePlayerReadService();
+
+        var result = await service.SearchPlayersAsync(
+            new PlayerLookupRequest(LastNameStartsWith: "R", PageSize: 10, Position: "ss", Era: 1925, Sort: "HR"));
+
+        Assert.True(result.Items.Count > 1);
+        var homeRuns = result.Items.Select(p => p.TotalHomeRuns ?? 0).ToList();
+        Assert.Equal(homeRuns.OrderByDescending(h => h), homeRuns);
+        Assert.All(result.Items, p =>
+        {
+            Assert.True(p.DebutYear <= 1929);
+            Assert.True(p.FinalYear >= 1920);
+        });
+    }
+
+    [Theory]
+    [InlineData("XX", null, null)]
+    [InlineData(null, 1700, null)]
+    [InlineData(null, null, "salary")]
+    public async Task SearchPlayersAsync_WithInvalidFilter_ThrowsUsageError(string? position, int? era, string? sort)
+    {
+        var service = CreatePlayerReadService();
+
+        await Assert.ThrowsAsync<BaseballMcpUsageException>(() =>
+            service.SearchPlayersAsync(new PlayerLookupRequest(Position: position, Era: era, Sort: sort)));
+    }
+
+    [Fact]
+    public async Task GetPlayerAsync_IncludesOpsIndexAllStarYearsAndManagerFlag()
+    {
+        var service = CreatePlayerReadService();
+
+        var player = await service.GetPlayerAsync("torrejo01");
+
+        Assert.NotNull(player);
+        Assert.True(player.CareerOpsIndex > 100);
+        Assert.Equal(9, player.AllStarSelectionCount);
+        Assert.Equal(player.AllStarSelectionCount, player.AllStarYears!.Count);
+        Assert.True(player.HasManagerialCareer);
+    }
+
+    [Fact]
+    public async Task GetPlayerAdvancedStatsAsync_ReturnsBattingAndPitchingRates()
+    {
+        var service = CreatePlayerReadService();
+
+        var stats = await service.GetPlayerAdvancedStatsAsync("ruthba01");
+
+        Assert.NotNull(stats);
+        var batting1927 = Assert.Single(stats.BattingSeasons, s => s.Year == 1927);
+        Assert.True(batting1927.OpsIndex > 200);
+        Assert.True(batting1927.Qualified);
+        var pitching1916 = Assert.Single(stats.PitchingSeasons, s => s.Year == 1916);
+        Assert.InRange(pitching1916.Era!.Value, 1.5, 2.0);
+        Assert.Null(await service.GetPlayerAdvancedStatsAsync("zzzzz99"));
+    }
+
+    [Fact]
+    public async Task ListFranchisesAsync_WithNameAndEra_FiltersRows()
+    {
+        var service = CreateFranchiseReadService();
+
+        var result = await service.ListFranchisesAsync(new FranchiseLookupRequest(Query: "giants", Era: 1935));
+
+        Assert.Contains(result.Items, f => f.FranchiseId == "SFG");
+        Assert.All(result.Items, f =>
+        {
+            Assert.Contains("giants", f.FranchiseName, StringComparison.OrdinalIgnoreCase);
+            Assert.True(f.FirstYear <= 1939 && f.LastYear >= 1930);
+        });
+    }
+
+    [Fact]
+    public async Task ListManagersAsync_DefaultSort_LeadsWithConnieMackAndClampsPageSize()
+    {
+        var service = CreateManagerReadService(managerListPageSizeMax: 5);
+
+        var result = await service.ListManagersAsync(new ManagerLookupRequest(PageSize: 20));
+
+        Assert.Equal(5, result.Items.Count);
+        Assert.True(result.WasPageSizeClamped);
+        Assert.Equal("mackco01", result.Items[0].PlayerId);
+        Assert.Equal(3731, result.Items[0].Wins);
+        Assert.True(result.Items[0].IsInHallOfFame);
+    }
+
+    [Fact]
+    public async Task ListManagersAsync_WithNameQuery_SortsByName()
+    {
+        var service = CreateManagerReadService();
+
+        var result = await service.ListManagersAsync(new ManagerLookupRequest(Query: "mack", Sort: "name"));
+
+        Assert.Contains(result.Items, m => m.PlayerId == "mackco01");
+        var names = result.Items.Select(m => m.FullName).ToList();
+        Assert.Equal(names.Order(StringComparer.Ordinal), names);
+        await Assert.ThrowsAsync<BaseballMcpUsageException>(() =>
+            service.ListManagersAsync(new ManagerLookupRequest(Sort: "losses")));
+    }
+
+    [Fact]
+    public async Task AllStarReadService_ListsYearsAndRosters()
+    {
+        var service = CreateAllStarReadService();
+
+        var years = await service.ListAllStarYearsAsync();
+        Assert.Contains(years, y => y.Year == 1960 && y.GameCount == 2);
+
+        var season = await service.GetAllStarYearAsync(1943);
+        Assert.NotNull(season);
+        Assert.Equal("AllStar", season.Games[0].GameType);
+        Assert.Contains(season.Games, g => g.GameType == "EastWest");
+        Assert.True(season.Games[0].Rosters[0].Players[0].IsStarter);
+        Assert.Null(await service.GetAllStarYearAsync(1800));
+    }
+
+    [Fact]
+    public async Task NegroLeagueReadService_ReturnsLeaguesAndSeason()
+    {
+        var service = CreateNegroLeagueReadService();
+
+        var leagues = await service.ListLeaguesAsync();
+        Assert.Equal(7, leagues.Count);
+
+        var league = await service.GetLeagueAsync("nn2");
+        Assert.NotNull(league);
+        Assert.Contains(league.Clubs, c => c.TeamId == "HG");
+
+        var season = await service.GetLeagueSeasonAsync("NN2", 1943);
+        Assert.NotNull(season);
+        Assert.Equal("HG", season.Standings[0].TeamId);
+        Assert.Equal(0, season.Standings[0].GamesBehind);
+        Assert.NotEmpty(season.BattingAverageLeaders);
+        Assert.Null(await service.GetLeagueAsync("XYZ"));
+        Assert.Null(await service.GetLeagueSeasonAsync("NN2", 1960));
+    }
+
+    [Fact]
+    public async Task ThisDayReadService_RanksHallOfFamersFirstAndValidatesInput()
+    {
+        var service = CreateThisDayReadService();
+
+        var day = await service.GetThisDayAsync("02-06", 3);
+        Assert.Equal("February 6", day.Label);
+        Assert.Equal(3, day.Birthdays.Count);
+        Assert.Equal("ruthba01", day.Birthdays[0].PlayerId);
+
+        await Assert.ThrowsAsync<ModelContextProtocol.McpProtocolException>(() => service.GetThisDayAsync("02-30", 5));
+        await Assert.ThrowsAsync<ModelContextProtocol.McpProtocolException>(() => service.GetThisDayAsync("02-06", 26));
+    }
+
     private static ISalaryReadService CreateSalaryReadService(
         int salaryHistorySeasonsMax = 40,
         int salaryLeaderboardPageSizeMax = 50) =>
@@ -610,10 +764,41 @@ public class BaseballReadServiceTests
             new TestDbContextFactory(),
             CreateOptions(parkSearchPageSizeMax: parkSearchPageSizeMax, parkSeasonRowsMax: parkSeasonRowsMax));
 
-    private static IManagerReadService CreateManagerReadService(int managerSeasonRowsMax = 80) =>
-        new ManagerReadService(
-            new TestDbContextFactory(),
-            CreateOptions(managerSeasonRowsMax: managerSeasonRowsMax));
+    private static IManagerReadService CreateManagerReadService(
+        int managerSeasonRowsMax = 80,
+        int managerListPageSizeMax = 50)
+    {
+        var factory = new TestDbContextFactory();
+        var options = CreateOptions(managerSeasonRowsMax: managerSeasonRowsMax, managerListPageSizeMax: managerListPageSizeMax);
+        var requestPolicy = CreateRequestPolicy(options);
+        return new ManagerReadService(factory, options, CreateHallOfFameReadService(factory, options), requestPolicy);
+    }
+
+    private static IAllStarReadService CreateAllStarReadService()
+    {
+        var factory = new TestDbContextFactory();
+        return new AllStarReadService(factory, CreateHallOfFameReadService(factory, CreateOptions()));
+    }
+
+    private static INegroLeagueReadService CreateNegroLeagueReadService()
+    {
+        var factory = new TestDbContextFactory();
+        return new NegroLeagueReadService(factory, new LeaderboardQueryService(factory.CreateDbContext()));
+    }
+
+    private static IThisDayReadService CreateThisDayReadService()
+    {
+        var factory = new TestDbContextFactory();
+        return new ThisDayReadService(
+            factory,
+            CreateHallOfFameReadService(factory, CreateOptions()),
+            new MemoryCache(new MemoryCacheOptions()));
+    }
+
+    private static IHallOfFameReadService CreateHallOfFameReadService(
+        IDbContextFactory<BaseballDbContext> factory,
+        IOptions<BaseballMcpOptions> options) =>
+        new HallOfFameReadService(factory, new MemoryCache(new MemoryCacheOptions()), CreateRequestPolicy(options), options);
 
     private static BaseballMcpRequestPolicy CreateRequestPolicy(IOptions<BaseballMcpOptions>? options = null) =>
         new(options ?? CreateOptions());
@@ -631,6 +816,7 @@ public class BaseballReadServiceTests
         int parkSearchPageSizeMax = 50,
         int parkSeasonRowsMax = 160,
         int managerSeasonRowsMax = 80,
+        int managerListPageSizeMax = 50,
         int queryTimeoutSeconds = 30) =>
         Options.Create(new BaseballMcpOptions
         {
@@ -648,7 +834,8 @@ public class BaseballReadServiceTests
                 FieldingSeasonRowsMax = fieldingSeasonRowsMax,
                 ParkSearchPageSizeMax = parkSearchPageSizeMax,
                 ParkSeasonRowsMax = parkSeasonRowsMax,
-                ManagerSeasonRowsMax = managerSeasonRowsMax
+                ManagerSeasonRowsMax = managerSeasonRowsMax,
+                ManagerListPageSizeMax = managerListPageSizeMax
             }
         });
 
