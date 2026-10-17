@@ -132,6 +132,21 @@ dotnet run --project baseball-history-web
 The Aspire AppHost is additive and does not replace the direct `dotnet run`
 workflow for the existing web project.
 
+### REST API and OpenAPI
+
+All REST endpoints live under `/api`. The OpenAPI document and Scalar explorer
+are served at the site root, not under `/api`:
+
+| Resource | Production | Local (`http` profile) |
+|---|---|---|
+| REST API base | <https://baseballhistoryproject.com/api> | <http://localhost:5186/api> |
+| OpenAPI document | <https://baseballhistoryproject.com/openapi/v1.json> | <http://localhost:5186/openapi/v1.json> |
+| Scalar API reference | <https://baseballhistoryproject.com/scalar/v1> | <http://localhost:5186/scalar/v1> |
+| API docs page | <https://baseballhistoryproject.com/ApiDocs> | <http://localhost:5186/ApiDocs> |
+
+The `https` profile also listens on `https://localhost:7209`. When running under
+Aspire, use the `web` resource endpoint from `aspire describe` instead.
+
 ### Runtime Configuration Notes
 
 - The current runtime is PostgreSQL-backed and requires `ConnectionStrings:Lahman`.

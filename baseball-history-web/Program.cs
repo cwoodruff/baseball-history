@@ -81,10 +81,7 @@ app.MapRazorPages()
 
 // REST API
 app.MapOpenApi();
-if (app.Environment.IsDevelopment())
-{
-    app.MapScalarApiReference();
-}
+app.MapScalarApiReference();
 app.MapApiEndpoints();
 
 app.Run();

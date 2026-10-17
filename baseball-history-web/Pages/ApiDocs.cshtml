@@ -27,7 +27,7 @@
         <!-- Base URL -->
         <section class="mb-5">
                 <h2>Base URL</h2>
-                <pre class="bg-dark text-light p-3 rounded"><code>https://your-host/api</code></pre>
+                <pre class="bg-dark text-light p-3 rounded"><code>https://baseballhistoryproject.com/api</code></pre>
                 <p>All endpoints below are relative to this base. Responses use <code>application/json</code>.</p>
         </section>
 
@@ -64,14 +64,14 @@
                         </tbody>
                     </table>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/players?letter=R&amp;page=1&amp;pageSize=10"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players?letter=R&amp;page=1&amp;pageSize=10"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}</code></h5>
                     <p>Full player detail including career batting/pitching stats, teams played for, and Hall of Fame status.</p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/players/ruthba01"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players/ruthba01"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -120,14 +120,14 @@
                         </tbody>
                     </table>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/franchises?league=AL&amp;activeOnly=true"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/teams/franchises?league=AL&amp;activeOnly=true"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/teams/franchises/{franchiseId}</code></h5>
                     <p>Franchise detail with every season's record, division/pennant/World Series wins.</p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/franchises/NYY"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/teams/franchises/NYY"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -137,7 +137,7 @@
                         (batters and pitchers), and managers. Includes Hall of Fame flags.
                     </p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/teams/seasons/NYA/AL/1927"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/teams/seasons/NYA/AL/1927"</code></pre>
                 </div>
             </section>
 
@@ -164,9 +164,9 @@
                     </table>
                     <p><strong>Qualification for rate stats:</strong> When <code>qualified=true</code> (default), the threshold is computed relative to each player's career games played: total plate appearances must equal or exceed 3.1 PA per team-game across all stints, with a minimum floor of 100 PA. This season-relative logic allows players from shorter-season eras (Negro Leagues, 19th century) to qualify naturally without needing arbitrary career totals. Set <code>qualified=false</code> to see all players including small-sample outliers, or provide an explicit <code>minAb</code> value to override automatic qualification.</p>
                     <p><strong>Example:</strong> Career batting average leaders (qualified):</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/batting?stat=avg&amp;qualified=true"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/leaders/batting?stat=avg&amp;qualified=true"</code></pre>
                     <p><strong>Example:</strong> Career batting average, all players (no qualification):</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/batting?stat=avg&amp;qualified=false"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/leaders/batting?stat=avg&amp;qualified=false"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -188,9 +188,9 @@
                     </table>
                     <p><strong>Qualification for rate stats:</strong> When <code>qualified=true</code> (default), the threshold is computed relative to each player's career games played: total outs pitched must equal or exceed 3.0 outs per team-game across all stints (equivalent to 1 inning per game), with a minimum floor of 90 outs (30 innings). This season-relative logic allows pitchers from shorter-season eras to qualify naturally without needing arbitrary career inning totals. Set <code>qualified=false</code> to see all pitchers including small-sample outliers, or provide an explicit <code>minIp</code> value to override automatic qualification.</p>
                     <p><strong>Example:</strong> Career ERA leaders (qualified):</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/pitching?stat=era&amp;qualified=true"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/leaders/pitching?stat=era&amp;qualified=true"</code></pre>
                     <p><strong>Example:</strong> Career strikeout leaders with explicit minimum of 1000 IP:</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/leaders/pitching?stat=so&amp;minIp=1000"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/leaders/pitching?stat=so&amp;minIp=1000"</code></pre>
                 </div>
             </section>
 
@@ -216,7 +216,7 @@
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/hall-of-fame/{playerId}/voting</code></h5>
                     <p>Complete voting history for a player across all ballot years.</p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/hall-of-fame/jeterda01/voting"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/hall-of-fame/jeterda01/voting"</code></pre>
                 </div>
             </section>
 
@@ -235,7 +235,7 @@
                         </tbody>
                     </table>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/search?q=griffey"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/search?q=griffey"</code></pre>
                 </div>
             </section>
 
@@ -247,14 +247,14 @@
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/salaries/players/{playerId}</code></h5>
                     <p>Player salary history with career total. Data available from 1985 onward.</p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/salaries/players/troutmi01"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/salaries/players/troutmi01"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/salaries/teams/{teamId}/{year}</code></h5>
                     <p>Team payroll breakdown for a given season.</p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/salaries/teams/NYA/2014"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/salaries/teams/NYA/2014"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -311,14 +311,14 @@
                         </tbody>
                     </table>
                     <p><strong>Example:</strong> All World Series results:</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/postseason/series?round=WS&amp;pageSize=100"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/postseason/series?round=WS&amp;pageSize=100"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/postseason/series/{year}</code></h5>
                     <p>All postseason series for a given year.</p>
                     <p><strong>Example:</strong></p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/postseason/series/2024"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/postseason/series/2024"</code></pre>
                 </div>
             </section>
 
@@ -340,7 +340,7 @@
                         </tbody>
                     </table>
                     <p><strong>Example:</strong> All AL MVP winners:</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/awards/winners?awardId=MVP&amp;lgId=AL"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/awards/winners?awardId=MVP&amp;lgId=AL"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -350,7 +350,7 @@
                         max possible, first-place votes, and vote share percentage.
                     </p>
                     <p><strong>Example:</strong> 2023 AL MVP voting race:</p>
-                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://your-host/api/awards/voting/MVP/2023/AL"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/awards/voting/MVP/2023/AL"</code></pre>
                 </div>
             </section>
 
