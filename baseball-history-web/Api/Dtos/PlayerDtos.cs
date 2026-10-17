@@ -34,7 +34,11 @@ public sealed record PlayerDetail(
     CareerBattingDto? CareerBatting,
     CareerPitchingDto? CareerPitching,
     IReadOnlyList<PlayerTeamDto> Teams,
-    bool IsPartialRecord = false);
+    bool IsPartialRecord = false,
+    int? CareerOpsIndex = null,
+    bool? CareerQualified = null,
+    int AllStarSelections = 0,
+    bool HasManagerialCareer = false);
 
 public sealed record CareerBattingDto(
     int Games, int AtBats, int Runs, int Hits, int Doubles, int Triples,
@@ -75,3 +79,21 @@ public sealed record PostseasonPitchingDto(
     short Year, string Round, string? TeamId, string? LgId,
     int Games, int Wins, int Losses, int Saves, double InningsPitched,
     int Strikeouts, double Era);
+
+/// <summary>
+/// League-indexed season batting rates. OpsIndex is OPS relative to league
+/// (100 = average, not park-adjusted); BbPct and KPct are percentages. Null
+/// means the inputs weren't recorded that season.
+/// </summary>
+public sealed record AdvancedBattingSeasonDto(
+    short Year, string? LgId, long PlateAppearances,
+    double? Iso, double? Babip, double? BbPct, double? KPct,
+    double? OpsIndex, double? HrPer162, bool Qualified);
+
+/// <summary>
+/// Season advanced pitching rates. Null means the inputs weren't recorded
+/// that season (e.g. no innings pitched).
+/// </summary>
+public sealed record AdvancedPitchingSeasonDto(
+    short Year, string? LgId, int Games, int GamesStarted, double? InningsPitched,
+    double? Era, double? Whip, double? K9, double? Bb9, bool Qualified);

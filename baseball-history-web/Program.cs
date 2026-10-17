@@ -44,6 +44,10 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 // Add services to the container.
 builder.Services.AddSingleton<TeamColorService>();
 builder.Services.AddScoped<PlayerDetailService>();
+builder.Services.AddScoped<ManagerQueryService>();
+builder.Services.AddScoped<AllStarService>();
+builder.Services.AddScoped<NegroLeagueService>();
+builder.Services.AddScoped<ThisDayService>();
 builder.Services.AddHostedService<PlayerCacheService>();
 builder.Services.AddRazorPages();
 builder.Services.AddhtmxRazor();

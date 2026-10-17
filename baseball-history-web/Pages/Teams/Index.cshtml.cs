@@ -1,5 +1,6 @@
 using baseball_history_web.Extensions;
 using BaseballHistory.Data.Models;
+using baseball_history_web.Services;
 using baseball_history_web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,7 +18,7 @@ public class IndexModel(BaseballDbContext context) : PageModel
     {
         ViewModel.SelectedLeague = league;
         ViewModel.SearchQuery = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
-        ViewModel.Era = era is >= 1870 and <= 2030 ? era - era % 10 : null;
+        ViewModel.Era = EraDecade.From(era);
 
         // Aggregate team stats in the database instead of loading all 2700+ team records
         var summaries = await context.TeamsFranchises
@@ -53,7 +54,7 @@ public class IndexModel(BaseballDbContext context) : PageModel
 
             // Era filter: franchise fielded a team at some point during the decade
             if (ViewModel.Era.HasValue &&
-                !(summary.FirstYear <= ViewModel.Era.Value + 9 && summary.LastYear >= ViewModel.Era.Value))
+                !EraDecade.Overlaps(ViewModel.Era.Value, summary.FirstYear, summary.LastYear))
                 continue;
 
             if (summary.IsActive)

@@ -17,6 +17,10 @@ public static class ApiEndpointExtensions
         ParkEndpoints.Map(api.MapGroup("/parks").WithTags("Parks"));
         PostseasonEndpoints.Map(api.MapGroup("/postseason").WithTags("Postseason"));
         AwardEndpoints.Map(api.MapGroup("/awards").WithTags("Awards"));
+        ManagerEndpoints.Map(api.MapGroup("/managers").WithTags("Managers"));
+        AllStarEndpoints.Map(api.MapGroup("/all-star").WithTags("All-Star Games"));
+        NegroLeagueEndpoints.Map(api.MapGroup("/negro-leagues").WithTags("Negro Leagues"));
+        ThisDayEndpoints.Map(api.MapGroup("/this-day").WithTags("This Day in Baseball"));
 
         return app;
     }

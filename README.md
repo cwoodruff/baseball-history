@@ -19,9 +19,10 @@ Leagues, built on the Lahman Baseball Database. Three things set it apart:
   HTTP revision, so Claude and other MCP clients can answer baseball questions
   against the real data. The hosted endpoint is live at
   <https://baseball-history-mcp.azurewebsites.net/>; point any MCP client at it.
-- **Everything is open through a REST API.** 30+ JSON endpoints with no
-  authentication — players, teams, leaders, awards voting, postseason,
-  salaries, search — with an interactive Scalar explorer and OpenAPI spec.
+- **Everything is open through a REST API.** 35+ JSON endpoints with no
+  authentication — players, teams, managers, leaders, awards voting,
+  postseason, All-Star games, the Negro Leagues, salaries, search — with an
+  interactive Scalar explorer and OpenAPI spec.
 
 ![Home Screenshot](./docs/home-screenshot.png)
 

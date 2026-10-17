@@ -27,6 +27,15 @@ public class ThisDayViewModelTests
     }
 
     [Fact]
+    public void TryParseDay_RejectsMalformedInput()
+    {
+        Assert.True(ThisDayViewModel.TryParseDay("02-29", out var leapDay));
+        Assert.Equal((2, 29), leapDay);
+        Assert.False(ThisDayViewModel.TryParseDay("02-30", out _));
+        Assert.False(ThisDayViewModel.TryParseDay(null, out _));
+    }
+
+    [Fact]
     public void DateLabel_FormatsMonthName()
     {
         var vm = new ThisDayViewModel { Month = 2, Day = 6 };

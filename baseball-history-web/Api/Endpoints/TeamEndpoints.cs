@@ -1,4 +1,5 @@
 using baseball_history_web.Api.Dtos;
+using baseball_history_web.Services;
 using BaseballHistory.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -11,14 +12,23 @@ public static class TeamEndpoints
 
     public static void Map(RouteGroupBuilder group)
     {
-        group.MapGet("/franchises", GetFranchises).WithSummary("List all franchises");
+        group.MapGet("/franchises", GetFranchises)
+            .WithSummary("List franchises, with league, name and era filters")
+            .WithDescription("league matches the franchise's most recent league. q matches the franchise name (case-insensitive substring). era is a decade such as 1920 (any year in the decade works) and keeps franchises that fielded a team during it.");
         group.MapGet("/franchises/{franchiseId}", GetFranchiseDetail).WithSummary("Franchise detail with all seasons");
         group.MapGet("/seasons/{teamId}/{lgId}/{year:int}", GetTeamSeason).WithSummary("Team season detail with roster");
     }
 
     private static async Task<IResult> GetFranchises(
-        BaseballDbContext context, string? league = null, bool? activeOnly = null)
+        BaseballDbContext context, string? league = null, bool? activeOnly = null,
+        string? q = null, int? era = null)
     {
+        if (era != null && !EraDecade.IsValid(era))
+            return Results.BadRequest("era must be a year from 1870 to 2030.");
+
+        var searchQuery = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
+        var eraDecade = EraDecade.From(era);
+
         var summaries = await context.TeamsFranchises
             .Where(f => f.Teams.Any())
             .Select(f => new
@@ -44,6 +54,11 @@ public static class TeamEndpoints
             filtered = filtered.Where(f => f.CurrentLeague == league);
         if (activeOnly == true)
             filtered = filtered.Where(f => f.IsActive);
+        if (searchQuery != null)
+            filtered = filtered.Where(f =>
+                (f.FranchName ?? f.FranchId).Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        if (eraDecade.HasValue)
+            filtered = filtered.Where(f => EraDecade.Overlaps(eraDecade.Value, f.FirstYear, f.LastYear));
 
         var data = filtered
             .OrderBy(f => f.FranchName)

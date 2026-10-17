@@ -159,5 +159,8 @@ public class LeaderLine
     public string PlayerName { get; set; } = null!;
     public string? TeamName { get; set; }
     public string Value { get; set; } = null!;
+
+    /// <summary>The unformatted stat value behind Value</summary>
+    public decimal RawValue { get; set; }
     public bool IsInHallOfFame { get; set; }
 }

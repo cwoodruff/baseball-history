@@ -25,21 +25,27 @@ public class ThisDayViewModel
     /// Parses an optional "MM-DD" override; falls back to the given date's
     /// month/day when absent or malformed.
     /// </summary>
-    public static (int Month, int Day) ResolveDay(string? overrideDay, DateOnly today)
+    public static (int Month, int Day) ResolveDay(string? overrideDay, DateOnly today) =>
+        TryParseDay(overrideDay, out var day) ? day : (today.Month, today.Day);
+
+    /// <summary>Parses "MM-DD" (Feb 29 allowed)</summary>
+    public static bool TryParseDay(string? value, out (int Month, int Day) result)
     {
-        if (!string.IsNullOrEmpty(overrideDay))
+        result = default;
+        if (string.IsNullOrEmpty(value))
+            return false;
+
+        var parts = value.Split('-');
+        if (parts.Length == 2 &&
+            int.TryParse(parts[0], out var month) && month is >= 1 and <= 12 &&
+            int.TryParse(parts[1], out var day) && day >= 1 &&
+            day <= DateTime.DaysInMonth(2000, month)) // 2000 is a leap year, so Feb 29 is valid
         {
-            var parts = overrideDay.Split('-');
-            if (parts.Length == 2 &&
-                int.TryParse(parts[0], out var month) && month is >= 1 and <= 12 &&
-                int.TryParse(parts[1], out var day) && day >= 1 &&
-                day <= DateTime.DaysInMonth(2000, month)) // 2000 is a leap year, so Feb 29 is valid
-            {
-                return (month, day);
-            }
+            result = (month, day);
+            return true;
         }
 
-        return (today.Month, today.Day);
+        return false;
     }
 }
 

@@ -298,21 +298,7 @@ public class PlayerDetailService(BaseballDbContext context)
             .Where(m => m.PlayerId == id)
             .OrderByDescending(m => m.YearId)
             .ThenBy(m => m.Inseason)
-            .Select(m => new ManagerSeasonRow
-            {
-                Year = m.YearId,
-                TeamId = m.TeamId,
-                LgId = m.LgId,
-                TeamName = m.Team.Name,
-                Inseason = m.Inseason,
-                Games = m.G,
-                Wins = m.W,
-                Losses = m.L,
-                Rank = m.Rank,
-                IsPlayerManager = m.PlyrMgr == "Y",
-                WonPennant = m.Team.LgWin == "Y",
-                WonWorldSeries = m.Team.Wswin == "Y"
-            })
+            .Select(ManagerQueryService.SeasonRowProjection)
             .ToListAsync();
 
         // Get All-Star appearances

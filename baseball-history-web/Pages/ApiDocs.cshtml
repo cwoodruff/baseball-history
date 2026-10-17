@@ -19,7 +19,7 @@
                 <strong>Interactive API Explorer:</strong>
                 Try endpoints directly in the
                 <a href="/scalar/v1" target="_blank" rel="noopener">Scalar API Reference</a>
-                (available in development mode), or view the raw
+                or view the raw
                 <a href="/openapi/v1.json" target="_blank" rel="noopener">OpenAPI specification</a>.
             </div>
         </div>
@@ -54,22 +54,35 @@
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players</code></h5>
-                    <p>List players filtered by last name initial.</p>
+                    <p>
+                        List players by last name initial, with the same name, position, and era
+                        filters as the <a href="/Players">Players</a> browser. Paginated.
+                    </p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
                         <tbody>
-                            <tr><td><code>letter</code></td><td>string</td><td>A</td><td>Last name initial (A-Z)</td></tr>
+                            <tr><td><code>letter</code></td><td>string</td><td>A</td><td>Last name initial (A-Z); ignored when <code>q</code> is set</td></tr>
+                            <tr><td><code>q</code></td><td>string</td><td>&mdash;</td><td>Full-name search across all letters (case-insensitive)</td></tr>
+                            <tr><td><code>pos</code></td><td>string</td><td>&mdash;</td><td>Position ever played: <code>P</code>, <code>C</code>, <code>1B</code>, <code>2B</code>, <code>3B</code>, <code>SS</code>, <code>OF</code> (includes LF/CF/RF), <code>DH</code></td></tr>
+                            <tr><td><code>era</code></td><td>int</td><td>&mdash;</td><td>Decade (e.g. <code>1920</code>; any year in it works). Keeps players active during that decade</td></tr>
+                            <tr><td><code>sort</code></td><td>string</td><td>name</td><td><code>name</code>, <code>hr</code>, <code>hits</code>, or <code>games</code> (career totals, descending)</td></tr>
                             <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
                             <tr><td><code>pageSize</code></td><td>int</td><td>25</td><td>Results per page (max 100)</td></tr>
                         </tbody>
                     </table>
-                    <p><strong>Example:</strong></p>
+                    <p><strong>Examples:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players?letter=R&amp;page=1&amp;pageSize=10"</code></pre>
+                    <p>Shortstops active in the 1920s, by career home runs:</p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players?pos=SS&amp;era=1920&amp;sort=hr"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}</code></h5>
-                    <p>Full player detail including career batting/pitching stats, teams played for, and Hall of Fame status.</p>
+                    <p>
+                        Full player detail including career batting/pitching stats, teams played for, and Hall of Fame status.
+                        Also includes <code>careerOpsIndex</code> (career OPS vs. league, 100 = average), <code>careerQualified</code>,
+                        <code>allStarSelections</code> (distinct All-Star seasons), and <code>hasManagerialCareer</code>.
+                    </p>
                     <p><strong>Example:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players/ruthba01"</code></pre>
                 </div>
@@ -80,8 +93,25 @@
                 </div>
 
                 <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/batting/advanced</code></h5>
+                    <p>Season advanced batting, one row per season with stints combined: plate appearances, ISO, BABIP, BB%, K%, <code>opsIndex</code> (OPS vs. league, 100 = average, not park-adjusted), HR per 162 games, and season-relative qualification (3.1 PA per team game). A stat is <code>null</code> when its inputs weren&rsquo;t recorded that season.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players/ruthba01/batting/advanced"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/pitching</code></h5>
                     <p>Season-by-season pitching statistics with ERA.</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/pitching/advanced</code></h5>
+                    <p>
+                        Season advanced pitching, one row per season with stints combined: games, starts, innings,
+                        ERA, WHIP, K/9, BB/9, and season-relative qualification (1 IP per team game).
+                    </p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players/johnswa01/pitching/advanced"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -92,6 +122,18 @@
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/awards</code></h5>
                     <p>All awards won (MVP, Cy Young, Gold Glove, etc.).</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/all-star</code></h5>
+                    <p>All-Star Game selections, newest first, with team, whether the player started (and at which position number), and whether the player appeared in the game.</p>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/players/{playerId}/managing</code></h5>
+                    <p>Managerial stints (the player page&rsquo;s Managing tab): team, in-season order, record, finish, and pennant/World Series flags. Returns an empty array for players who never managed.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/players/torrejo01/managing"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -111,16 +153,22 @@
 
                 <div class="api-endpoint mb-4">
                     <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/teams/franchises</code></h5>
-                    <p>List all franchises with all-time records, championships, and pennants.</p>
+                    <p>
+                        List all franchises with all-time records, championships, and pennants, with the same name and
+                        era filters as the <a href="/Teams">Teams</a> browser.
+                    </p>
                     <table class="table table-sm">
                         <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
                         <tbody>
                             <tr><td><code>league</code></td><td>string</td><td>&mdash;</td><td>Filter by league (AL, NL)</td></tr>
                             <tr><td><code>activeOnly</code></td><td>bool</td><td>false</td><td>Only active franchises</td></tr>
+                            <tr><td><code>q</code></td><td>string</td><td>&mdash;</td><td>Franchise name contains (case-insensitive)</td></tr>
+                            <tr><td><code>era</code></td><td>int</td><td>&mdash;</td><td>Decade (e.g. <code>1900</code>). Keeps franchises that fielded a team during it</td></tr>
                         </tbody>
                     </table>
-                    <p><strong>Example:</strong></p>
+                    <p><strong>Examples:</strong></p>
                     <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/teams/franchises?league=AL&amp;activeOnly=true"</code></pre>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/teams/franchises?q=giants&amp;era=1930"</code></pre>
                 </div>
 
                 <div class="api-endpoint mb-4">
@@ -354,6 +402,98 @@
                 </div>
             </section>
 
+            <!-- Managers -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Managers</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/managers</code></h5>
+                    <p>Managers with career records and Hall of Fame flags. Paginated.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>q</code></td><td>string</td><td>&mdash;</td><td>First or last name contains (case-insensitive)</td></tr>
+                            <tr><td><code>sort</code></td><td>string</td><td>wins</td><td><code>wins</code> (career wins, descending) or <code>name</code></td></tr>
+                            <tr><td><code>page</code></td><td>int</td><td>1</td><td>Page number</td></tr>
+                            <tr><td><code>pageSize</code></td><td>int</td><td>50</td><td>Results per page (max 100)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/managers?q=mack&amp;sort=name"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/managers/{playerId}</code></h5>
+                    <p>A manager&rsquo;s career: totals, pennants and World Series titles, every season stint, split-season halves (1892, 1981), and manager awards with whether voting data exists. Returns 404 for people who never managed.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/managers/mackco01"</code></pre>
+                </div>
+            </section>
+
+            <!-- All-Star Games -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">All-Star Games</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/all-star</code></h5>
+                    <p>Every All-Star season, newest first, with game count, distinct selections, and whether the Negro Leagues East-West Game was played that year (1933&ndash;1948).</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/all-star"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/all-star/{year}</code></h5>
+                    <p>One season&rsquo;s games (two AL&ndash;NL games in 1959&ndash;1962) with rosters by league or squad. <code>gameType</code> is <code>AllStar</code>, <code>EastWest</code>, or <code>NorthSouth</code>. Starters are listed first with their position; <code>teamLgId</code> is the club&rsquo;s season league, which differs from the squad code in Negro Leagues games.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/all-star/1943"</code></pre>
+                </div>
+            </section>
+
+            <!-- Negro Leagues -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">Negro Leagues</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/negro-leagues</code></h5>
+                    <p>The seven Negro Leagues (1920&ndash;1948) MLB recognizes as major leagues, with years, a summary, team-season and club counts.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/negro-leagues"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/negro-leagues/{lgId}</code></h5>
+                    <p>A league&rsquo;s seasons (with champions) and its clubs&rsquo; aggregate records. <code>lgId</code> is <code>NNL</code>, <code>ECL</code>, <code>ANL</code>, <code>EWL</code>, <code>NSL</code>, <code>NN2</code>, or <code>NAL</code> (case-insensitive).</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/negro-leagues/NN2"</code></pre>
+                </div>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/negro-leagues/{lgId}/{year}</code></h5>
+                    <p>Season standings with games behind, plus the top five in batting average and ERA (qualified) and home runs and wins. Leader values are numeric.</p>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/negro-leagues/NN2/1943"</code></pre>
+                </div>
+            </section>
+
+            <!-- This Day in Baseball -->
+            <section class="mb-5">
+                <h2 class="border-bottom pb-2">This Day in Baseball</h2>
+
+                <div class="api-endpoint mb-4">
+                    <h5><rhx-badge rhx-variant="success" class="me-2">GET</rhx-badge><code>/api/this-day</code></h5>
+                    <p>Birthdays, debuts, and final games on a calendar day &mdash; the data behind the home page widget. Hall of Famers rank first, then the most recent.</p>
+                    <table class="table table-sm">
+                        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>date</code></td><td>string</td><td>today</td><td>Month and day as <code>MM-DD</code> (e.g. <code>02-06</code>; <code>02-29</code> allowed)</td></tr>
+                            <tr><td><code>limit</code></td><td>int</td><td>5</td><td>Entries per category (1&ndash;25)</td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Example:</strong></p>
+                    <pre class="bg-dark text-light p-3 rounded"><code>curl "https://baseballhistoryproject.com/api/this-day?date=02-06&amp;limit=10"</code></pre>
+                </div>
+            </section>
+
             <!-- Response Codes -->
             <section class="mb-5">
                 <h2 class="border-bottom pb-2">Response Codes</h2>
@@ -361,7 +501,7 @@
                     <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
                     <tbody>
                         <tr><td><code>200</code></td><td>Success</td></tr>
-                        <tr><td><code>400</code></td><td>Bad request (e.g. search query too short)</td></tr>
+                        <tr><td><code>400</code></td><td>Bad request (e.g. search query too short, or an unrecognized filter value such as <code>pos=XX</code>)</td></tr>
                         <tr><td><code>404</code></td><td>Resource not found</td></tr>
                     </tbody>
                 </table>

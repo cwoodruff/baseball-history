@@ -536,11 +536,19 @@ All endpoints are GET requests (read-only database). No authentication required.
 ### Configuration
 
 - OpenAPI spec: `/openapi/v1.json`
-- Interactive docs: `/scalar/v1` (development mode only)
+- Interactive docs: `/scalar/v1`
 - In-app reference: `/ApiDocs`
 
 Endpoints are registered via `ApiEndpointExtensions.MapApiEndpoints()` in
 `Program.cs`. Each domain has a static endpoint class in `Api/Endpoints/`.
+
+Managers, All-Star, Negro Leagues, and This Day endpoints call the same
+services as their Razor Pages (`ManagerQueryService`, `AllStarService`,
+`NegroLeagueService`, `ThisDayService`) and map the shared view models to DTOs
+in `Api/ApiMappings.cs`. The player list filters (`PlayerListFilters`) and the
+decade filter (`EraDecade`) are shared the same way, so the API and the web
+browsers return the same rows. Unrecognized filter values (`pos`, `sort`,
+`era`, `date`) return 400 rather than being ignored.
 
 ### Pagination Envelope
 
@@ -559,12 +567,16 @@ List endpoints return:
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| GET | `/api/players` | List players by last name letter (`letter`, `page`, `pageSize`) |
-| GET | `/api/players/{playerId}` | Full player detail with career stats and teams |
+| GET | `/api/players` | List players (`letter`, `q`, `pos`, `era`, `sort`, `page`, `pageSize`); `q` spans all letters |
+| GET | `/api/players/{playerId}` | Full player detail with career stats, teams, career OPS vs. league, All-Star selection count |
 | GET | `/api/players/{playerId}/batting` | Season-by-season batting |
+| GET | `/api/players/{playerId}/batting/advanced` | Season PA, ISO, BABIP, BB%, K%, OPS vs. league, HR/162, qualification |
 | GET | `/api/players/{playerId}/pitching` | Season-by-season pitching |
+| GET | `/api/players/{playerId}/pitching/advanced` | Season IP, ERA, WHIP, K/9, BB/9, qualification |
 | GET | `/api/players/{playerId}/fielding` | Season-by-season fielding by position |
 | GET | `/api/players/{playerId}/awards` | Player awards |
+| GET | `/api/players/{playerId}/all-star` | All-Star Game selections |
+| GET | `/api/players/{playerId}/managing` | Managerial stints (empty if never managed) |
 | GET | `/api/players/{playerId}/postseason/batting` | Postseason batting stats |
 | GET | `/api/players/{playerId}/postseason/pitching` | Postseason pitching stats |
 
@@ -572,7 +584,7 @@ List endpoints return:
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| GET | `/api/teams/franchises` | List franchises (`league`, `activeOnly`) |
+| GET | `/api/teams/franchises` | List franchises (`league`, `activeOnly`, `q`, `era`) |
 | GET | `/api/teams/franchises/{franchiseId}` | Franchise detail with all seasons |
 | GET | `/api/teams/seasons/{teamId}/{lgId}/{year}` | Team season with full roster |
 
@@ -625,6 +637,34 @@ List endpoints return:
 | GET | `/api/awards/winners` | Award winners (`awardId`, `year`, `lgId`, `page`, `pageSize`) |
 | GET | `/api/awards/voting/{awardId}/{year}/{lgId}` | Full voting breakdown for an award race |
 
+### Managers — `/api/managers`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/managers` | Managers with career records (`q`, `sort` = `wins`/`name`, `page`, `pageSize`) |
+| GET | `/api/managers/{playerId}` | Manager career: stints, split-season halves, awards |
+
+### All-Star Games — `/api/all-star`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/all-star` | All-Star seasons with game and selection counts |
+| GET | `/api/all-star/{year}` | Games and rosters for a season (AL-NL, East-West, North-South) |
+
+### Negro Leagues — `/api/negro-leagues`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/negro-leagues` | The seven recognized major Negro Leagues |
+| GET | `/api/negro-leagues/{lgId}` | League seasons with champions and club records |
+| GET | `/api/negro-leagues/{lgId}/{year}` | Season standings and top-five leaders |
+
+### This Day in Baseball — `/api/this-day`
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/this-day` | Birthdays, debuts, final games (`date` = `MM-DD`, `limit`) |
+
 ### DTOs
 
 API DTOs are record types in `Api/Dtos/`, separate from Razor Page ViewModels:
@@ -632,7 +672,7 @@ API DTOs are record types in `Api/Dtos/`, separate from Razor Page ViewModels:
 | File | Types |
 |------|-------|
 | `PagedResponse.cs` | `PagedResponse<T>` — generic pagination wrapper |
-| `PlayerDtos.cs` | `PlayerListItem`, `PlayerDetail`, `CareerBattingDto`, `CareerPitchingDto`, `SeasonBattingDto`, `SeasonPitchingDto`, `SeasonFieldingDto`, `PlayerAwardDto`, `PlayerTeamDto`, `PostseasonBattingDto`, `PostseasonPitchingDto` |
+| `PlayerDtos.cs` | `PlayerListItem`, `PlayerDetail`, `CareerBattingDto`, `CareerPitchingDto`, `SeasonBattingDto`, `SeasonPitchingDto`, `SeasonFieldingDto`, `PlayerAwardDto`, `PlayerTeamDto`, `PostseasonBattingDto`, `PostseasonPitchingDto`, `AdvancedBattingSeasonDto`, `AdvancedPitchingSeasonDto` |
 | `TeamDtos.cs` | `FranchiseListItem`, `FranchiseDetail`, `FranchiseSeasonItem`, `TeamSeasonDetail`, `ApiTeamBattingDto`, `ApiTeamPitchingDto`, `RosterBatterDto`, `RosterPitcherDto`, `ApiManagerDto` |
 | `LeaderDtos.cs` | `BattingLeaderDto`, `PitchingLeaderDto` |
 | `HallOfFameDtos.cs` | `HallOfFameInducteeDto`, `HallOfFameVotingHistoryDto`, `VotingYearDto` |
@@ -641,3 +681,7 @@ API DTOs are record types in `Api/Dtos/`, separate from Razor Page ViewModels:
 | `ParkDtos.cs` | `ParkDto`, `ParkDetailDto`, `ParkSeasonDto` |
 | `PostseasonDtos.cs` | `PostseasonSeriesDto` |
 | `AwardDtos.cs` | `AwardWinnerDto`, `AwardVotingDto`, `AwardVoteDto` |
+| `ManagerDtos.cs` | `ManagerListItem`, `ManagerDetailDto`, `ManagerSeasonDto`, `ManagerHalfDto`, `ManagerAwardDto` |
+| `AllStarDtos.cs` | `AllStarYearItem`, `AllStarYearDetail`, `AllStarGameDto`, `AllStarRosterDto`, `AllStarPlayerDto`, `PlayerAllStarDto` |
+| `NegroLeagueDtos.cs` | `NegroLeagueItem`, `NegroLeagueDetail`, `NegroLeagueSeasonItem`, `NegroLeagueClubDto`, `NegroLeagueSeasonDetail`, `NegroLeagueStandingsDto`, `NegroLeagueLeadersDto`, `SeasonLeaderDto` |
+| `ThisDayDtos.cs` | `ThisDayDto`, `ThisDayEntryDto` |

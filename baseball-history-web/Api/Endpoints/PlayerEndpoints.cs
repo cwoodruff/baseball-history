@@ -12,29 +12,47 @@ public static class PlayerEndpoints
 
     public static void Map(RouteGroupBuilder group)
     {
-        group.MapGet("/", GetPlayers).WithSummary("List players by last name letter");
+        group.MapGet("/", GetPlayers)
+            .WithSummary("List players by last name letter, with name, position and era filters")
+            .WithDescription("q searches full names across all letters (letter is ignored when q is set). pos is P, C, 1B, 2B, 3B, SS, OF (includes LF/CF/RF) or DH and matches any season fielded there. era is a decade such as 1920 (any year in the decade works) and keeps players active during it. sort is name (default), hr, hits or games.");
         group.MapGet("/{playerId}", GetPlayerDetail).WithSummary("Get player detail with career stats");
         group.MapGet("/{playerId}/batting", GetPlayerBatting).WithSummary("Season-by-season batting stats");
+        group.MapGet("/{playerId}/batting/advanced", GetPlayerAdvancedBatting)
+            .WithSummary("Season advanced batting: PA, ISO, BABIP, BB%, K%, OPS vs league, HR/162")
+            .WithDescription("One row per season (stints combined). opsIndex is OPS relative to league, 100 = average, not park-adjusted. qualified uses season-relative qualification (3.1 PA per team game).");
         group.MapGet("/{playerId}/pitching", GetPlayerPitching).WithSummary("Season-by-season pitching stats");
+        group.MapGet("/{playerId}/pitching/advanced", GetPlayerAdvancedPitching)
+            .WithSummary("Season advanced pitching: IP, ERA, WHIP, K/9, BB/9")
+            .WithDescription("One row per season (stints combined). qualified uses season-relative qualification (1 IP per team game).");
         group.MapGet("/{playerId}/fielding", GetPlayerFielding).WithSummary("Season-by-season fielding stats");
         group.MapGet("/{playerId}/awards", GetPlayerAwards).WithSummary("Player awards");
+        group.MapGet("/{playerId}/all-star", GetPlayerAllStar).WithSummary("All-Star Game selections");
+        group.MapGet("/{playerId}/managing", GetPlayerManaging)
+            .WithSummary("Managerial stints (the player page's Managing tab); empty if the player never managed");
         group.MapGet("/{playerId}/postseason/batting", GetPlayerPostseasonBatting).WithSummary("Postseason batting stats");
         group.MapGet("/{playerId}/postseason/pitching", GetPlayerPostseasonPitching).WithSummary("Postseason pitching stats");
     }
 
     private static async Task<IResult> GetPlayers(
         BaseballDbContext context, IMemoryCache cache,
-        string? letter = null, int page = 1, int pageSize = 25)
+        string? letter = null, string? q = null, string? pos = null, int? era = null, string? sort = null,
+        int page = 1, int pageSize = 25)
     {
+        if (pos != null && !PlayerListFilters.IsValidPosition(pos))
+            return Results.BadRequest("pos must be one of P, C, 1B, 2B, 3B, SS, OF, DH.");
+        if (sort != null && !PlayerListFilters.IsValidSort(sort))
+            return Results.BadRequest("sort must be one of name, hr, hits, games.");
+        if (era != null && !EraDecade.IsValid(era))
+            return Results.BadRequest("era must be a year from 1870 to 2030.");
+
         pageSize = Math.Clamp(pageSize, 1, 100);
         var currentLetter = letter?.ToUpper().FirstOrDefault() ?? 'A';
+        var searchQuery = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
 
         var hofPlayerIds = await GetHofPlayerIds(context, cache);
 
-        var query = context.People
-            .Where(p => p.NameLast != null && p.NameLast.ToUpper().StartsWith(currentLetter.ToString()))
-            .OrderBy(p => p.NameLast)
-            .ThenBy(p => p.NameFirst);
+        var query = PlayerListFilters.Apply(context.People, currentLetter, searchQuery, pos,
+            EraDecade.From(era), sort ?? PlayerListFilters.DefaultSort);
 
         var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
@@ -218,13 +236,28 @@ public static class PlayerEndpoints
         if (person.BirthCity != null || person.BirthState != null)
             birthPlace = string.Join(", ", new[] { person.BirthCity, person.BirthState, person.BirthCountry }.Where(s => s != null));
 
+        var careerOpsIndex = await context.CareerBattingSummaries
+            .Where(c => c.PlayerId == playerId)
+            .Select(c => new { c.OpsIndex, c.Qualified })
+            .FirstOrDefaultAsync();
+
+        var allStarSelections = await context.AllstarFull
+            .Where(a => a.PlayerId == playerId)
+            .Select(a => a.YearId)
+            .Distinct()
+            .CountAsync();
+
+        var hasManagerialCareer = await context.Managers.AnyAsync(m => m.PlayerId == playerId);
+
         return Results.Ok(new PlayerDetail(
             person.PlayerId, person.NameFirst, person.NameLast, person.NameGiven,
             person.Height, person.Weight, person.Bats, person.Throws,
             birthDate, person.BirthCity, person.BirthState, person.BirthCountry, deathDate,
             person.Debut?.Year, person.FinalGame?.Year,
             isHof, hofYear, careerBatting, careerPitching, teams,
-            PlayerRecordFacts.IsPartialName(person.NameFirst)));
+            PlayerRecordFacts.IsPartialName(person.NameFirst),
+            (int?)careerOpsIndex?.OpsIndex, careerOpsIndex?.Qualified,
+            allStarSelections, hasManagerialCareer));
     }
 
     private static async Task<IResult> GetPlayerBatting(string playerId, BaseballDbContext context)
@@ -305,6 +338,76 @@ public static class PlayerEndpoints
             .ToListAsync();
 
         return Results.Ok(awards);
+    }
+
+    private static async Task<IResult> GetPlayerAdvancedBatting(string playerId, BaseballDbContext context)
+    {
+        if (!await context.People.AnyAsync(p => p.PlayerId == playerId))
+            return Results.NotFound();
+
+        var seasons = await context.PlayerSeasonRates
+            .Where(r => r.PlayerId == playerId && r.Pa > 0)
+            .OrderByDescending(r => r.YearId)
+            .Select(r => new AdvancedBattingSeasonDto(
+                r.YearId, r.LgId, r.Pa ?? 0,
+                (double?)r.Iso, (double?)r.Babip, (double?)r.BbPct, (double?)r.KPct,
+                (double?)r.OpsIndex, (double?)r.HrPer162, r.Qualified ?? false))
+            .ToListAsync();
+
+        return Results.Ok(seasons);
+    }
+
+    private static async Task<IResult> GetPlayerAdvancedPitching(string playerId, BaseballDbContext context)
+    {
+        if (!await context.People.AnyAsync(p => p.PlayerId == playerId))
+            return Results.NotFound();
+
+        var seasons = await context.PlayerSeasonPitchingAdvanced
+            .Where(p => p.PlayerId == playerId)
+            .OrderByDescending(p => p.YearId)
+            .Select(p => new AdvancedPitchingSeasonDto(
+                p.YearId, p.LgId, (int)(p.G ?? 0), (int)(p.Gs ?? 0), (double?)p.Ip,
+                (double?)p.Era, (double?)p.Whip, (double?)p.K9, (double?)p.Bb9, p.Qualified ?? false))
+            .ToListAsync();
+
+        return Results.Ok(seasons);
+    }
+
+    private static async Task<IResult> GetPlayerAllStar(string playerId, BaseballDbContext context)
+    {
+        if (!await context.People.AnyAsync(p => p.PlayerId == playerId))
+            return Results.NotFound();
+
+        var rows = await context.AllstarFull
+            .Where(a => a.PlayerId == playerId)
+            .OrderByDescending(a => a.YearId)
+            .ThenBy(a => a.GameNum)
+            .Select(a => new { a.YearId, a.LgId, a.TeamId, a.GameNum, a.StartingPos, a.Gp })
+            .ToListAsync();
+
+        // GameNum and StartingPos are string columns that can be empty
+        var selections = rows
+            .Select(a =>
+            {
+                int? startingPos = int.TryParse(a.StartingPos, out var pos) && pos > 0 ? pos : null;
+                return new PlayerAllStarDto(
+                    a.YearId, a.LgId, a.TeamId,
+                    int.TryParse(a.GameNum, out var gameNum) ? gameNum : 0,
+                    startingPos.HasValue, startingPos, a.Gp == 1);
+            })
+            .ToList();
+
+        return Results.Ok(selections);
+    }
+
+    private static async Task<IResult> GetPlayerManaging(string playerId, BaseballDbContext context,
+        ManagerQueryService managerService)
+    {
+        if (!await context.People.AnyAsync(p => p.PlayerId == playerId))
+            return Results.NotFound();
+
+        var seasons = await managerService.GetManagerialSeasonsAsync(playerId);
+        return Results.Ok(seasons.Select(m => m.ToDto()).ToList());
     }
 
     private static async Task<IResult> GetPlayerPostseasonBatting(string playerId, BaseballDbContext context)
