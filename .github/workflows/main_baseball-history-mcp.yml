@@ -67,3 +67,8 @@ jobs:
           app-name: 'baseball-history-mcp'
           slot-name: 'Production'
           package: .
+
+      # The zip deploy overwrites DLLs the running process has mapped, which
+      # surfaces as BadImageFormatException until the app restarts
+      - name: Restart Azure Web App
+        run: az webapp restart --name baseball-history-mcp --resource-group baseball-history-rg
