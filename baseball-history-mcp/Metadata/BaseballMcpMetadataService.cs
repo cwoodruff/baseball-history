@@ -459,7 +459,7 @@ public sealed class BaseballMcpMetadataService(
                         ],
                         SupportedQueryShapes:
                         [
-                            "Birthdays, debuts, and final games on a calendar day with get_this_day(date?, limit), Hall of Famers first, up to 25 per category."
+                            "Birthdays, debuts, and final games on a calendar day with get_this_day(date? or month + day, limit), Hall of Famers first, up to 25 per category."
                         ],
                         UnsupportedQueryShapes:
                         [

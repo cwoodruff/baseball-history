@@ -225,8 +225,10 @@ public sealed class BaseballReferenceTools(
 
     [McpServerTool(Name = "get_this_day", ReadOnly = true, Title = "Get This Day in Baseball"), Description("Get birthdays, major league debuts, and final games on one calendar day, Hall of Famers first and then most recent.")]
     public Task<ThisDayReadModel> GetThisDayAsync(
-        [Description("Optional month and day as MM-DD, for example 02-06; defaults to today's server date.")] string? date = null,
+        [Description("Optional calendar day as MM-DD, for example 02-06. Use this or month + day; with neither, defaults to today's server date.")] string? date = null,
+        [Description("Optional month, 1 to 12; pass together with day instead of date.")] int? month = null,
+        [Description("Optional day of the month; pass together with month instead of date.")] int? day = null,
         [Description("Entries per category, 1 to 25.")] int limit = 5,
         CancellationToken cancellationToken = default)
-        => thisDay.GetThisDayAsync(date, limit, cancellationToken);
+        => thisDay.GetThisDayAsync(date, limit, month, day, cancellationToken);
 }

@@ -184,6 +184,13 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
         using var thisDayPayload = McpHostFixture.ReadToolPayload(thisDayResponse);
         Assert.Equal("ruthba01", thisDayPayload.RootElement.GetProperty("birthdays")[0].GetProperty("playerId").GetString());
 
+        using var monthDayResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_this_day", arguments = new { month = 7, day = 4, limit = 2 } });
+        Assert.False(McpHostFixture.IsToolError(monthDayResponse), McpHostFixture.ReadToolMessage(monthDayResponse));
+        using var monthDayPayload = McpHostFixture.ReadToolPayload(monthDayResponse);
+        Assert.Equal("July 4", monthDayPayload.RootElement.GetProperty("label").GetString());
+
         using var advancedResponse = await fixture.RequestAsync(
             "tools/call",
             new { name = "get_player_advanced_stats", arguments = new { playerId = "ruthba01" } });

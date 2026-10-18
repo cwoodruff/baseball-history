@@ -738,6 +738,20 @@ public class BaseballReadServiceTests
         await Assert.ThrowsAsync<ModelContextProtocol.McpProtocolException>(() => service.GetThisDayAsync("02-06", 26));
     }
 
+    [Fact]
+    public async Task ThisDayReadService_AcceptsMonthAndDayAsAlternativeToDate()
+    {
+        var service = CreateThisDayReadService();
+
+        var day = await service.GetThisDayAsync(null, 3, month: 2, day: 6);
+        Assert.Equal("February 6", day.Label);
+        Assert.Equal("ruthba01", day.Birthdays[0].PlayerId);
+
+        await Assert.ThrowsAsync<ModelContextProtocol.McpProtocolException>(() => service.GetThisDayAsync(null, 5, month: 2));
+        await Assert.ThrowsAsync<ModelContextProtocol.McpProtocolException>(() => service.GetThisDayAsync(null, 5, month: 2, day: 30));
+        await Assert.ThrowsAsync<ModelContextProtocol.McpProtocolException>(() => service.GetThisDayAsync("02-06", 5, month: 2, day: 6));
+    }
+
     private static ISalaryReadService CreateSalaryReadService(
         int salaryHistorySeasonsMax = 40,
         int salaryLeaderboardPageSizeMax = 50) =>

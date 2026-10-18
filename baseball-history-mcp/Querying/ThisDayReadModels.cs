@@ -18,5 +18,5 @@ public sealed record ThisDayReadModel(
 
 public interface IThisDayReadService
 {
-    Task<ThisDayReadModel> GetThisDayAsync(string? date, int limit, CancellationToken cancellationToken = default);
+    Task<ThisDayReadModel> GetThisDayAsync(string? date, int limit, int? month = null, int? day = null, CancellationToken cancellationToken = default);
 }

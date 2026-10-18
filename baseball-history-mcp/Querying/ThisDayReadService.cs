@@ -22,9 +22,11 @@ public sealed class ThisDayReadService(
     public async Task<ThisDayReadModel> GetThisDayAsync(
         string? date,
         int limit,
+        int? month = null,
+        int? day = null,
         CancellationToken cancellationToken = default)
     {
-        var (month, day) = ParseDate(date);
+        (month, day) = ResolveDay(date, month, day);
         if (limit is < 1 or > MaxEntriesPerCategory)
         {
             McpInputValidation.ThrowInvalid($"limit must be between 1 and {MaxEntriesPerCategory}.");
@@ -33,13 +35,34 @@ public sealed class ThisDayReadService(
         return (await cache.GetOrCreateAsync($"baseball-history-mcp:this-day:{month}-{day}:{limit}", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-            return await LoadAsync(month, day, limit, cancellationToken);
+            return await LoadAsync(month.Value, day.Value, limit, cancellationToken);
         }))!;
     }
 
-    private static (int Month, int Day) ParseDate(string? date)
+    /// <summary>The day comes from date (MM-DD) or month + day, never both; neither means today</summary>
+    private static (int Month, int Day) ResolveDay(string? date, int? month, int? day)
     {
         var normalized = McpInputValidation.NormalizeOptionalText(date);
+        if (month is not null || day is not null)
+        {
+            if (normalized is not null)
+            {
+                McpInputValidation.ThrowInvalid("Pass either date (MM-DD) or month and day, not both.");
+            }
+
+            if (month is null || day is null)
+            {
+                McpInputValidation.ThrowInvalid("month and day must be passed together.");
+            }
+
+            if (!IsValidDay(month!.Value, day!.Value))
+            {
+                McpInputValidation.ThrowInvalid("month must be 1 to 12 and day must exist in that month.");
+            }
+
+            return (month.Value, day.Value);
+        }
+
         if (normalized is null)
         {
             var today = DateTime.Now;
@@ -48,16 +71,20 @@ public sealed class ThisDayReadService(
 
         var parts = normalized.Split('-');
         if (parts.Length == 2 &&
-            int.TryParse(parts[0], out var month) && month is >= 1 and <= 12 &&
-            int.TryParse(parts[1], out var day) && day >= 1 &&
-            day <= DateTime.DaysInMonth(2000, month)) // 2000 is a leap year, so Feb 29 is valid
+            int.TryParse(parts[0], out var parsedMonth) &&
+            int.TryParse(parts[1], out var parsedDay) &&
+            IsValidDay(parsedMonth, parsedDay))
         {
-            return (month, day);
+            return (parsedMonth, parsedDay);
         }
 
         McpInputValidation.ThrowInvalid("date must be MM-DD, for example 02-06.");
         return default;
     }
+
+    // 2000 is a leap year, so Feb 29 is valid
+    private static bool IsValidDay(int month, int day) =>
+        month is >= 1 and <= 12 && day >= 1 && day <= DateTime.DaysInMonth(2000, month);
 
     private async Task<ThisDayReadModel> LoadAsync(int month, int day, int limit, CancellationToken cancellationToken)
     {
