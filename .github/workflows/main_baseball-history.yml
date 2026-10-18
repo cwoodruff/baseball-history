@@ -47,6 +47,15 @@ jobs:
         with:
           name: .net-app
       
+      # Signs in with OIDC through the baseball-history-web-deploy managed
+      # identity, which is federated to main
+      - name: Login to Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.WEB_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.WEB_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.WEB_AZURE_SUBSCRIPTION_ID }}
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -54,17 +63,6 @@ jobs:
           app-name: 'baseball-history'
           slot-name: 'Production'
           package: .
-
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E21EDEC1FA3B4E079F18B39DBEFCF737 }}
-
-      # The publish profile can't restart the app, so the restart signs in
-      # with OIDC through the baseball-history-web-deploy managed identity
-      - name: Login to Azure
-        uses: azure/login@v3
-        with:
-          client-id: ${{ secrets.WEB_AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.WEB_AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.WEB_AZURE_SUBSCRIPTION_ID }}
 
       # The zip deploy overwrites DLLs the running process has mapped, which
       # surfaces as BadImageFormatException until the app restarts
