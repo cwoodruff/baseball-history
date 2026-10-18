@@ -206,6 +206,39 @@ public sealed class McpProtocolIntegrationTests(McpHostFixture fixture)
     }
 
     [Fact]
+    public async Task Host_RejectsArgumentsTheToolDoesNotDeclare()
+    {
+        using var unknownResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_this_day", arguments = new { monthNumber = 7, dayOfMonth = 4 } });
+        Assert.True(McpHostFixture.IsToolError(unknownResponse));
+        var message = McpHostFixture.ReadToolMessage(unknownResponse);
+        Assert.Contains("Unknown arguments for get_this_day: monthNumber, dayOfMonth", message);
+        Assert.Contains("Supported arguments: date, month, day, limit", message);
+
+        using var noArgumentToolResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "list_negro_leagues", arguments = new { league = "NNL" } });
+        Assert.True(McpHostFixture.IsToolError(noArgumentToolResponse));
+        Assert.Contains("Supported arguments: none", McpHostFixture.ReadToolMessage(noArgumentToolResponse));
+
+        using var knownResponse = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_this_day", arguments = new { month = 7, day = 4, limit = 1 } });
+        Assert.False(McpHostFixture.IsToolError(knownResponse), McpHostFixture.ReadToolMessage(knownResponse));
+    }
+
+    [Fact]
+    public async Task Host_ReturnsInputValidationMessagesToClients()
+    {
+        using var response = await fixture.RequestAsync(
+            "tools/call",
+            new { name = "get_this_day", arguments = new { month = 7 } });
+        Assert.True(McpHostFixture.IsToolError(response));
+        Assert.Equal("Invalid parameters: month and day must be passed together.", McpHostFixture.ReadToolMessage(response));
+    }
+
+    [Fact]
     public async Task Host_CallsDiscoveryAndLeaderboardToolsTheWayClientsDo()
     {
         using var searchResponse = await fixture.RequestAsync(

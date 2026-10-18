@@ -77,7 +77,9 @@ internal static class BaseballMcpServiceCollectionExtensions
                 options.ServerInstructions =
                     "Use these read-only baseball history tools for player lookup, franchise lookup, deterministic team-season reads, curated leaderboards, Hall of Fame history, salary history, per-player postseason, fielding, and advanced season rates, ballpark lookup, manager lists and careers, All-Star games, the Negro Leagues, this day in baseball, workflow guidance, and runtime diagnostics. Start with baseball-history://server/workflow-guide for question routing, then use baseball-history://server/info, baseball-history://server/stats-catalog, baseball-history://server/diagnostics, baseball-history://hall-of-fame/guide, baseball-history://salary/guide, or the get_server_diagnostics tool as needed. This server never mutates data. Statistics come from the Lahman Baseball Database (CC BY-SA 3.0) with Negro Leagues data from the Seamheads Negro Leagues Database via SABR; attribution requirements are published at /Licensing on the companion site.";
             })
-            .WithRequestFilters(filters => filters.AddCallToolFilter(BaseballMcpToolErrorHandling.NormalizeToolFailures))
+            .WithRequestFilters(filters => filters
+                .AddCallToolFilter(BaseballMcpToolErrorHandling.NormalizeToolFailures)
+                .AddCallToolFilter(BaseballMcpToolErrorHandling.RejectUnknownArguments))
             .WithResourcesFromAssembly()
             .WithToolsFromAssembly();
     }
