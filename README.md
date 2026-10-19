@@ -32,6 +32,7 @@ Leagues, built on the Lahman Baseball Database. Three things set it apart:
 - [Technology Stack](#technology-stack)
 - [Documentation](#documentation)
 - [Getting Started](#getting-started)
+- [Deployment](#deployment)
 - [Project Structure](#project-structure)
 
 ## Features
@@ -166,6 +167,43 @@ present, loaded into PostgreSQL for runtime use.
 `ConnectionStrings:Lahman` must point at that PostgreSQL database. The legacy
 `lahman.db` SQLite file is historical migration input only; new local or Azure
 setups should not rely on copying it into `baseball-history-web`.
+
+## Deployment
+
+Both apps deploy from GitHub Actions on push to `main` and run on Azure App
+Service. Everything below lives in Azure or GitHub rather than this repository,
+so keep this section current when it changes.
+
+| | Web app | MCP server |
+|---|---|---|
+| App Service | `baseball-history` | `baseball-history-mcp` |
+| Public URL | <https://baseballhistoryproject.com> | <https://baseball-history-mcp.azurewebsites.net/> |
+| Workflow | `.github/workflows/main_baseball-history.yml` | `.github/workflows/main_baseball-history-mcp.yml` |
+| Runs on | every push to `main` | pushes touching `baseball-history-mcp/`, `baseball-history-data/`, `baseball-history-servicedefaults/`, or its workflow |
+| Deploy identity | `baseball-history-web-deploy` | `baseball-history-mcp-deploy` |
+| GitHub secrets | `WEB_AZURE_CLIENT_ID`, `WEB_AZURE_TENANT_ID`, `WEB_AZURE_SUBSCRIPTION_ID` | `MCP_AZURE_CLIENT_ID`, `MCP_AZURE_TENANT_ID`, `MCP_AZURE_SUBSCRIPTION_ID` |
+
+- **Hosting:** both apps run in resource group `baseball-history-rg` on the
+  shared Linux plan `htmx-demos-plan` (Basic B1, one instance, Central US) with
+  the `DOTNETCORE|10.0` runtime. `simplicity-first` shares the same plan.
+- **Sign-in:** the workflows authenticate with OIDC through user-assigned
+  managed identities in `baseball-history-rg`. Each identity has a federated
+  credential for `repo:cwoodruff/baseball-history:ref:refs/heads/main` and the
+  Website Contributor role on its own app only.
+- **Basic auth:** SCM and FTP basic-auth publishing are disabled on both apps,
+  so publish profiles can't deploy.
+- **Restart after deploy:** each workflow runs `az webapp restart` after the
+  zip deploy. Without it the running process can load half-replaced DLLs and
+  fail with `BadImageFormatException`. Expect up to a minute or two of cold
+  start right after a deploy; the B1 plan has no deployment slots.
+- **Always On:** enabled on both apps so they aren't unloaded when idle.
+- **Health check:** both apps use `/healthz`, the machine endpoint from
+  `baseball-history-servicedefaults`. `/Health` on the web app is the
+  human-facing support page, not the probe.
+- **Manual deploy:** run either workflow from the Actions tab
+  (`workflow_dispatch`), or with the Azure CLI:
+  `az webapp deploy -n <app> -g baseball-history-rg --src-path <zip> --type zip`
+  followed by `az webapp restart -n <app> -g baseball-history-rg`.
 
 ## Project Structure
 
