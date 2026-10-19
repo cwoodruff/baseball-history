@@ -26,6 +26,8 @@ public class McpDocsPageTests(WebApplicationFactory<Program> factory) : Integrat
         Assert.Contains("get_server_diagnostics", html);
         // What's-new section links the expanded surface to the new site features
         Assert.Contains("id=\"whats-new\"", html);
+        Assert.Contains("Stricter arguments", html);
+        Assert.Contains("Arguments are validated", html);
         Assert.Contains("href=\"/Parks\"", html);
         Assert.Contains("href=\"/Managers\"", html);
         Assert.Contains("href=\"/NegroLeagues\"", html);

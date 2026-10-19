@@ -64,6 +64,12 @@
                     and <code>sort</code> filters; <code>list_franchises</code> takes <code>query</code> and <code>era</code>;
                     and <code>get_player</code> adds career OPS vs. league, All-Star selection years, and whether the player managed.
                 </li>
+                <li class="mb-2">
+                    <strong>Stricter arguments.</strong> A tool call with an argument the tool doesn&rsquo;t declare now
+                    fails with a message naming the unknown argument and the supported ones, instead of quietly running on
+                    defaults. Invalid values come back with the specific problem, such as
+                    <code>month and day must be passed together.</code>
+                </li>
             </ul>
         </section>
 
@@ -368,6 +374,7 @@ Console.WriteLine(result.Content[0].Text);</code></pre>
             <h2 class="border-bottom pb-2">Limits &amp; data notes</h2>
             <ul>
                 <li>Page sizes are capped: player search 100, franchise list 50, Hall of Fame 50, batting/pitching leaderboards 100, salary leaderboard 50.</li>
+                <li>Arguments are validated: names are case-sensitive and must match the tool&rsquo;s input schema (for example <code>playerId</code>, not <code>player_id</code>), and an unknown name or out-of-range value returns a tool error (<code>isError: true</code>) explaining what to fix.</li>
                 <li>History is bounded: Hall of Fame voting history returns up to 25 years; salary history up to 40 seasons.</li>
                 <li>All data is from the <a href="https://sabr.org/lahman-database/" target="_blank" rel="noopener">Lahman Baseball Database</a>; the server is read-only.</li>
                 <li>Player IDs follow the Lahman convention (e.g. <code>ruthba01</code>, <code>troutmi01</code>); franchise IDs match Lahman codes (e.g. <code>NYY</code>); team-season lookups use team id, league, and year (e.g. <code>NYA</code>, <code>AL</code>, 1927).</li>
